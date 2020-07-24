@@ -30,4 +30,4 @@
 3. npm install
 4. Изменение параметров в config.json;
 5. Запуск:
-node viz.js или pm2 viz.js
+node viz.js или pm2 start viz.js
