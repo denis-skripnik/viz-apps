@@ -47,10 +47,11 @@ for (user of users) {
 }
 
 async function timer() {
-        await botjs.langNotifyMSG();
         let users = await udb.findAllUsers();
 await checkCommittee();
 }       
+
+setInterval(botjs.langNotifyMSG, 3600000);
 
 async function noReturn() {
         await botjs.startMSG();

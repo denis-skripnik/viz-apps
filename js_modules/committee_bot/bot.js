@@ -58,6 +58,7 @@ replyMarkup = bot.keyboard([
     }
 
     async function sendMSG(userId, text, type, params, lang) {
+if (userId) {
         try {
         if (lang === 'Ru') {
 let keybord = await ru_keybord(type, params);
@@ -70,12 +71,13 @@ await bot.sendMessage(userId, text, keybord);
     await bot.sendMessage(userId, text, keybord);
 }
 } catch(e) {
-console.log(e);
+console.error(e);
     if (e.error_code === 403) {
 await udb.removeUser(userId);
 }
 }
-    }
+}    
+}
 
 async function startMSG() {
 return bot.on(/start|старт/, async function (msg, match) {
@@ -214,7 +216,6 @@ Please be attentive: don’t remove or add an additional space.`;
 
     async function oneUserMSG(uid, res, end_time) {
         try {
-        console.log(uid);
             const user = await udb.getUser(uid);
         if (user) {
 
@@ -409,8 +410,8 @@ await sendMSG(fromId, text, 'standart', 'no', 'Eng');
 async function langNotifyMSG() {
 const user_info = await udb.findAllUsers();
 if (user_info) {
-for (let user in user_info) {
-if (!user_info[user].lang || user_info[user].lang === "") {
+    for (let user in user_info) {
+if (!user_info[user].lang || user_info[user].lang === "yes_no") {
 const user_data = {uid: user_info[user]['uid'], username: user_info[user]['username'], state:0, lang: "yes_no"};
 
 const res = await udb.updateUser(user_info[user]['uid'], user_data);
