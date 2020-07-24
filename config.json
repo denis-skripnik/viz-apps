@@ -1,0 +1,11 @@
+{
+  "node": "wss://viz.lexai.host/ws",
+  "awards_bot": {
+    "api_key": "x:y",
+    "admin_id": 1
+  },
+  "committee_bot": {
+    "api_key": "z:a",
+    "admin_id": 2
+  }
+}
