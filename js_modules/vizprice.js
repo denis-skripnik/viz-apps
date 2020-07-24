@@ -1,7 +1,7 @@
 const methods = require("./methods");
 const pdb = require("../databases/pricesdb");
 
-async function customJsonOperation(op, opbody) {
+async function customOperation(op, opbody) {
 let ok_ops_count = 0;
     try {
     let accounts = await methods.getAccount('bts.quotes.bank.viz.plus');
@@ -20,4 +20,4 @@ ok_ops_count += 1;
 return ok_ops_count;
 }
 
-module.exports.customJsonOperation = customJsonOperation;
+module.exports.customOperation = customOperation;

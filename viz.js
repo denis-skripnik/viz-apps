@@ -20,8 +20,8 @@ let ok_ops_count = 0;
         switch(op) {
             case "transfer":
             break;
-            case "custom_json":
-            ok_ops_count += await prices.customJsonOperation(op, opbody);
+            case "custom":
+            ok_ops_count += await prices.customOperation(op, opbody);
             break;
             case "benefactor_award":
             case "receive_award":
