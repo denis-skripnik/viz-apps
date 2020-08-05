@@ -81,7 +81,7 @@ await bot.sendMessage(userId, text, keybord);
     await bot.sendMessage(userId, text, keybord);
 }
 } catch(e) {
-console.log(e);
+console.error(e);
     if (e.error_code === 403) {
 await udb.removeUser(userId);
 }

@@ -28,7 +28,11 @@ let ok_ops_count = 0;
 ok_ops_count += await awards.processBlock(op, opbody);
 break;
 case "committee_worker_create_request":
-ok_ops_count += await committee.processCommittee(PROPS.committee_requests, opbody);
+ok_ops_count += await committee.committeeWorkerCreateRequestOperation(PROPS.committee_requests, opbody);
+break;
+case "committee_pay_request":
+ok_ops_count += await committee.committeePayRequestOperation(opbody);
+break;
 default:
                     //неизвестная команда
             }
@@ -88,5 +92,4 @@ new CronJob('0 30 * * * *', top.run, null, true);
 
 awards.noReturn();
 
-new CronJob('0 * * * * *', committee.timer, null, true);
 committee.noReturn();

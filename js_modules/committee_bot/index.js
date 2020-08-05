@@ -3,7 +3,7 @@ const udb = require(process.cwd() + "/databases/committee_bot/usersdb");
 const cdb = require(process.cwd() + "/databases/committee_bot/committeedb");
 const helpers = require("../helpers");
 
-async function processCommittee(id, opbody) {
+async function committeeWorkerCreateRequestOperation(id, opbody) {
 let end_datetime = parseInt(new Date().getTime()/1000) + opbody.duration;
 try {
 let results_count = await cdb.updateCommittee(id, opbody.creator, opbody.url, opbody.worker, opbody.required_amount_min, opbody.required_amount_max, end_datetime);
@@ -22,12 +22,10 @@ return results_count;
 }
     }
 
-async function checkCommittee() {
-        let workers_list = await cdb.findAllCommittee();
-let now_datetime = parseInt(new Date().getTime()/1000);
-        for (let request of workers_list) {
-                if (request.end <= now_datetime) {
-                        try {
+async function committeePayRequestOperation(opbody) {
+        let request = await cdb.getCommittee(opbody.request_id);
+        if (request) {
+                try {
                         await cdb.removeCommittee(request._id);
                         } catch(e) {
         console.log(e);
@@ -35,21 +33,15 @@ let now_datetime = parseInt(new Date().getTime()/1000);
 let users = await udb.findAllUsers();
 for (user of users) {
         if (user.lang === 'Ru') {
-        let text = `Заявка №<a href="https://control.viz.world/committee/${request.id}">${request.id}</a> завершена.`;
+        let text = `Заявка №<a href="https://control.viz.world/committee/${request.id}">${request.id}</a> завершена. Воркер получил ${opbody.tokens}.`;
         await botjs.sendMSG(user['uid'], text, 'standart', 'no', 'Ru');
 } else if (user.lang === 'Eng') {
-        let text = `Request №<a href="https://control.viz.world/committee/${request.id}">${request.id}</a> is finished.`;
+        let text = `Request №<a href="https://control.viz.world/committee/${request.id}">${request.id}</a> is finished. Worker received ${opbody.tokens}.`;
         await sendMSG(user['uid'], text, 'standart', 'no', 'Eng');
 }
 }
 }
 }
-}
-
-async function timer() {
-        let users = await udb.findAllUsers();
-await checkCommittee();
-}       
 
 setInterval(botjs.langNotifyMSG, 3600000);
 
@@ -66,6 +58,6 @@ async function noReturn() {
         await botjs.langRuCommand();
         }
         
-module.exports.processCommittee = processCommittee;
-module.exports.timer = timer;
+module.exports.committeeWorkerCreateRequestOperation = committeeWorkerCreateRequestOperation;
+module.exports.committeePayRequestOperation = committeePayRequestOperation;
 module.exports.noReturn = noReturn;
