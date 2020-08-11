@@ -34,44 +34,43 @@ async function customOperation(date, opbody) {
         let json = await helpers.isJsonString(opbody.json);
     if (json.approve === true) {
         let data = json.data[1];
-        let db;
         switch(json.data[0]) {
             case "update_project":
-let db = await pdb.getProject(data.creator, data.name);
-            if (db && opbody.from === db.creator) {
+let u_prj = await pdb.getProject(data.creator, data.name);
+            if (u_prj && opbody.from === u_prj.creator) {
     await pdb.updateProject(data.creator, data.name, data.new_name, data.description, data.image_link, data.type, data.category, data.dev_status, data.command, data.site, data.github);
 }
         break;
         case "update_task":
-        db = await tdb.getTask(data.creator, data.name);
-        if (db && opbody.from === db.creator) {
+        let u_tsk = await tdb.getTask(data.creator, data.name);
+        if (u_tsk && opbody.from === u_tsk.creator) {
             await tdb.updateTask(data.creator, data.name, data.new_name, data.description, data.mambers, data.status);
         }
         break;
         case "add_task_member":
-        db = await tdb.getTask(data.creator, data.name);
-        if (db) {
-            let mambers = db.mambers;
+        let a_tsk_m = await tdb.getTask(data.creator, data.name);
+        if (a_tsk_m) {
+            let mambers = a_tsk_m.mambers;
             mambers.push(opbody.required_posting_auths[0]);
-            await tdb.updateTask(data.creator, db.name, db.name, db.description, mambers, db.status);
+            await tdb.updateTask(data.creator, a_tsk_m.name, a_tsk_m.name, a_tsk_m.description, mambers, a_tsk_m.status);
         }
         break;
         case "delete_task_member":
-        db = await tdb.getTask(data.creator, data.name);
+        let d_tsk_m = await tdb.getTask(data.creator, data.name);
         let login = opbody.required_posting_auths[0];
         if (data.task_member) {
             login = data.task_member;
         }
-        if (db && db.mambers.indexOf(login)) {
-            if (opbody.required_posting_auths[0] === conf.viz_projects.login || opbody.required_posting_auths[0] === data.task_member || opbody.required_posting_auths[0] === db.creator) {
-            let members = db.mambers;
+        if (d_tsk_m && d_tsk_m.mambers.indexOf(login)) {
+            if (opbody.required_posting_auths[0] === conf.viz_projects.login || opbody.required_posting_auths[0] === data.task_member || opbody.required_posting_auths[0] === d_tsk_m.creator) {
+            let members = d_tsk_m.mambers;
 let new_members = [];
             for (let member of members) {
 if (member !== login) {
 new_members.push(member);
 }
 }
-            await tdb.updateTask(data.creator, db.name, db.name, db.description, new_members, db.status);
+            await tdb.updateTask(data.creator, d_tsk_m.name, d_tsk_m.name, d_tsk_m.description, new_members, d_tsk_m.status);
 await wtdb.deleteWorkingTasks({task_creator: data.creator, task_name: data.name, user: login, date: data.date});
         }
         }
@@ -80,8 +79,8 @@ await wtdb.deleteWorkingTasks({task_creator: data.creator, task_name: data.name,
 if (data.date) {
     date = data.date;
 }
-db = await pdb.getProject(opbody.required_posting_auths[0], data.project);
-            if (db && opbody.required_posting_auths[0] === db.creator || db && db.command.indexOf(opbody.required_posting_auths[0]) > -1) {
+let n_prj = await pdb.getProject(opbody.required_posting_auths[0], data.project);
+            if (n_prj && opbody.required_posting_auths[0] === n_prj.creator || n_prj && n_prj.command.indexOf(opbody.required_posting_auths[0]) > -1) {
 await ndb.updateNews(data.project_creator, data.project_name, opbody.required_posting_auths[0], date, data.title, data.description, data.text, data.image_link);
         }
 break;
@@ -92,8 +91,8 @@ case "working_tasks":
         if (data.date) {
             date = data.date;
         }
-        db = await tdb.getTask(data.task_creator, data.task_name);
-        if (db && db.mambers.indexOf(opbody.from) > -1) {
+        let w_tsk = await tdb.getTask(data.task_creator, data.task_name);
+        if (w_tsk && w_tsk.mambers.indexOf(opbody.from) > -1) {
 await wtdb.updateWorkingTask(data.task_creator, data.task_name, opbody.required_posting_auths[0], date, data.title, data.description, data.text);
         }
         break;
