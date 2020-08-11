@@ -1,5 +1,5 @@
 {
-  "node": "wss://viz.lexai.host/ws",
+  "node": "https://viz-node.dpos.space",
   "awards_bot": {
     "api_key": "x:y",
     "admin_id": 1
@@ -7,5 +7,9 @@
   "committee_bot": {
     "api_key": "z:a",
     "admin_id": 2
+  },
+  "viz_projects": {
+    "login": "viz-projects",
+    "amount": "100.000 VIZ"
   }
 }
