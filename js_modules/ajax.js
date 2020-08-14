@@ -4,6 +4,12 @@ const helpers = require("./helpers");
 const methods = require("./methods");
 const vudb = require("../databases/viz_usersdb");
 const pdb = require("../databases/pricesdb");
+const prdb = require("../databases/viz_projects/projectsdb");
+const ndb = require("../databases/viz_projects/newsdb");
+const tdb = require("../databases/viz_projects/tasksdb");
+const wtdb = require("../databases/viz_projects/workingtasksdb");
+const cdb = require("../databases/viz_projects/categoriesdb");
+const tydb = require("../databases/viz_projects/typesdb");
 const conf = require('../config.json');
 
 app.get('/viz-api/', async function (req, res) {
@@ -12,6 +18,7 @@ app.get('/viz-api/', async function (req, res) {
     let page = req.query.page;
 let date = req.query.date; // получили параметр date из url
 let login = req.query.login; // получили параметр login из url
+let filter = req.query.filter;
 if (service === 'top' && type) {
         let data = await vudb.getTop(type, page);
     let users = [];
@@ -32,6 +39,22 @@ if (service === 'top' && type) {
 } else if (service === 'prices') {
     let data = await pdb.getPrices();
     delete data._id;
+    res.send(data);
+} else if (service === 'viz-projects') {
+    let data = [];
+    if (type === 'projects') {
+data = await prdb.getProjects(filter, page)
+    } else if (type === 'news') {
+        data = await ndb.getNews(filter, page);
+    } else if (type === 'tasks') {
+        data = await tdb.getTasks(filter, page);
+    } else if (type === 'working_tasks') {
+        data = await wtdb.getWorkingTasks(filter, page);
+    } else if (type === 'categories') {
+        data = await cdb.getCategories();
+    } else if (type === 'types') {
+        data = await tydb.getTypes();
+    }
     res.send(data);
 }
 });

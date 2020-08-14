@@ -2,6 +2,8 @@ const pdb = require("../databases/viz_projects/projectsdb");
 const ndb = require("../databases/viz_projects/newsdb");
 const tdb = require("../databases/viz_projects/tasksdb");
 const wtdb = require("../databases/viz_projects/workingtasksdb");
+const cdb = require("../databases/viz_projects/categoriesdb");
+const tydb = require("../databases/viz_projects/typesdb");
 const conf = require('../config.json');
 const gate = conf.viz_projects.login;
 const helpers = require("./helpers");
@@ -51,8 +53,10 @@ let u_prj = await pdb.getProject(data.creator, data.name);
         let a_tsk_m = await tdb.getTask(data.creator, data.name);
         if (a_tsk_m) {
             let mambers = a_tsk_m.mambers;
-            mambers.push(opbody.required_posting_auths[0]);
-            await tdb.updateTask(data.creator, a_tsk_m.name, a_tsk_m.name, a_tsk_m.description, mambers, a_tsk_m.status);
+            if (mambers.length < 10) {
+                mambers.push(opbody.required_posting_auths[0]);
+                await tdb.updateTask(data.creator, a_tsk_m.name, a_tsk_m.name, a_tsk_m.description, mambers, a_tsk_m.status);
+            }
         }
         break;
         case "delete_task_member":
@@ -108,7 +112,27 @@ if (data.type === 'task') {
     await ndb.deleteNews({project_creator: data.creator, project_name: data.name});
 }
     break;
-        default:
+        case "add_type":
+if (opbody.required_posting_auths[0] === conf.viz_projects.login && data.name) {
+    await tydb.addType(data.name);
+}
+        break;
+        case "delete_type":
+        if (opbody.required_posting_auths[0] === conf.viz_projects.login && data.name) {
+            await tydb.deleteType(data.name);
+        }
+        break;
+        case "add_category":
+        if (opbody.required_posting_auths[0] === conf.viz_projects.login && data.name) {
+            await cdb.addCategory(data.name);
+        }
+        break;
+        case "delete_category":
+        if (opbody.required_posting_auths[0] === conf.viz_projects.login && data.name) {
+            await cdb.deleteCategory(data.name);
+        }
+        break;
+    default:
         // Ничего не делать.
     }
     }
