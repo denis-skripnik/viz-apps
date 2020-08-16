@@ -27,19 +27,19 @@ async function committeePayRequestOperation(opbody) {
         if (request) {
                 try {
                         await cdb.removeCommittee(request._id);
-                        } catch(e) {
+                        let users = await udb.findAllUsers();
+                        for (user of users) {
+                                if (user.lang === 'Ru') {
+                                let text = `Заявка №<a href="https://control.viz.world/committee/${request.id}">${request.id}</a> завершена. Воркер получил ${opbody.tokens}.`;
+                                await botjs.sendMSG(user['uid'], text, 'standart', 'no', 'Ru');
+                        } else if (user.lang === 'Eng') {
+                                let text = `Request №<a href="https://control.viz.world/committee/${request.id}">${request.id}</a> is finished. Worker received ${opbody.tokens}.`;
+                                await botjs.sendMSG(user['uid'], text, 'standart', 'no', 'Eng');
+                        }
+                        }
+                } catch(e) {
         console.log(e);
                         }                        
-let users = await udb.findAllUsers();
-for (user of users) {
-        if (user.lang === 'Ru') {
-        let text = `Заявка №<a href="https://control.viz.world/committee/${request.id}">${request.id}</a> завершена. Воркер получил ${opbody.tokens}.`;
-        await botjs.sendMSG(user['uid'], text, 'standart', 'no', 'Ru');
-} else if (user.lang === 'Eng') {
-        let text = `Request №<a href="https://control.viz.world/committee/${request.id}">${request.id}</a> is finished. Worker received ${opbody.tokens}.`;
-        await sendMSG(user['uid'], text, 'standart', 'no', 'Eng');
-}
-}
 }
 }
 
