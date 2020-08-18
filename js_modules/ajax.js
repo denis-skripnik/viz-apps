@@ -19,22 +19,26 @@ app.get('/viz-api/', async function (req, res) {
 let date = req.query.date; // получили параметр date из url
 let login = req.query.login; // получили параметр login из url
 let filter = req.query.filter;
-if (service === 'top' && type) {
+if (service === 'top' && type && page) {
         let data = await vudb.getTop(type, page);
     let users = [];
-    let users_count = 0;
-    for (let user of data) {
-            users[users_count] = {};
-            users[users_count]['name'] = user['name'];
-            users[users_count][type] = user[type];
-            users[users_count][type + '_percent'] = user[type + '_percent'];
-            for (let el in user) {
-    if (type !== el && el !== 'name' && el + '_percent' !== type + '_percent') {
-        users[users_count][el] = user[el];
-    }
-    }
-    users_count++;
-    }
+    if (data && data.length > 0) {
+        let collums = {};
+        collums['shares'] = ['shares', 'shares_percent', 'delegated_shares', 'received_shares', 'effective_shares', 'viz', 'viz_percent'];
+        collums['delegated_shares'] = ['delegated_shares', 'shares', 'shares_percent', 'received_shares', 'effective_shares', 'viz', 'viz_percent'];
+        collums['received_shares'] = ['received_shares', 'shares', 'shares_percent', 'delegated_shares', 'effective_shares', 'viz', 'viz_percent'];
+        collums['effective_shares'] = ['effective_shares', 'shares', 'shares_percent', 'delegated_shares', 'received_shares', 'viz', 'viz_percent'];
+        collums['viz'] = ['viz', 'viz_percent', 'shares', 'shares_percent', 'delegated_shares', 'received_shares', 'effective_shares'];
+        let users_count = 0;
+        for (let user of data) {
+                users[users_count] = {};
+                users[users_count]['name'] = user['name'];
+for (let collum of collums) {
+    users[users_count][collum] = user[collum];
+}
+        users_count++;
+        } // end for.
+    } // end if data.
     res.send(users);
 } else if (service === 'prices') {
     let data = await pdb.getPrices();
