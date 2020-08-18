@@ -33,7 +33,7 @@ if (service === 'top' && type && page) {
         for (let user of data) {
                 users[users_count] = {};
                 users[users_count]['name'] = user['name'];
-for (let collum of collums) {
+for (let collum of collums[type]) {
     users[users_count][collum] = user[collum];
 }
         users_count++;
