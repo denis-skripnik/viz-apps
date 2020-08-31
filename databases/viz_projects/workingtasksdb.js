@@ -50,7 +50,7 @@ async function updateWorkingTask(task_creator, task_name, user, date, text) {
 
         let collection = db.collection('working_tasks');
 
-              let res = await collection.updateOne({task_creator, task_name, user, date}, {$set: {task_id, user, date, text}}, { upsert: true });
+              let res = await collection.updateOne({task_creator, task_name, user, date}, {$set: {task_creator, task_name, user, date, text}}, { upsert: true });
 
 return res;
     } catch (err) {

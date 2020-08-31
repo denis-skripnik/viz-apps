@@ -47,13 +47,13 @@ for (let collum of collums[type]) {
 } else if (service === 'viz-projects') {
     let data = [];
     if (type === 'projects') {
-data = await prdb.getProjects(filter, page)
+data = await prdb.getProjects(JSON.parse(filter), page)
     } else if (type === 'news') {
-        data = await ndb.getNews(filter, page);
+        data = await ndb.getNews(JSON.parse(filter), page);
     } else if (type === 'tasks') {
-        data = await tdb.getTasks(filter, page);
+        data = await tdb.getTasks(JSON.parse(filter), page);
     } else if (type === 'working_tasks') {
-        data = await wtdb.getWorkingTasks(filter, page);
+        data = await wtdb.getWorkingTasks(JSON.parse(filter), page);
     } else if (type === 'categories') {
         data = await cdb.getCategories();
     } else if (type === 'types') {
