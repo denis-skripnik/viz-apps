@@ -1,11 +1,8 @@
-const MongoClient = require('mongodb').MongoClient;
-
-const url = 'mongodb://127.0.0.1:27017';
+const db = require('./../@db.js');
 
 async function getCommittee(id) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-        .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
     if (!client) {
         return;
@@ -25,14 +22,13 @@ return res;
 return err;
     } finally {
 
-        client.close();
+    
     }
 }
 
 async function addUser(data) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-        .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
     if (!client) {
         return;
@@ -54,14 +50,13 @@ return res;
     return err;
       } finally {
 
-        client.close();
+
     }
 }
 
 async function updateCommittee(id, creator, url, worker, required_amount_min, required_amount_max, end) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-      .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
   if (!client) {
       return;
@@ -83,14 +78,13 @@ return res;
   return err;
     } finally {
 
-      client.close();
+ 
   }
 }
 
 async function removeCommittee(_id) {
 
-  const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-    .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
 if (!client) {
     return;
@@ -112,13 +106,12 @@ return res;
 return err;
   } finally {
 
-    client.close();
+ 
 }
 }
 
 async function findAllCommittee() {
-  const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-    .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
 if (!client) {
     return;
@@ -143,7 +136,7 @@ return res;
 return err;
   } finally {
 
-    client.close();
+  
 }
 }
 

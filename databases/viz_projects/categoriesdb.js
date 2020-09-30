@@ -1,11 +1,8 @@
-const MongoClient = require('mongodb').MongoClient;
-
-const url = 'mongodb://localhost:27017';
+const db = require('./../@db.js');
 
 async function addCategory(name) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-        .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
     if (!client) {
         return;
@@ -27,14 +24,13 @@ return res;
     return err;
       } finally {
 
-        client.close();
+        
     }
 }
 
 async function getCategories() {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-        .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
     if (!client) {
         return;
@@ -58,14 +54,13 @@ async function getCategories() {
     return err;
       } finally {
   
-        client.close();
+        
     }
 }
 
 async function deleteCategory(name) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-      .catch(err => { console.log(err); });
+    const client = await db.getClient();
   
   if (!client) {
       return;
@@ -87,7 +82,7 @@ async function deleteCategory(name) {
   return err;
     } finally {
   
-      client.close();
+      
   }
   }
 

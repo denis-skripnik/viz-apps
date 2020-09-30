@@ -1,11 +1,8 @@
-const MongoClient = require('mongodb').MongoClient;
-
-const url = 'mongodb://localhost:27017';
+const db = require('./@db.js');
 
 async function getBlock(bn) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-        .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
     if (!client) {
         return;
@@ -33,14 +30,13 @@ return res;
 return err;
     } finally {
 
-        client.close();
+        
     }
 }
 
 async function updateBlock(id) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-        .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
     if (!client) {
         return;
@@ -61,7 +57,7 @@ return res;
     return err;
       } finally {
 
-        client.close();
+
     }
 }
 

@@ -1,11 +1,8 @@
-const MongoClient = require('mongodb').MongoClient;
-
-const url = 'mongodb://localhost:27017';
+const db = require('./@db.js');
 
 async function getTop(type, page) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-        .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
     if (!client) {
         return;
@@ -41,14 +38,13 @@ async function getTop(type, page) {
     return err;
       } finally {
   
-        client.close();
+        
     }
 }
 
 async function updateTop(name, shares, shares_percent, delegated_shares, received_shares, effective_shares, viz, viz_percent) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-        .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
     if (!client) {
         return;
@@ -74,7 +70,7 @@ return res;
     return err;
       } finally {
 
-        client.close();
+        
     }
 }
 

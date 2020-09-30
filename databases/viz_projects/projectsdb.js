@@ -1,11 +1,8 @@
-const MongoClient = require('mongodb').MongoClient;
-
-const url = 'mongodb://localhost:27017';
+const db = require('./../@db.js');
 
 async function addProject(creator, name, description, image_link, type, category, dev_status, command, site, github) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-        .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
     if (!client) {
         return;
@@ -27,14 +24,13 @@ return res;
     return err;
       } finally {
 
-        client.close();
+        
     }
 }
 
 async function getProject(creator, name) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-        .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
     if (!client) {
         return;
@@ -54,14 +50,13 @@ return res;
 return err;
     } finally {
 
-        client.close();
+        
     }
 }
 
 async function getProjects(query, page) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-        .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
     if (!client) {
         return;
@@ -87,14 +82,13 @@ async function getProjects(query, page) {
     return err;
       } finally {
   
-        client.close();
+        
     }
 }
 
 async function updateProject(creator, name, new_name, description, image_link, type, category, dev_status, command, site, github) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-        .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
     if (!client) {
         return;
@@ -115,14 +109,13 @@ return res;
     return err;
       } finally {
 
-        client.close();
+       
     }
 }
 
 async function deleteProjects(creator, name) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-      .catch(err => { console.log(err); });
+    const client = await db.getClient();
   
   if (!client) {
       return;
@@ -144,7 +137,7 @@ async function deleteProjects(creator, name) {
   return err;
     } finally {
   
-      client.close();
+      
   }
   }
 

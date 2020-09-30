@@ -1,11 +1,8 @@
-const MongoClient = require('mongodb').MongoClient;
-
-const url = 'mongodb://localhost:27017';
+const db = require('./../@db.js');
 
 async function addTask(creator, name, description, mambers, status) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-        .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
     if (!client) {
         return;
@@ -27,14 +24,13 @@ return res;
     return err;
       } finally {
 
-        client.close();
+        
     }
 }
 
 async function getTask(creator, name) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-        .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
     if (!client) {
         return;
@@ -54,14 +50,13 @@ return res;
 return err;
     } finally {
 
-        client.close();
+        
     }
 }
 
 async function getTasks(query, page) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-        .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
     if (!client) {
         return;
@@ -87,14 +82,13 @@ async function getTasks(query, page) {
     return err;
       } finally {
   
-        client.close();
+        
     }
 }
 
 async function updateTask(creator, name, new_name, description, mambers, status) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-        .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
     if (!client) {
         return;
@@ -115,14 +109,13 @@ return res;
     return err;
       } finally {
 
-        client.close();
+        
     }
 }
 
 async function deleteTasks(creator, name) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-      .catch(err => { console.log(err); });
+    const client = await db.getClient();
   
   if (!client) {
       return;
@@ -144,7 +137,7 @@ async function deleteTasks(creator, name) {
   return err;
     } finally {
   
-      client.close();
+      
   }
   }
 
