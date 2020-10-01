@@ -1,11 +1,8 @@
-const MongoClient = require('mongodb').MongoClient;
-
-const url = 'mongodb://127.0.0.1:27017';
+const db = require('./../@db.js');
 
 async function getUser(userId) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-        .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
     if (!client) {
         return;
@@ -25,14 +22,13 @@ return res;
 return err;
     } finally {
 
-        client.close();
+    
     }
 }
 
 async function addUser(data) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-        .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
     if (!client) {
         return;
@@ -54,14 +50,13 @@ return res;
     return err;
       } finally {
 
-        client.close();
+    
     }
 }
 
 async function updateUser(uid, data) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-      .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
   if (!client) {
       return;
@@ -83,14 +78,13 @@ return res;
   return err;
     } finally {
 
-      client.close();
+    
   }
 }
 
 async function removeUser(tg_id) {
 
-  const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-    .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
 if (!client) {
     return;
@@ -112,13 +106,12 @@ return res;
 return err;
   } finally {
 
-    client.close();
+   
 }
 }
 
 async function findAllUsers() {
-  const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-    .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
 if (!client) {
     return;
@@ -143,7 +136,7 @@ return res;
 return err;
   } finally {
 
-    client.close();
+
 }
 }
 

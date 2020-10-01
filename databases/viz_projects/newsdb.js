@@ -1,11 +1,8 @@
-const MongoClient = require('mongodb').MongoClient;
-
-const url = 'mongodb://localhost:27017';
+const db = require('./../@db.js');
 
 async function getNews(query, page) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-        .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
     if (!client) {
         return;
@@ -30,15 +27,13 @@ async function getNews(query, page) {
         console.log(err);
     return err;
       } finally {
-  
-        client.close();
+
     }
 }
 
 async function updateNews(project_creator, project_name, user, date, title, description, text, image_link) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-        .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
     if (!client) {
         return;
@@ -59,14 +54,13 @@ return res;
     return err;
       } finally {
 
-        client.close();
+
     }
 }
 
 async function deleteNews(data) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-      .catch(err => { console.log(err); });
+    const client = await db.getClient();
   
   if (!client) {
       return;
@@ -88,7 +82,7 @@ async function deleteNews(data) {
   return err;
     } finally {
   
-      client.close();
+
   }
   }
 

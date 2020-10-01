@@ -1,11 +1,8 @@
-const MongoClient = require('mongodb').MongoClient;
-
-const url = 'mongodb://localhost:27017';
+const db = require('./../@db.js');
 
 async function getWorkingTasks(query, page) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-        .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
     if (!client) {
         return;
@@ -31,14 +28,13 @@ async function getWorkingTasks(query, page) {
     return err;
       } finally {
   
-        client.close();
+
     }
 }
 
 async function updateWorkingTask(task_creator, task_name, user, date, text) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-        .catch(err => { console.log(err); });
+    const client = await db.getClient();
 
     if (!client) {
         return;
@@ -59,14 +55,13 @@ return res;
     return err;
       } finally {
 
-        client.close();
+
     }
 }
 
 async function deleteWorkingTasks(data) {
 
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true})
-      .catch(err => { console.log(err); });
+    const client = await db.getClient();
   
   if (!client) {
       return;
@@ -88,7 +83,6 @@ async function deleteWorkingTasks(data) {
   return err;
     } finally {
   
-      client.close();
   }
   }
   

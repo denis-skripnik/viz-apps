@@ -1,3 +1,7 @@
+require("./databases/@db.js").initialize({
+    url: 'mongodb://localhost:27017',
+    poolSize: 15
+});
 require("./js_modules/ajax");
 const CronJob = require('cron').CronJob;
 const conf = require("./config.json");
