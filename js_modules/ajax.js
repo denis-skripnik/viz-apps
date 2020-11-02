@@ -10,6 +10,7 @@ const tdb = require("../databases/viz_projects/tasksdb");
 const wtdb = require("../databases/viz_projects/workingtasksdb");
 const cdb = require("../databases/viz_projects/categoriesdb");
 const tydb = require("../databases/viz_projects/typesdb");
+const wrdb = require("../databases/wrdb");
 const conf = require('../config.json');
 
 app.get('/viz-api/', async function (req, res) {
@@ -60,6 +61,13 @@ data = await prdb.getProjects(JSON.parse(filter), page)
         data = await tydb.getTypes();
     }
     res.send(data);
+} else if (service === 'witnesses') {
+    let data = await wrdb.findAllWitnesses();
+    if (data && data.length > 0) {
+        res.send(data);
+    } else {
+        res.send({});
+    }
 }
 });
 app.listen(3100, function () {

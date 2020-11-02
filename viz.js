@@ -10,6 +10,7 @@ const top = require("./js_modules/viz_top");
 const awards = require("./js_modules/awards_bot");
 const committee = require("./js_modules/committee_bot");
 const vp = require("./js_modules/viz_projects");
+const wr = require("./js_modules/witness_rewards");
 const helpers = require("./js_modules/helpers");
 const methods = require("./js_modules/methods");
 const bdb = require("./databases/blocksdb");
@@ -23,6 +24,9 @@ let ok_ops_count = 0;
     for(let tr of block) {
         const [op, opbody] = tr.op;
         switch(op) {
+            case "witness_reward":
+                ok_ops_count += await wr.witnessRewardOperation(opbody, tr.timestamp);
+                break;
             case "transfer":
 if (opbody.to === conf.viz_projects.login && opbody.amount === conf.viz_projects.amount) {
 ok_ops_count += await vp.transferOperation(opbody);
