@@ -1,5 +1,11 @@
 {
   "node": "https://viz-node.dpos.space",
+
+  "api": {
+    "provider_account": "denis-skripnik",
+    "authTrueLimiter": 50,
+    "authFalseLimiter": 10
+  },
   "awards_bot": {
     "api_key": "x:y",
     "admin_id": 1

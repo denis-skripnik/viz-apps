@@ -2,7 +2,7 @@ require("./databases/@db.js").initialize({
     url: 'mongodb://localhost:27017',
     poolSize: 15
 });
-require("./js_modules/ajax");
+require("./js_modules/api");
 const CronJob = require('cron').CronJob;
 const conf = require("./config.json");
 const prices = require("./js_modules/vizprice");
@@ -11,6 +11,7 @@ const awards = require("./js_modules/awards_bot");
 const committee = require("./js_modules/committee_bot");
 const vp = require("./js_modules/viz_projects");
 const wr = require("./js_modules/witness_rewards");
+const links = require("./js_modules/links");
 const helpers = require("./js_modules/helpers");
 const methods = require("./js_modules/methods");
 const bdb = require("./databases/blocksdb");
@@ -19,6 +20,10 @@ const SHORT_DELAY = 3000;
 const SUPER_LONG_DELAY = 1000 * 60 * 15;
 
 async function processBlock(bn) {
+    if (bn%28800 == 0) {
+        await links.updateShares();
+            }
+        
     const block = await methods.getOpsInBlock(bn);
 let ok_ops_count = 0;
     for(let tr of block) {
@@ -39,8 +44,14 @@ ok_ops_count += await vp.transferOperation(opbody);
             }
             break;
             case "benefactor_award":
-            case "receive_award":
+                ok_ops_count += await awards.processBlock(op, opbody);
+                break;
+                case "receive_award":
 ok_ops_count += await awards.processBlock(op, opbody);
+if (opbody.receiver === 'committee' && data.length === 3) {
+    let data = opbody.memo.split(',');
+    ok_ops_count += await links.receiveAwardOperation(opbody.custom_sequence, parseFloat(opbody.shares), data);
+}
 break;
 case "committee_worker_create_request":
 ok_ops_count += await committee.committeeWorkerCreateRequestOperation(PROPS.committee_requests, opbody);
