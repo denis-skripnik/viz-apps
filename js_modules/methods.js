@@ -57,7 +57,7 @@ return {status: "ok", data: result};
     }
     
     async function verifyData(data, signature, VIZPUBKEY) {
-        return viz.auth.signature.verifyData(data, signature, VIZPUBKEY);
+        return viz.auth.signature.verifyData(data, viz.auth.signature.fromHex(signature),VIZPUBKEY);
     }
     
     async function getSubscriptionStatus(subscriber, account) {
