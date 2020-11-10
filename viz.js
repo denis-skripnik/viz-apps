@@ -48,8 +48,8 @@ ok_ops_count += await vp.transferOperation(opbody);
                 break;
                 case "receive_award":
 ok_ops_count += await awards.processBlock(op, opbody);
+let data = opbody.memo.split(',');
 if (opbody.receiver === 'committee' && data.length === 3) {
-    let data = opbody.memo.split(',');
     ok_ops_count += await links.receiveAwardOperation(opbody.custom_sequence, parseFloat(opbody.shares), data);
 }
 break;
