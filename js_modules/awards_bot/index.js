@@ -1,8 +1,19 @@
 const botjs = require("./bot");
 const methods = require("../methods");
 
-const replaceLink = function(aMemo, aReplace, aLink){
-    return aMemo.split(aReplace).join(aLink + aReplace)
+function linkChanger(aString, aUrl) {
+    let result = aString
+    const regexp = /(\b(viz):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig
+    const links = result.match(regexp)
+    if (!Array.isArray(links)) {
+        return result
+    }
+    for (let link of links) {
+        result = result.replace(link, function(link) {
+            return '<a href="' + (aUrl || '') + link + '">' + link + '</a>'
+        })
+    }
+    return result
 }
 
 async function processAward(award) {
@@ -12,7 +23,7 @@ async function processAward(award) {
 
 async function processBlock(op, opbody) {
 let ops_array = [];
-    opbody.memo = replaceLink(opbody.memo, 'viz://', 'https://readdle.me/#');
+opbody.memo = linkChanger(opbody.memo, 'https://readdle.me/dapp.html#');
 switch(op) {
             case "benefactor_award":
             ops_array.push({type: 'benefactor_award', data: opbody});
