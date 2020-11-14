@@ -1,6 +1,10 @@
 const botjs = require("./bot");
 const methods = require("../methods");
 
+const replaceLink = function(aMemo, aReplace, aLink){
+    return aMemo.split(aReplace).join(aLink + aReplace)
+}
+
 async function processAward(award) {
     let results_count = await botjs.awardMSG(award);
     return results_count;
@@ -8,7 +12,8 @@ async function processAward(award) {
 
 async function processBlock(op, opbody) {
 let ops_array = [];
-    switch(op) {
+    opbody.memo = replaceLink(opbody.memo, 'viz://', 'https://readdle.me/#');
+switch(op) {
             case "benefactor_award":
             ops_array.push({type: 'benefactor_award', data: opbody});
 break;
