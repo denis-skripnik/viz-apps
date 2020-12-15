@@ -192,7 +192,7 @@ let subscribes = [];
 await udb.updateUser(id, message, status, 'selected_language', subscribes);
                     await botjs.sendMSG(id, text, btns);
                     await helpers.sleep(3000);
-                    await main(id, my_name, lng[user.lng].home, status);
+                    await main(id, my_name, lng[message].home, status);
                 } else if (user && user.lng && user.lng !== '' && message.indexOf(lng[user.lng].back) > -1 || user && user.lng && user.lng !== '' && message.indexOf(lng[user.lng].cancel) > -1) {
                     await main(id, my_name, user.prev_status, status);
                 } else {
