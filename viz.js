@@ -9,6 +9,7 @@ const prices = require("./js_modules/vizprice");
 const top = require("./js_modules/viz_top");
 const awards = require("./js_modules/awards_bot");
 const committee = require("./js_modules/committee_bot");
+const rb = require("./js_modules/readdle_bot");
 const vp = require("./js_modules/viz_projects");
 const wr = require("./js_modules/witness_rewards");
 const links = require("./js_modules/links");
@@ -41,6 +42,8 @@ ok_ops_count += await vp.transferOperation(opbody);
             ok_ops_count += await prices.customOperation(op, opbody);
             if (opbody.id === 'viz_projects') {
                 ok_ops_count += await vp.customOperation(tr.timestamp, opbody);
+            } else if (opbody.id === 'V') {
+                ok_ops_count += await rb.notify(opbody.required_regular_auths[0], bn, JSON.parse(opbody.json));
             }
             break;
             case "benefactor_award":

@@ -1,6 +1,5 @@
 {
   "node": "https://viz-node.dpos.space",
-
   "api": {
     "provider_account": "denis-skripnik",
     "authTrueLimiter": 50,
@@ -9,6 +8,10 @@
   "awards_bot": {
     "api_key": "x:y",
     "admin_id": 1
+  },
+  "readdle_bot": {
+    "bot_api_key": "x:y-z",
+    "admins": [123456789]
   },
   "committee_bot": {
     "api_key": "z:a",
