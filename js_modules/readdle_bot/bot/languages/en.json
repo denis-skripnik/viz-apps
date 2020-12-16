@@ -58,5 +58,5 @@
         "award_error": "Error sending the award. details: ",
         "news": "News",
     "help": "Help",
-    "help_text": "Bot review in Russian: https://golos.id/ru--golos/@lllll1ll/rukovodstvo-po-podklyucheniyu-k-stake-bot. If you have any questions or problems, write to the chat @dpos_space or personal @denis_skripnik"
-    }
+    "help_text": "Almost all commands are executed via buttons. Only unsubscribe via unsub login\r\nAre the buttons gone? Click on the bot's keyboard button or type /start.\r\nIf you have any questions or problems, write to the chat @dpos_space or personal @denis_skripnik"
+}
