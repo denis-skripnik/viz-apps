@@ -485,7 +485,7 @@ ${data.d.text}
     ${data.d.text}
     <a href="https://readdle.me/dapp.html#viz://@${login}/${bn}">${lng[lang].read}</a>`;
 } else if (!data.t && !data.d.s && data.d.r) {
-    text = `${lng[lang].type_reply} <a href="https://readdle.me/dapp.html#${data.d.r}">${data.d.r}</a>:
+    text = `${lng[lang].type_reply} ${login} ${lng[lang].type_reply2} <a href="https://readdle.me/dapp.html#${data.d.r}">${data.d.r}</a>:
     
     ${data.d.text}
 
