@@ -160,7 +160,7 @@ await botjs.sendMSG(id, text, btns, true);
                                                                             let text = lng[user.lng].delete_conferm + login;
                                                     let btns = await keybord(user.lng, 'conferm');
                                                     await botjs.sendMSG(id, text, btns, false);
-                                                } else if (message.indexOf('@') > -1 && message.indexOf(lng[user.lng].news) === -1 && user.status.indexOf('publish_') === -1 && user.status.indexOf('postcontent') === -1) {
+                                                } else if (message.indexOf('@') > -1 && message.indexOf(lng[user.lng].news) === -1 && user.status.indexOf('publish_') === -1 && user.status.indexOf('postcontent') === -1 && user.status.indexOf('note_') === -1) {
                                                     let acc = await adb.getAccount(message.split('@')[1]);
 if (acc && acc.id === id) {
     let text = lng[user.lng].change_account + message;
@@ -353,10 +353,11 @@ try {
         await botjs.sendMSG(id, text, btns, false);
     }    
 } else if (user && user.lng && lng[user.lng] && user.status.indexOf('note_') > -1) {
-let login = user.status.split('_')[1];
+    let login = user.status.split('_')[1];
 let text = '';
 try {
-        let acc = await adb.getAccount(login);
+    await udb.updateUser(id, user.lng, user.status, 'note_sended', user.subscribes);    
+    let acc = await adb.getAccount(login);
         if (acc) {
             let wif = sjcl.decrypt(login + '_postingKey_readdle_bot', acc.posting_key);
             let data = {};
@@ -370,6 +371,7 @@ try {
             text = lng[user.lng].post_not_sended;
         }
         } catch(e) {
+            await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes);    
             console.log(e, JSON.stringify(e));
             text = lng[user.lng].post_not_sended;
         }
