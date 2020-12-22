@@ -472,26 +472,23 @@ text = lng[user.lng].award_sended;
 async function sendNotify(login, lang, id, bn, data) {
     let text = '';
     if (data.t && data.t === 'p' && !data.d.r && !data.d.s) {
-        text = `${lng[lang].type_publication}: ${data.d.t}
+        text = `<a href="https://readdle.me/dapp.html#viz://@${login}/${bn}/publication/">${lng[lang].type_publication}</a> ${lng[lang].from} ${login}.
+${lng[lang].publication_title}: ${data.d.t}
 
-        ${lng[lang].announcement}:
-${data.d.d}
-<a href="https://readdle.me/dapp.html#viz://@${login}/${bn}/publication/">${lng[lang].read}</a>`;
+${lng[lang].announcement}:
+${data.d.d}`;
     } else if (!data.t && !data.d.s && !data.d.r) {
-        text = `${lng[lang].type_note}:
-${data.d.text}
-<a href="https://readdle.me/dapp.html#viz://@${login}/${bn}">${lng[lang].read}</a>`;
+        text = `<a href="https://readdle.me/dapp.html#viz://@${login}/${bn}">${lng[lang].type_note}</a> ${lng[lang].from} ${login}. ${lng[lang].note_text}:
+
+${data.d.text}`;
 } else if (!data.t && !data.d.r && data.d.s) {
-    text = `${lng[lang].type_repost} <a href="https://readdle.me/dapp.html#${data.d.s}">${data.d.s}</a>:
+    text = `<a href="https://readdle.me/dapp.html#viz://@${login}/${bn}">${lng[lang].type_repost}</a> ${lng[lang].repost_post} <a href="https://readdle.me/dapp.html#${data.d.s}">${data.d.s}</a> ${lng[lang].from} ${login}:
 
-    ${data.d.text}
-    <a href="https://readdle.me/dapp.html#viz://@${login}/${bn}">${lng[lang].read}</a>`;
+${data.d.text}`;
 } else if (!data.t && !data.d.s && data.d.r) {
-    text = `${lng[lang].type_reply} ${login} ${lng[lang].type_reply2} <a href="https://readdle.me/dapp.html#${data.d.r}">${data.d.r}</a>:
+    text = `<a href="https://readdle.me/dapp.html#viz://@${login}/${bn}">${lng[lang].type_reply}</a> ${lng[lang].from} ${login} ${lng[lang].type_reply2} <a href="https://readdle.me/dapp.html#${data.d.r}">${data.d.r}</a>:
     
-    ${data.d.text}
-
-<a href="https://readdle.me/dapp.html#viz://@${login}/${bn}">${lng[lang].read}</a>`;
+    ${data.d.text}`;
 }
 let user = await udb.getUser(parseInt(id));
 if (user) {
