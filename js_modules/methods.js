@@ -30,6 +30,10 @@ let pk = '';
         return await viz.api.getAccountsAsync([login]);
         }
     
+async function getCustomProtocolAccount(account, custom_protocol_id) {
+return await viz.api.getAccountAsync(account, custom_protocol_id);
+}
+
 async function lookupAccounts(curr_acc) {
     return await viz.api.lookupAccountsAsync(curr_acc, 100);
 }
@@ -71,10 +75,21 @@ return {status: "ok", data: result};
     return active;    
     }
 
+async function sendJson(wif, login, id, json) {
+    return await viz.broadcast.customAsync(wif, [], [login], id, json);
+}
+
+async function award(wif, initiator, receiver, percent, memo) {
+var energy=percent * 100;
+var beneficiaries=[]
+return await viz.broadcast.awardAsync(wif,initiator,receiver,energy,0,memo,beneficiaries);
+}
+
 module.exports.getOpsInBlock = getOpsInBlock;
 module.exports.getProps = getProps;      
 module.exports.updateAccount = updateAccount;
 module.exports.getAccount = getAccount;
+module.exports.getCustomProtocolAccount = getCustomProtocolAccount;
 module.exports.lookupAccounts = lookupAccounts;
 module.exports.getAccounts = getAccounts;
 module.exports.send = send;
@@ -82,3 +97,5 @@ module.exports.wifToPublic = wifToPublic;
 module.exports.workerVote = workerVote;
 module.exports.verifyData = verifyData;
 module.exports.getSubscriptionStatus = getSubscriptionStatus;
+module.exports.sendJson = sendJson;
+module.exports.award = award;

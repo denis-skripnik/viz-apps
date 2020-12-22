@@ -35,7 +35,7 @@ replyMarkup = bot.keyboard([
 ], {resize: true});
 }
 var buttons = {
-    disable_web_page_preview: true,
+    webPreview: false,
     parseMode: 'Html',
     replyMarkup};
     return buttons;
