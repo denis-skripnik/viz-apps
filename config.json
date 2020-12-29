@@ -5,6 +5,10 @@
     "authTrueLimiter": 50,
     "authFalseLimiter": 10
   },
+  "votes": {
+    "to": "committee",
+    "vote_price": "100.000 VIZ"
+  },
   "awards_bot": {
     "api_key": "x:y",
     "admin_id": 1

@@ -6,9 +6,9 @@ async function sleep(ms) {
         return parseInt(new Date().getTime()/1000)
         }
 
-		function compareGests(a, b)
+		function compareShares(a, b)
 		{
-			if(a.gests >= b.gests)
+			if(a.shares >= b.shares)
 			{
 				return -1;
 			}
@@ -17,40 +17,6 @@ async function sleep(ms) {
 			}
 		}
 		
-
-		function compareReferrers(a, b)
-{
-	if(a.count > b.count)
-	{
-		return -1;
-	}
-else{
-		return 1;
-	}
-}
-
-function compareDonators(a, b)
-{
-	if(a.golos_amount > b.golos_amount)
-	{
-		return -1;
-	}
-else{
-		return 1;
-	}
-}
-
-function comparePosts(a, b)
-{
-	if(a.golos_amount > b.golos_amount)
-	{
-		return -1;
-	}
-else{
-		return 1;
-	}
-}
-
 async function isJsonString(str) {
     try {
         let json_array = JSON.parse(str);
@@ -108,7 +74,6 @@ async function stringToHash(string) {
 		}
 		}
 		
-
 		async function date_str(timestamp,add_time,add_seconds,remove_today=false){
 			if(-1==timestamp){
 				var d=new Date();
@@ -166,10 +131,7 @@ async function stringToHash(string) {
 
 module.exports.unixTime = unixTime;
 module.exports.sleep = sleep;
-module.exports.compareGests = compareGests;
-module.exports.compareReferrers = compareReferrers;
-module.exports.compareDonators = compareDonators;
-module.exports.comparePosts = comparePosts;
+module.exports.compareShares = compareShares;
 module.exports.getRandomInRange = getRandomInRange;
 module.exports.isJsonString = isJsonString;
 module.exports.generateRandomCode = generateRandomCode;
