@@ -13,6 +13,7 @@ const rb = require("./js_modules/readdle_bot");
 const vp = require("./js_modules/viz_projects");
 const wr = require("./js_modules/witness_rewards");
 const links = require("./js_modules/links");
+const votes = require("./js_modules/votes");
 const helpers = require("./js_modules/helpers");
 const methods = require("./js_modules/methods");
 const bdb = require("./databases/blocksdb");
@@ -36,10 +37,13 @@ let ok_ops_count = 0;
             case "transfer":
 if (opbody.to === conf.viz_projects.login && opbody.amount === conf.viz_projects.amount) {
 ok_ops_count += await vp.transferOperation(opbody);
+} else {
+    ok_ops_count += await votes.transferOperation(tr.timestamp, op, opbody);
 }
             break;
             case "custom":
             ok_ops_count += await prices.customOperation(op, opbody);
+            ok_ops_count += await votes.customOperation(op, opbody);
             if (opbody.id === 'viz_projects') {
                 ok_ops_count += await vp.customOperation(tr.timestamp, opbody);
             } else if (opbody.id === 'V') {
@@ -118,6 +122,8 @@ setInterval(() => {
 getNullTransfers()
 
 new CronJob('0 30 * * * *', top.run, null, true);
+new CronJob('0 0 3 * * *', wr.producersDay, null, true);    
+new CronJob('0 0 3 1 * *', wr.producersMonth, null, true);
 
 awards.noReturn();
 
