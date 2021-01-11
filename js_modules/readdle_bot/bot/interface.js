@@ -266,7 +266,7 @@ let subscribes = [];
         if (user && user.status) {
             status = user.status;
         }
-await udb.updateUser(id, message, status, lng[user.lng].home, subscribes);
+await udb.updateUser(id, message, status, lng[message].home, subscribes);
                     await botjs.sendMSG(id, text, btns, false);
                     await helpers.sleep(3000);
                   await main(id, lng[message].home, 1);
@@ -473,6 +473,7 @@ text = lng[user.lng].award_sended;
 }
 
 async function sendNotify(login, lang, id, bn, data) {
+try {
     let text = '';
     if (data.t && data.t === 'p' && !data.d.r && !data.d.s) {
         text = `<a href="https://readdle.me/dapp.html#viz://@${login}/${bn}/publication/">${lng[lang].type_publication}</a> ${lng[lang].from} ${login}.
@@ -498,6 +499,10 @@ if (user) {
     await udb.updateUser(id, user.lng, user.status, `notify_actions#viz://@${login}/${bn}`, user.subscribes);
     let btns = await keybord(lang, 'notify_buttons');
         await botjs.sendMSG(id, text, btns, true);
+}
+} catch(e) {
+    console.error(e);
+    console.error('Язык: ' + lang + ', id: ' + id);
 }
 }
 
