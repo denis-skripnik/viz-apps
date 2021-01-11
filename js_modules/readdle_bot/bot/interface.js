@@ -109,10 +109,10 @@ if (login !== sub) {
                 let text = '';
                 if (unsub_count > 0) {
     text = lng[user.lng].unsubscribed + sub;
-    await udb.updateUser(id, user.lng, user.status, 'unsubscribed', subscriptions);
+    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, subscriptions);
 } else {
     text = lng[user.lng].not_subscription + sub;
-    await udb.updateUser(id, user.lng, user.status, 'not_subscription', user.subscribes);
+    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes);
 }
 let btns = await keybord(user.lng, 'home');
 await botjs.sendMSG(id, text, btns, false);
@@ -266,7 +266,7 @@ let subscribes = [];
         if (user && user.status) {
             status = user.status;
         }
-await udb.updateUser(id, message, status, 'selected_language', subscribes);
+await udb.updateUser(id, message, status, lng[user.lng].home, subscribes);
                     await botjs.sendMSG(id, text, btns, false);
                     await helpers.sleep(3000);
                   await main(id, lng[message].home, 1);
@@ -315,7 +315,7 @@ await botjs.sendMSG(id, text, btns, false);
     await main(id, lng[user.lng].change_posting + '@' + login, status);
 }
 } catch(e) {
-    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home);
+    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes);
     text = lng[user.lng].posting_not_valid;
     btns = await keybord(user.lng, 'home');
     await botjs.sendMSG(id, text, btns, false);
@@ -333,7 +333,7 @@ try {
     console.log(JSON.stringify(posting_public_keys), public_wif);
     if (posting_public_keys.indexOf(public_wif) > -1) {
     await adb.updateAccount(id, login, sjcl.encrypt(login + '_postingKey_readdle_bot', message));
-                            await udb.updateUser(id, user.lng, user.status, 'added_posting_key', user.subscribes);
+                            await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes);
                             text = lng[user.lng].saved_posting_key + login;
     btns = await keybord(user.lng, 'home');
     await botjs.sendMSG(id, text, btns, false);
@@ -356,7 +356,7 @@ try {
     let login = user.status.split('_')[1];
 let text = '';
 try {
-    await udb.updateUser(id, user.lng, user.status, 'note_sended', user.subscribes);    
+    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes);    
     let acc = await adb.getAccount(login);
         if (acc) {
             let wif = sjcl.decrypt(login + '_postingKey_readdle_bot', acc.posting_key);
@@ -427,7 +427,7 @@ login += ' @' + user.status.split('_')[2];
 console.log('Результат: ' + JSON.stringify(res));
 }
     }                        
-    await udb.updateUser(id, user.lng, user.status, 'delet_account', user.subscribes);
+    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes);
     let btns = await keybord(user.lng, 'home');
     await botjs.sendMSG(id, text, btns, false);
     await helpers.sleep(3000);
@@ -437,13 +437,16 @@ console.log('Результат: ' + JSON.stringify(res));
         let text = '';
         if (get_account && get_account.length > 0) {
                         let subscribes = user.subscribes;
+                        if (!subscribes) {
+                            subscribes = [];
+                        }
                         if (subscribes.indexOf(message) === -1) {
                             subscribes.push(message);
                         }
             text = lng[user.lng].subscription_added;
-            await udb.updateUser(id, user.lng, user.status, 'added_subscription', subscribes);
+            await udb.updateUser(id, user.lng, user.status, lng[user.lng].subscribes, subscribes);
         } else {
-            await udb.updateUser(id, user.lng, user.status, 'not_account', user.subscribes);
+            await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes);
             text = lng[user.lng].not_account;
         }
         let btns = await keybord(user.lng, 'home');
@@ -458,10 +461,10 @@ let text = '';
 try {
     await methods.award(wif, data.login, receiver, parseFloat(message), link);
 text = lng[user.lng].award_sended;
-                await udb.updateUser(id, user.lng, user.status, 'sended_award', user.subscribes);
+                await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes);
 } catch(e) {
     text = lng[user.lng].award_error + e;
-    await udb.updateUser(id, user.lng, user.status, 'not_sended_award', user.subscribes);
+    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes);
 }
         let btns = await keybord(user.lng, 'home');
         await botjs.sendMSG(id, text, btns, false);
@@ -480,15 +483,15 @@ ${data.d.d}`;
     } else if (!data.t && !data.d.s && !data.d.r) {
         text = `<a href="https://readdle.me/dapp.html#viz://@${login}/${bn}">${lng[lang].type_note}</a> ${lng[lang].from} ${login}. ${lng[lang].note_text}:
 
-${data.d.text}`;
+${data.d.text.substring(0, 400)}`;
 } else if (!data.t && !data.d.r && data.d.s) {
     text = `<a href="https://readdle.me/dapp.html#viz://@${login}/${bn}">${lng[lang].type_repost}</a> ${lng[lang].repost_post} <a href="https://readdle.me/dapp.html#${data.d.s}">${data.d.s}</a> ${lng[lang].from} ${login}:
 
-${data.d.text}`;
+${data.d.text.substring(0, 400)}`;
 } else if (!data.t && !data.d.s && data.d.r) {
     text = `<a href="https://readdle.me/dapp.html#viz://@${login}/${bn}">${lng[lang].type_reply}</a> ${lng[lang].from} ${login} ${lng[lang].type_reply2} <a href="https://readdle.me/dapp.html#${data.d.r}">${data.d.r}</a>:
     
-    ${data.d.text}`;
+    ${data.d.text.substring(0, 400)}`;
 }
 let user = await udb.getUser(parseInt(id));
 if (user) {
