@@ -40,8 +40,10 @@ async function keybord(btn_list, inline) {
 
 async function sendMSG(userId, text, buttons, inline) {
     try {
-    let options = await keybord(buttons, inline);
+    if (text && text !== '') {
+        let options = await keybord(buttons, inline);
         await bot.sendMessage(userId, text, options);
+    }
     } catch(error) {
         console.log('Ошибка с отправкой сообщения: ' + JSON.stringify(error));
         if (error.error_code !== 403) {
