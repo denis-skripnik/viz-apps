@@ -16,7 +16,7 @@ if (variant === 'lng') {
         buttons = [["English", "Русский"]];
     } else if (variant === 'home') {
         buttons = [[lng[lang].subscribes, lng[lang].accounts], [lng[lang].help, lng[lang].lang]];
-    } else if (variant.indexOf('@') > -1 && variant.indexOf('accounts_buttons') === -1) {
+    } else if (variant.indexOf('@') > -1 && variant.indexOf('accounts_buttons') === -1 && variant.indexOf('notify_buttons#') === -1) {
         let login = variant.split('@')[1];
         buttons = [[lng[lang].change_posting, lng[lang].publish], [lng[lang].delete, lng[lang].back, lng[lang].home]];
     } else if (variant.indexOf('accounts_buttons') > -1) {
@@ -29,8 +29,9 @@ if (variant === 'lng') {
         buttons = [[lng[lang].add_account, lng[lang].back, lng[lang].home]];
     }     else if (variant === 'publish') {
         buttons = [[lng[lang].note, lng[lang].post], [lng[lang].back, lng[lang].home]];
-    }     else if (variant === 'notify_buttons') {
-        buttons = [[lng[lang].award]];
+    }     else if (variant.indexOf('notify_buttons#') > -1) {
+        let post = variant.split('#')[1];
+        buttons = [[[lng[lang].award + ' ' + post, lng[lang].award]]];
     }     else if (variant === 'back') {
     buttons = [[lng[lang].back, lng[lang].home]];
 }     else if (variant === 'cancel') {
@@ -135,13 +136,13 @@ for (let acc of accs) {
 if (!buttons[key]) {
 buttons[key] = [];
 }
-buttons[key].push(`@${acc.login}`);
+buttons[key].push([`@${acc.login}`, `@${acc.login}`]);
 if (n % 2 == 0) {
 key++;
 }
 n++;
 }
-                                                                                        buttons.push([lng[user.lng].add_account, lng[user.lng].home])
+                                                                                        buttons.push([[lng[user.lng].add_account, lng[user.lng].add_account], [lng[user.lng].home, lng[user.lng].home]])
 text = lng[user.lng].select_account;
 btns = await keybord(user.lng, 'accounts_buttons' + JSON.stringify(buttons));
 await botjs.sendMSG(id, text, btns, true);
@@ -160,7 +161,7 @@ await botjs.sendMSG(id, text, btns, true);
                                                                             let text = lng[user.lng].delete_conferm + login;
                                                     let btns = await keybord(user.lng, 'conferm');
                                                     await botjs.sendMSG(id, text, btns, false);
-                                                } else if (message.indexOf('@') > -1 && message.indexOf(lng[user.lng].news) === -1 && user.status.indexOf('publish_') === -1 && user.status.indexOf('postcontent') === -1 && user.status.indexOf('note_') === -1) {
+                                                } else if (message.indexOf('@') > -1 && message.indexOf(lng[user.lng].news) === -1 && message.indexOf(lng[user.lng].award) === -1 && user.status.indexOf('publish_') === -1 && user.status.indexOf('postcontent') === -1 && user.status.indexOf('note_') === -1) {
                                                     let acc = await adb.getAccount(message.split('@')[1]);
 if (acc && acc.id === id) {
     let text = lng[user.lng].change_account + message;
@@ -211,8 +212,8 @@ if (acc && acc.id === id) {
                                                                                             let btns = await keybord(user.lng, 'cancel');
                                                                                             await udb.updateUser(id, user.lng, user.status, 'post_' + login, user.subscribes);
                                                                                         await botjs.sendMSG(id, text, btns, false);
-                                                                                    } else if (user && user.lng && message.indexOf(lng[user.lng].award) > -1 && user.status.indexOf('notify_actions#') > -1) {
-let link = user.status.split('#')[1];
+                                                                                    } else if (user && user.lng && message.indexOf(lng[user.lng].award) > -1) {
+let link = message.split(' ')[1];
 let accs = await adb.getAccounts(id);
 let text = '';
 let btns;
@@ -496,8 +497,8 @@ ${data.d.text.substring(0, 400)}`;
 }
 let user = await udb.getUser(parseInt(id));
 if (user) {
-    await udb.updateUser(id, user.lng, user.status, `notify_actions#viz://@${login}/${bn}`, user.subscribes);
-    let btns = await keybord(lang, 'notify_buttons');
+    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes);
+    let btns = await keybord(lang, `notify_buttons#viz://@${login}/${bn}`);
         await botjs.sendMSG(id, text, btns, true);
 }
 } catch(e) {
