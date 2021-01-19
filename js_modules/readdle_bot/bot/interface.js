@@ -507,5 +507,28 @@ if (user) {
 }
 }
 
+async function sendReply(id, text, link) {
+    let user = await udb.getUser(id);
+if (user) {
+    let message = lng[user.lng].reply_not_sended
+    let accs = await adb.getAccounts(id);
+    if (accs && accs.length > 0) {
+        let acc = accs[0];
+        let wif = sjcl.decrypt(acc.login + '_postingKey_readdle_bot', acc.posting_key);
+        let data = {};
+        let custom_data = await methods.getCustomProtocolAccount(acc.login, 'V');
+        data.p =         custom_data.custom_sequence_block_num;
+        data.d = {};
+                data.d.text = text;
+data.d.r = link + '/';
+                await methods.sendJson(wif, acc.login, 'V', JSON.stringify(data));
+                message = lng[user.lng].sended_reply;
+            }
+            let btns = await keybord(user.lng, 'home');
+            await botjs.sendMSG(id, message, btns, false);
+        }
+}
+
 module.exports.main = main;
 module.exports.sendNotify = sendNotify;
+module.exports.sendReply = sendReply;

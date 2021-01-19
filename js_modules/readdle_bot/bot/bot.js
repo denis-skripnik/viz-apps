@@ -56,7 +56,18 @@ async function allCommands() {
     try {
     bot.on('text', async (msg) => {
         var uid = await ids(msg.from.id);
+        if (msg.reply_to_message) {
+            let entities = msg.reply_to_message.entities;
+            if (entities && entities.length > 0) {
+let el = entities[0];
+                    if (el.type === 'text_link') {
+    let link = el.url.split('#')[1];
+    await i.sendReply(uid.id, msg.text, link);
+}
+                        }
+        } else {
             await i.main(uid.id, msg.text, uid.status);
+        }
     });
 
     bot.on('callbackQuery', async (msg) => {
