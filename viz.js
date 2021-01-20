@@ -44,7 +44,7 @@ ok_ops_count += await vp.transferOperation(opbody);
             case "custom":
             ok_ops_count += await prices.customOperation(op, opbody);
             ok_ops_count += await votes.customOperation(op, opbody);
-            if (opbody.id === 'viz_projects') {
+            if (opbody.id === 'viz-projects') {
                 ok_ops_count += await vp.customOperation(tr.timestamp, opbody);
             } else if (opbody.id === 'V') {
                 ok_ops_count += await rb.notify(opbody.required_regular_auths[0], bn, JSON.parse(opbody.json));

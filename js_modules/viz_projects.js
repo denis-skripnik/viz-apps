@@ -53,7 +53,7 @@ if (u_prj && opbody.required_regular_auths[0] === u_prj.creator) {
         let a_tsk_m = await tdb.getTask(data.creator, data.name);
         if (a_tsk_m) {
             let mambers = a_tsk_m.mambers;
-            if (mambers.length < 10) {
+            if (mambers.length < 10 && mambers.indexOf(opbody.required_regular_auths[0]) === -1) {
                 mambers.push(opbody.required_regular_auths[0]);
                 await tdb.updateTask(data.creator, a_tsk_m.name, a_tsk_m.name, a_tsk_m.description, mambers, a_tsk_m.status);
             }
