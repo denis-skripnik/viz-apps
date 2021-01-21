@@ -10,6 +10,10 @@ async function getOpsInBlock(bn) {
       return await viz.api.getDynamicGlobalPropertiesAsync();
       }
 
+      async function getConfig() {
+        return await viz.api.getConfigAsync();
+        }
+  
       async function updateAccount(service) {
 let test_user = '';
 let pk = '';
@@ -87,6 +91,7 @@ return await viz.broadcast.awardAsync(wif,initiator,receiver,energy,0,memo,benef
 
 module.exports.getOpsInBlock = getOpsInBlock;
 module.exports.getProps = getProps;      
+module.exports.getConfig = getConfig;
 module.exports.updateAccount = updateAccount;
 module.exports.getAccount = getAccount;
 module.exports.getCustomProtocolAccount = getCustomProtocolAccount;

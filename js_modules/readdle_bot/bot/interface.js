@@ -222,7 +222,22 @@ if (accs && accs.length > 0) {
     let get_account = await methods.getAccount(account.login);
 if (get_account && get_account.length > 0) {
     let acc = get_account[0];
-text = lng[user.lng].type_award + acc.energy / 100 + '%';
+let config_mass = await methods.getConfig();
+let props = await methods.getProps();
+let last_vote_time = acc.last_vote_time;
+    let current_time = new Date(props.time).getTime();
+    let last_vote_seconds = new Date(last_vote_time).getTime();
+    let fastpower = 10000 / config_mass.CHAIN_ENERGY_REGENERATION_SECONDS;
+     let volume_not = (acc.energy + ((current_time-last_vote_seconds)/1000)* fastpower)/100; //расчет текущей Voting Power
+    volume = volume_not.toFixed(2); // Округление до двух знаков после запятой
+     let charge = 0;
+    if (volume>=100) {
+    charge = 100;
+    }
+    else {
+        charge=volume;
+    }
+           text = lng[user.lng].type_award + charge + '%';
 btns = await keybord(user.lng, 'cancel');
 let award_data = {};
 award_data.login = account.login;
