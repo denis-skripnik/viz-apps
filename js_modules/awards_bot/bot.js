@@ -69,6 +69,7 @@ replyMarkup = bot.keyboard([
     }
 
     async function sendMSG(userId, text, type, lang) {
+        await new Promise(r => setTimeout(r, 50));
         try {
         if (lang === 'Ru') {
 let keybord = await ru_keybord(type);

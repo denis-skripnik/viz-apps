@@ -39,6 +39,7 @@ async function keybord(btn_list, inline) {
     }
 
 async function sendMSG(userId, text, buttons, inline) {
+    await new Promise(r => setTimeout(r, 50));
     try {
     if (text && text !== '') {
         let options = await keybord(buttons, inline);
