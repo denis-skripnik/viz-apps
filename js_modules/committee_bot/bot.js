@@ -343,7 +343,7 @@ async function nullSupportCommand() {
                 bot.on('text', async (msg) => {
         var fromId = msg.from.id;
         var username = msg.from.username;
-        
+        if (msg.text === 'Поддержка') return;
         const user = await udb.getUser(fromId);
 switch(user.state) {
 case 1:
