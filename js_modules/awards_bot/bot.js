@@ -254,7 +254,7 @@ bot.on(/about|^О боте/i, async function (msg, match) {
 Это бот, который уведомляет о наградах и бенефициарских пользователям, на которых вы подписаны.
 Награда (award) - операция в VIZ. Позволяет награждать кого угодно за что угодно.
 Бенефициары (beneficiaries), Бенефициарская награда (benefactor_award) - это вознаграждение тем, кого указал отправитель награды помимо получателя.
-Автором бота является незрячий программист @skripnikdenis. На Viz логин https://info.viz.plus/accounts/denis-skripnik.
+Автором бота является незрячий программист @denis_skripnik. На Viz логин https://info.viz.plus/accounts/denis-skripnik.
 Помимо этого бота есть и другие:
 @viz_committee_bot - уведомляет о заявках в комитете,
 <a href="https://dpos.space/viz/awards">Форма для отправки наград</a>
@@ -268,7 +268,7 @@ This is a bot that notifies you about awards and beneficiaries received by users
 Award is an operation in VIZ. Allows you to award anyone for anything.
 The beneficiaries get benefactor_award – it is an award to those indicated by the sender of the award besides the recipient.
 
-The author of the bot is a blind programmer @skripnikdenis. His Viz login is https://info.viz.plus/accounts/denis-skripnik.
+The author of the bot is a blind programmer @denis_skripnik. His Viz login is https://info.viz.plus/accounts/denis-skripnik.
 In addition to this bot, there are a couple of others:
 @viz_committee_bot – notifies of requests in the committee,
 <a href="https://viz.dpos.space/awards/en/form.html">Form for awards</a>
