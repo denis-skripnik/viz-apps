@@ -16,7 +16,7 @@
     "posting_not_found": "Regular key not found in the list of account keys or node connection error. Please check and try again.",
     "account_not_add": "Account not added to the database of the bot.",
     "posting_not_valid": "regular key has not a valid format.",
-    "account_list_is_empty": "no Accounts.",
+    "account_list_is_empty": "no Accounts (<a href=\"https://start.viz.plus\">Регистрация</a>).",
     "change_account": "Select what you want to change the account ",
     "on": "Yes",
     "off": "No",
