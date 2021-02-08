@@ -492,21 +492,21 @@ async function sendNotify(login, lang, id, bn, data) {
 try {
     let text = '';
     if (data.t && data.t === 'p' && !data.d.r && !data.d.s) {
-        text = `<a href="https://readdle.me/dapp.html#viz://@${login}/${bn}/publication/">${lng[lang].type_publication}</a> ${lng[lang].from} ${login}.
+        text = `<a href="https://readdle.me/#viz://@${login}/${bn}/publication/">${lng[lang].type_publication}</a> ${lng[lang].from} ${login}.
 ${lng[lang].publication_title}: ${data.d.t}
 
 ${lng[lang].announcement}:
 ${data.d.d}`;
     } else if (!data.t && !data.d.s && !data.d.r) {
-        text = `<a href="https://readdle.me/dapp.html#viz://@${login}/${bn}">${lng[lang].type_note}</a> ${lng[lang].from} ${login}. ${lng[lang].note_text}:
+        text = `<a href="https://readdle.me/#viz://@${login}/${bn}">${lng[lang].type_note}</a> ${lng[lang].from} ${login}. ${lng[lang].note_text}:
 
 ${data.d.text.substring(0, 400)}`;
 } else if (!data.t && !data.d.r && data.d.s) {
-    text = `<a href="https://readdle.me/dapp.html#viz://@${login}/${bn}">${lng[lang].type_repost}</a> ${lng[lang].repost_post} <a href="https://readdle.me/dapp.html#${data.d.s}">${data.d.s}</a> ${lng[lang].from} ${login}:
+    text = `<a href="https://readdle.me/#viz://@${login}/${bn}">${lng[lang].type_repost}</a> ${lng[lang].repost_post} <a href="https://readdle.me/#${data.d.s}">${data.d.s}</a> ${lng[lang].from} ${login}:
 
 ${data.d.text.substring(0, 400)}`;
 } else if (!data.t && !data.d.s && data.d.r) {
-    text = `<a href="https://readdle.me/dapp.html#viz://@${login}/${bn}">${lng[lang].type_reply}</a> ${lng[lang].from} ${login} ${lng[lang].type_reply2} <a href="https://readdle.me/dapp.html#${data.d.r}">${data.d.r}</a>:
+    text = `<a href="https://readdle.me/#viz://@${login}/${bn}">${lng[lang].type_reply}</a> ${lng[lang].from} ${login} ${lng[lang].type_reply2} <a href="https://readdle.me/#${data.d.r}">${data.d.r}</a>:
     
     ${data.d.text.substring(0, 400)}`;
 }
