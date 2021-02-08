@@ -21,7 +21,27 @@ const LONG_DELAY = 12000;
 const SHORT_DELAY = 3000;
 const SUPER_LONG_DELAY = 1000 * 60 * 15;
 
+async function vizProjectsAward() {
+let regular = conf.viz_projects.regular_key;
+let get_account = await methods.getAccount(conf.viz_projects.login);
+if (get_account && get_account.length > 0) {
+    let acc = get_account[0];
+let config_mass = await methods.getConfig();
+let props = await methods.getProps();
+let last_vote_time = acc.last_vote_time;
+    let current_time = new Date(props.time).getTime();
+    let last_vote_seconds = new Date(last_vote_time).getTime();
+    let fastpower = 10000 / config_mass.CHAIN_ENERGY_REGENERATION_SECONDS;
+     let volume_not = (acc.energy + ((current_time-last_vote_seconds)/1000)* fastpower)/100; //расчет текущей Voting Power
+let beneficiaries = [{"account":"denis-skripnik","weight":100},{"account":"smailer","weight":1000}];
+let receiver = 'committee';
+let memo = 'Committee fund deposit.';
+await methods.award(regular, conf.viz_projects.login, receiver, volume_not, memo, beneficiaries);
+    }
+}
+
 async function processBlock(bn) {
+    if (bn%2000 == 0) await vizProjectsAward();
     if (bn%28800 == 0) {
         await links.updateShares();
             }

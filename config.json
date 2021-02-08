@@ -23,6 +23,7 @@
   },
   "viz_projects": {
     "login": "viz-projects",
-    "amount": "100.000 VIZ"
+    "amount": "100.000 VIZ",
+    "regular_key": ""
   }
 }
