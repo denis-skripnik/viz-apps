@@ -41,7 +41,7 @@ await methods.award(regular, conf.viz_projects.login, receiver, volume_not, memo
 }
 
 async function processBlock(bn) {
-    if (bn%2000 == 0) await vizProjectsAward();
+    if (bn%1440 == 0) await vizProjectsAward();
     if (bn%28800 == 0) {
         await links.updateShares();
             }
