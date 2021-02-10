@@ -12,12 +12,14 @@ if (users && users.length > 0) {
 		var ffl = 0;
 		var jarr = [data.d.m, data.d.d, data.d.text].join(' ');
 		var regex = /@[A-Z,a-z,.,0-9,\-,_]+/g;
-		if(jarr.length > 2 && user.subscribes && jarr.match(regex))
-		jarr.match(regex).forEach(function (element) {if (user.subscribes.indexOf(element.substr(1)) > -1) ffl = 1;});
-		
-		if (user.subscribes && user.subscribes.indexOf(login) > -1 || user.subscribes && user.subscribes.length === 0 || data.d.r&& user.subscribes && user.subscribes.indexOf(data.d.r.split('@')[1].split('/')[0]) > -1 || ffl == 1) {
-					await i.sendNotify(login, user.lng, user.id, bn, data);
-		}
+if (jarr.indexOf('#nsfw') === -1 || jarr.indexOf('#nsfw') > -1 && user.show_nsfw == true) {
+	if(jarr.length > 2 && user.subscribes && jarr.match(regex))
+	jarr.match(regex).forEach(function (element) {if (user.subscribes.indexOf(element.substr(1)) > -1) ffl = 1;});
+	
+			if (user.subscribes && user.subscribes.indexOf(login) > -1 || user.subscribes && user.subscribes.length === 0 && user.show_all == true || data.d.r&& user.subscribes && user.subscribes.indexOf(data.d.r.split('@')[1].split('/')[0]) > -1 || ffl == 1) {
+				await i.sendNotify(login, user.lng, user.id, bn, data);
+	}
+} // end if #nsfw.
 	}
 }
 }
