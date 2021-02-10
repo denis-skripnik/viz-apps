@@ -15,7 +15,14 @@ async function keybord(lang, variant) {
 if (variant === 'lng') {
         buttons = [["English", "Русский"]];
     } else if (variant === 'home') {
-        buttons = [[lng[lang].subscribes, lng[lang].accounts], [lng[lang].help, lng[lang].lang]];
+        buttons = [[lng[lang].settings, lng[lang].help, lng[lang].lang]];
+    } else if (variant.indexOf('settings') > -1) {
+        let params = JSON.parse(variant.split('settings')[1]);
+        let show_all = '◾ ';
+        let show_nsfw = '◾ ';
+        if (params[0] == true) show_all = '✅ ';
+        if (params[1] == true) show_nsfw = '✅ ';
+        buttons = [[lng[lang].subscribes, lng[lang].accounts], [show_all + lng[lang].show_all, show_nsfw + lng[lang].show_nsfw], [lng[lang].back, lng[lang].home]];
     } else if (variant.indexOf('@') > -1 && variant.indexOf('accounts_buttons') === -1 && variant.indexOf('notify_buttons#') === -1) {
         let login = variant.split('@')[1];
         buttons = [[lng[lang].change_posting, lng[lang].publish], [lng[lang].delete, lng[lang].back, lng[lang].home]];
@@ -44,12 +51,14 @@ if (variant === 'lng') {
 async function main(id, message, status) {
     let user = await udb.getUser(id);
     if (!user) {
-        await udb.addUser(id, '', '', 'start', []);
+        await udb.addUser(id, '', '', 'start', [], true, true);
     } else {
-            if (user.status === message) {
-                await udb.updateUser(id, user.lng, user.prev_status, message, user.subscribes);
+        if (user.show_nsfw == undefined) user.show_nsfw = true;
+        if (user.show_all == undefined) user.show_all = true;
+        if (user.status === message) {
+                await udb.updateUser(id, user.lng, user.prev_status, message, user.subscribes, user.show_nsfw, user.show_all);
             } else {
-                await udb.updateUser(id, user.lng, user.status, message, user.subscribes);
+                await udb.updateUser(id, user.lng, user.status, message, user.subscribes, user.show_nsfw, user.show_all);
             }
     }
 
@@ -75,6 +84,36 @@ await botjs.sendMSG(id, text, btns, false);
         let text = lng[user.lng].home_message;
         let btns = await keybord(user.lng, 'home');
         await botjs.sendMSG(id, text, btns, false);        
+    } else if (user && user.lng && message.indexOf(lng[user.lng].settings) > -1 && message.indexOf(lng[user.lng].news) === -1 && message.indexOf(lng[user.lng].award) === -1 && user.status.indexOf('publish_') === -1 && user.status.indexOf('postcontent') === -1 && user.status.indexOf('note_') === -1) {
+        let text = lng[user.lng].settings_text;
+                let btns = await keybord(user.lng, 'settings' + JSON.stringify([user.show_all, user.show_nsfw]));
+        await botjs.sendMSG(id, text, btns, false);        
+    } else if (user && user.lng && message.indexOf(lng[user.lng].show_all) > -1) {
+        let text = lng[user.lng].show_all_no_change;
+        let btns = await keybord(user.lng, 'settings' + JSON.stringify([user.show_all, user.show_nsfw]));
+        if (user.show_all == true) {
+            await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, user.show_nsfw, false);
+            text = lng[user.lng].show_all_false;
+            btns = await keybord(user.lng, 'settings' + JSON.stringify([false, user.show_nsfw]));
+        } else {
+            await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, user.show_nsfw, true);
+            text = lng[user.lng].show_all_true;
+            btns = await keybord(user.lng, 'settings' + JSON.stringify([true, user.show_nsfw]));
+        }
+        await botjs.sendMSG(id, text, btns, false);        
+    } else if (user && user.lng && message.indexOf(lng[user.lng].show_nsfw) > -1) {
+        let text = lng[user.lng].show_nsfw_no_change;
+        let btns = await keybord(user.lng, 'settings' + JSON.stringify([user.show_all, user.show_nsfw]));
+        if (user.show_nsfw == true) {
+            await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, false, user.show_all);
+            text = lng[user.lng].show_nsfw_false;
+            btns = await keybord(user.lng, 'settings' + JSON.stringify([user.show_all, false]));
+        } else {
+            await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, true, user.show_all);
+            text = lng[user.lng].show_nsfw_true;
+            btns = await keybord(user.lng, 'settings' + JSON.stringify([user.show_all, true]));
+        }
+        await botjs.sendMSG(id, text, btns, false);
     } else if (user && user.lng && message.indexOf(lng[user.lng].add_subscription) > -1) {
         let text = lng[user.lng].enter_login;
         let btns = await keybord(user.lng, 'cancel');
@@ -110,10 +149,10 @@ if (login !== sub) {
                 let text = '';
                 if (unsub_count > 0) {
     text = lng[user.lng].unsubscribed + sub;
-    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, subscriptions);
+    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, subscriptions, user.show_nsfw, user.show_all);
 } else {
     text = lng[user.lng].not_subscription + sub;
-    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes);
+    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, user.show_nsfw, user.show_all);
 }
 let btns = await keybord(user.lng, 'home');
 await botjs.sendMSG(id, text, btns, false);
@@ -157,7 +196,7 @@ await botjs.sendMSG(id, text, btns, true);
                                                                             if (message.split('@')[2]) {
                                                                                 login += '@' + message.split('@')[2];
                                                                                     }
-                                                                            await udb.updateUser(id, user.lng, user.status, 'delete_' + login, user.subscribes);
+                                                                            await udb.updateUser(id, user.lng, user.status, 'delete_' + login, user.subscribes, user.show_nsfw, user.show_all);
                                                                             let text = lng[user.lng].delete_conferm + login;
                                                     let btns = await keybord(user.lng, 'conferm');
                                                     await botjs.sendMSG(id, text, btns, false);
@@ -183,9 +222,9 @@ if (acc && acc.id === id) {
                                                                                         }
                                                                                             text = lng[user.lng].type_posting;
                                                                                             btns = await keybord(user.lng, 'cancel');
-                                                                                            await udb.updateUser(id, user.lng, user.status, 'changed_posting_' + login + '_' + JSON.stringify(posting_public_keys), user.subscribes);
+                                                                                            await udb.updateUser(id, user.lng, user.status, 'changed_posting_' + login + '_' + JSON.stringify(posting_public_keys), user.subscribes, user.show_nsfw, user.show_all);
                                                                                         } else {
-                                                                                            await udb.updateUser(id, user.lng, user.status, 'change_account', user.subscribes);
+                                                                                            await udb.updateUser(id, user.lng, user.status, 'change_account', user.subscribes, user.show_nsfw, user.show_all);
                                                                                             text = lng[user.lng].not_account;
                                                                                             btns = await keybord(user.lng, 'home');
                                                                                         }
@@ -198,19 +237,19 @@ if (acc && acc.id === id) {
                                                                                         let login = user.status.split('@')[1];
                                                                                             let text = lng[user.lng].select_publish_type;
                                                                                             let btns = await keybord(user.lng, 'publish');
-                                                                                            await udb.updateUser(id, user.lng, user.status, 'publish_@' + login, user.subscribes);
+                                                                                            await udb.updateUser(id, user.lng, user.status, 'publish_@' + login, user.subscribes, user.show_nsfw, user.show_all);
                                                                                         await botjs.sendMSG(id, text, btns, false);
                                                                                     } else if (user && user.lng && message === lng[user.lng].note && user.status.indexOf('@') > -1) {
                                                                                         let login = user.status.split('@')[1];
                                                                                             let text = lng[user.lng].type_post;
                                                                                             let btns = await keybord(user.lng, 'cancel');
-                                                                                            await udb.updateUser(id, user.lng, user.status, 'note_' + login, user.subscribes);
+                                                                                            await udb.updateUser(id, user.lng, user.status, 'note_' + login, user.subscribes, user.show_nsfw, user.show_all);
                                                                                         await botjs.sendMSG(id, text, btns, false);
                                                                                     } else if (user && user.lng && message === lng[user.lng].post && user.status.indexOf('@') > -1) {
                                                                                         let login = user.status.split('@')[1];
                                                                                             let text = lng[user.lng].title;
                                                                                             let btns = await keybord(user.lng, 'cancel');
-                                                                                            await udb.updateUser(id, user.lng, user.status, 'post_' + login, user.subscribes);
+                                                                                            await udb.updateUser(id, user.lng, user.status, 'post_' + login, user.subscribes, user.show_nsfw, user.show_all);
                                                                                         await botjs.sendMSG(id, text, btns, false);
                                                                                     } else if (user && user.lng && message.indexOf(lng[user.lng].award) > -1) {
 let link = message.split(' ')[1];
@@ -243,7 +282,7 @@ let award_data = {};
 award_data.login = account.login;
 award_data.posting_key = account.posting_key;
 award_data.link = link;
-await udb.updateUser(id, user.lng, user.status, 'awarding_' + JSON.stringify(award_data), user.subscribes);
+await udb.updateUser(id, user.lng, user.status, 'awarding_' + JSON.stringify(award_data), user.subscribes, user.show_nsfw, user.show_all);
 } else {
     text = lng[user.lng].not_connection;
     btns = await keybord(user.lng, 'back');
@@ -282,7 +321,7 @@ let subscribes = [];
         if (user && user.status) {
             status = user.status;
         }
-await udb.updateUser(id, message, status, lng[message].home, subscribes);
+await udb.updateUser(id, message, status, lng[message].home, subscribes, user.show_nsfw, user.show_all);
                     await botjs.sendMSG(id, text, btns, false);
                     await helpers.sleep(3000);
                   await main(id, lng[message].home, 1);
@@ -301,9 +340,9 @@ posting_public_keys.push(key[0]);
 }
     text = lng[user.lng].type_posting;
     btns = await keybord(user.lng, 'cancel');
-    await udb.updateUser(id, user.lng, user.status, 'login_' + message + '_' + JSON.stringify(posting_public_keys), user.subscribes);
+    await udb.updateUser(id, user.lng, user.status, 'login_' + message + '_' + JSON.stringify(posting_public_keys), user.subscribes, user.show_nsfw, user.show_all);
 } else {
-    await udb.updateUser(id, user.lng, user.status, 'add_account', user.subscribes);
+    await udb.updateUser(id, user.lng, user.status, 'add_account', user.subscribes, user.show_nsfw, user.show_all);
     text = lng[user.lng].not_account;
     btns = await keybord(user.lng, 'home');
 }
@@ -318,12 +357,12 @@ const public_wif = await methods.wifToPublic(message);
 console.log(JSON.stringify(posting_public_keys), public_wif);
 if (posting_public_keys.indexOf(public_wif) > -1) {
 await adb.updateAccount(id, login, sjcl.encrypt(login + '_postingKey_readdle_bot', message));
-await udb.updateUser(id, user.lng, user.status, 'posting_' + login, user.subscribes);
+await udb.updateUser(id, user.lng, user.status, 'posting_' + login, user.subscribes, user.show_nsfw, user.show_all);
 text = lng[user.lng].saved_true;
 btns = await keybord(user.lng, 'home');
 await botjs.sendMSG(id, text, btns, false);
 } else {
-    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes);
+    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, user.show_nsfw, user.show_all);
     text = lng[user.lng].posting_not_found;
     btns = await keybord(user.lng, 'home');
     await botjs.sendMSG(id, text, btns, false);
@@ -331,7 +370,7 @@ await botjs.sendMSG(id, text, btns, false);
     await main(id, lng[user.lng].change_posting + '@' + login, status);
 }
 } catch(e) {
-    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes);
+    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, user.show_nsfw, user.show_all);
     text = lng[user.lng].posting_not_valid;
     btns = await keybord(user.lng, 'home');
     await botjs.sendMSG(id, text, btns, false);
@@ -349,12 +388,12 @@ try {
     console.log(JSON.stringify(posting_public_keys), public_wif);
     if (posting_public_keys.indexOf(public_wif) > -1) {
     await adb.updateAccount(id, login, sjcl.encrypt(login + '_postingKey_readdle_bot', message));
-                            await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes);
+                            await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, user.show_nsfw, user.show_all);
                             text = lng[user.lng].saved_posting_key + login;
     btns = await keybord(user.lng, 'home');
     await botjs.sendMSG(id, text, btns, false);
 } else {
-    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes);
+    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, user.show_nsfw, user.show_all);
     text = lng[user.lng].posting_not_found;
     btns = await keybord(user.lng, 'home');
     await botjs.sendMSG(id, text, btns, false);
@@ -362,7 +401,7 @@ try {
     await main(id, lng[user.lng].change_posting + '@' + login, status);
 }
     } catch(e) {
-        await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes);
+        await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, user.show_nsfw, user.show_all);
         console.log(JSON.stringify(e));
         text = lng[user.lng].posting_not_valid;
         btns = await keybord(user.lng, 'home');
@@ -372,7 +411,7 @@ try {
     let login = user.status.split('_')[1];
 let text = '';
 try {
-    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes);    
+    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, user.show_nsfw, user.show_all);    
     let acc = await adb.getAccount(login);
         if (acc) {
             let wif = sjcl.decrypt(login + '_postingKey_readdle_bot', acc.posting_key);
@@ -387,7 +426,7 @@ try {
             text = lng[user.lng].post_not_sended;
         }
         } catch(e) {
-            await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes);    
+            await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, user.show_nsfw, user.show_all);    
             console.log(e, JSON.stringify(e));
             text = lng[user.lng].post_not_sended;
         }
@@ -398,7 +437,7 @@ try {
                 text = lng[user.lng].content;
         let btns = await keybord(user.lng, 'cancel');
         await botjs.sendMSG(id, text, btns, false);
-        await udb.updateUser(id, user.lng, user.status, 'postcontent_' + login + '_' + message, user.subscribes);
+        await udb.updateUser(id, user.lng, user.status, 'postcontent_' + login + '_' + message, user.subscribes, user.show_nsfw, user.show_all);
     } else if (user && user.lng && lng[user.lng] && user.status.indexOf('postcontent_') > -1) {
         let data = user.status.split('_');
         let login = data[1];
@@ -443,7 +482,7 @@ login += ' @' + user.status.split('_')[2];
 console.log('Результат: ' + JSON.stringify(res));
 }
     }                        
-    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes);
+    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, user.show_nsfw, user.show_all);
     let btns = await keybord(user.lng, 'home');
     await botjs.sendMSG(id, text, btns, false);
     await helpers.sleep(3000);
@@ -460,9 +499,9 @@ console.log('Результат: ' + JSON.stringify(res));
                             subscribes.push(message);
                         }
             text = lng[user.lng].subscription_added;
-            await udb.updateUser(id, user.lng, user.status, lng[user.lng].subscribes, subscribes);
+            await udb.updateUser(id, user.lng, user.status, lng[user.lng].subscribes, subscribes, user.show_nsfw, user.show_all);
         } else {
-            await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes);
+            await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, user.show_nsfw, user.show_all);
             text = lng[user.lng].not_account;
         }
         let btns = await keybord(user.lng, 'home');
@@ -477,10 +516,10 @@ let text = '';
 try {
     await methods.award(wif, data.login, receiver, parseFloat(message), link);
 text = lng[user.lng].award_sended;
-                await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes);
+                await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, user.show_nsfw, user.show_all);
 } catch(e) {
     text = lng[user.lng].award_error + e;
-    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes);
+    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, user.show_nsfw, user.show_all);
 }
         let btns = await keybord(user.lng, 'home');
         await botjs.sendMSG(id, text, btns, false);
@@ -512,7 +551,9 @@ ${data.d.text.substring(0, 400)}`;
 }
 let user = await udb.getUser(parseInt(id));
 if (user) {
-    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes);
+    if (user.show_nsfw == undefined) user.show_nsfw = true;
+    if ( user.show_all == undefined) user.show_all = true;
+    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, user.show_nsfw, user.show_all);
     let btns = await keybord(lang, `notify_buttons#viz://@${login}/${bn}`);
         await botjs.sendMSG(id, text, btns, true);
 }

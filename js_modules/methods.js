@@ -83,9 +83,9 @@ async function sendJson(wif, login, id, json) {
     return await viz.broadcast.customAsync(wif, [], [login], id, json);
 }
 
-async function award(wif, initiator, receiver, percent, memo) {
+async function award(wif, initiator, receiver, percent, memo, beneficiaries = []) {
 var energy=percent * 100;
-var beneficiaries=[]
+energy = parseInt(energy);
 return await viz.broadcast.awardAsync(wif,initiator,receiver,energy,0,memo,beneficiaries);
 }
 

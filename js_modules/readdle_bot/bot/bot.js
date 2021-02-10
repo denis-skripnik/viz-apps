@@ -47,8 +47,8 @@ async function sendMSG(userId, text, buttons, inline) {
     }
     } catch(error) {
         console.log('Ошибка с отправкой сообщения: ' + JSON.stringify(error));
-        if (error.error_code !== 403) {
-        process.exit(1);
+        if (error.error_code !== 403 && error.description === "Forbidden: bot was blocked by the user") {
+await udb.removeUser(userId);
         }
     }
     }
