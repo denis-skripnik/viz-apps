@@ -15,7 +15,7 @@ async function run() {
                 let content = [];
                 content[0] = `New chats - Новые чаты:`;
                 for (let el of res['chats']) {
-let db_res = await chatsdb.getChat(el.name);
+                        let db_res = await chatsdb.getChat(el.name);
                         if (!db_res) {
                                 content_counter++;
                                 let chunk = `
@@ -34,7 +34,7 @@ await chatsdb.updateChat(el.id, el.name, el.title, el.descr);
 
                     if (content_counter > 0) {
                         for (let text of content) {
-                                await botjs.sendMSG('@viz_chats_channels', text);
+                                await botjs.sendMSG(-1001396750173, text);
                         }
                     }
                } // end chats.
@@ -47,7 +47,7 @@ await chatsdb.updateChat(el.id, el.name, el.title, el.descr);
                 let content = [];
                 content[0] = `New channels - Новые каналы:`;
                 for (let el of res['channels']) {
-let db_res = await channelsdb.getChannel(el.name);
+                        let db_res = await channelsdb.getChannel(el.name);
                         if (!db_res) {
                                 content_counter++;
                                 let chunk = `
@@ -66,7 +66,7 @@ await channelsdb.updateChannel(el.id, el.name, el.title, el.descr);
 
                     if (content_counter > 0) {
                         for (let text of content) {
-                                await botjs.sendMSG('@viz_channels_channels', text);
+                                await botjs.sendMSG(-1001396750173, text);
                         }
                     }
                } // end channels.

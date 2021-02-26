@@ -10,7 +10,7 @@ async function getChannel(name) {
 
     try {
 
-        const db = client.db("viz_channels_channels_bot");
+        const db = client.db("viz_chats_channels_bot");
 
         let collection = db.collection('channels');
 
@@ -36,7 +36,7 @@ async function updateChannel(id, name, title, descr) {
 
   try {
 
-      const db = client.db("viz_channels_channels_bot");
+      const db = client.db("viz_chats_channels_bot");
 
       let collection = db.collection('channels');
 
@@ -64,7 +64,7 @@ if (!client) {
 
 try {
 
-    const db = client.db("viz_channels_channels_bot");
+    const db = client.db("viz_chats_channels_bot");
 
     let collection = db.collection('channels');
 
@@ -91,7 +91,7 @@ if (!client) {
 
 try {
 
-    const db = client.db("viz_channels_channels_bot");
+    const db = client.db("viz_chats_channels_bot");
 
     let collection = db.collection('channels');
 

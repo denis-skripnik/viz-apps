@@ -4,17 +4,12 @@ const bot = new TeleBot(conf.chats_channels_bot.api_key);
 bot.start();
 const helpers = require("../helpers");
 
-async function keybord() {
-var buttons = {
-    parseMode: 'Html',
-    webPreview: false};
-    return buttons;
-}
-
     async function sendMSG(userId, text) {
         await new Promise(r => setTimeout(r, 50));
-    let keybord = await keybord();
-    await bot.sendMessage(userId, text, keybord);
+        var buttons = {
+            parseMode: 'Html',
+            webPreview: false};
+    await bot.sendMessage(userId, text, buttons);
 }
 
 async function startMSG() {
