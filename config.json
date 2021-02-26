@@ -25,5 +25,8 @@
     "login": "viz-projects",
     "amount": "100.000 VIZ",
     "regular_key": ""
+  },
+  "chats_channels_bot": {
+    "api_key": ""
   }
 }

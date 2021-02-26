@@ -10,6 +10,7 @@ const top = require("./js_modules/viz_top");
 const awards = require("./js_modules/awards_bot");
 const committee = require("./js_modules/committee_bot");
 const rb = require("./js_modules/readdle_bot");
+const vccb = require("./js_modules/viz_chats_channels_bot");
 const vp = require("./js_modules/viz_projects");
 const wr = require("./js_modules/witness_rewards");
 const links = require("./js_modules/links");
@@ -44,7 +45,8 @@ async function processBlock(bn) {
     if (bn%1440 == 0) await vizProjectsAward();
     if (bn%28800 == 0) {
         await links.updateShares();
-            }
+            await vccb.run();
+    }
         
     const block = await methods.getOpsInBlock(bn);
 let ok_ops_count = 0;
