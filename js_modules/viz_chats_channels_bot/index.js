@@ -20,7 +20,8 @@ async function run() {
                                 content_counter++;
                                 let chunk = `
 
-                                ${content_counter}. <a href="https://telegram.viz.world/@${el.name}">@${el.name}</a>
+${content_counter}. @${el.name}
+<a href="https://telegram.viz.world/@${el.name}">Смотреть на telegram.viz.world</a>
 Description - Описание:
 ${el.descr}`;
                                 if (content[msg_counter].length + chunk.length >= 4096) {
@@ -52,8 +53,10 @@ await chatsdb.updateChat(el.id, el.name, el.title, el.descr);
                                 content_counter++;
                                 let chunk = `
 
-                                ${content_counter}. <a href="https://telegram.viz.world/@${el.name}">@${el.name}</a>
-Description - Описание:
+                                ${content_counter}. @${el.name}
+                                <a href="https://telegram.viz.world/@${el.name}">Смотреть на telegram.viz.world</a>
+
+                                Description - Описание:
 ${el.descr}`;
                                 if (content[msg_counter].length + chunk.length >= 4096) {
                                 msg_counter++;
