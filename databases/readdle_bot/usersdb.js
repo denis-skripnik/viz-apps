@@ -23,7 +23,7 @@ return err;
     }
 }
 
-async function addUser(id, lng, prev_status, status, subscribes) {
+async function addUser(id, lng, prev_status, status, subscribes, show_nsfw, show_all, energy_percent, coment_account) {
     let client = await pool.getClient()
 
     if (!client) {
@@ -36,7 +36,7 @@ async function addUser(id, lng, prev_status, status, subscribes) {
 
         let collection = db.collection('users');
 
-        let res = await collection.insertOne({id, lng, prev_status, status, subscribes});
+        let res = await collection.insertOne({id, lng, prev_status, status, subscribes, show_nsfw, show_all, energy_percent, coment_account});
 
 return res;
 
@@ -49,7 +49,7 @@ return res;
     }
 }
 
-async function updateUser(id, lng, prev_status, status, subscribes) {
+async function updateUser(id, lng, prev_status, status, subscribes, show_nsfw, show_all, energy_percent, coment_account) {
 
     let client = await pool.getClient()
 
@@ -63,7 +63,7 @@ async function updateUser(id, lng, prev_status, status, subscribes) {
 
       let collection = db.collection('users');
 
-      let res = await collection.updateOne({id}, {$set: {id, lng, prev_status, status, subscribes}}, {});
+      let res = await collection.updateOne({id}, {$set: {id, lng, prev_status, status, subscribes, show_nsfw, show_all, energy_percent, coment_account}}, {});
 
 return res;
 
@@ -74,6 +74,34 @@ return res;
     } finally {
 
   }
+}
+
+async function removeUser(id) {
+
+	let client = await pool.getClient()
+	if (!client) {
+		return;
+	}
+
+	try {
+
+		const db = client.db("readdle_bot");
+
+		let collection = db.collection('users');
+
+		let res = await collection.deleteOne({
+			id
+		});
+
+		return res;
+
+	} catch (err) {
+
+		console.log(err);
+		return err;
+	} finally {
+
+	}
 }
 
 async function findAllUsers() {
@@ -107,4 +135,5 @@ return err;
 module.exports.getUser = getUser;
 module.exports.addUser = addUser;
 module.exports.updateUser = updateUser;
+module.exports.removeUser = removeUser;
 module.exports.findAllUsers = findAllUsers;
