@@ -5,6 +5,11 @@ const helpers = require("../helpers");
 const conf = require(process.cwd() + '/config.json');
 var sjcl = require('sjcl');
 
+function replaceSIAWithHTMLLinks(text) {
+    var exp = /(\b(sia):\/\/([-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|]))/gi;
+    return text.replace(exp,"<a href='https://siasky.net/$3'>$1</a>"); 
+}
+
 async function notify(login, bn, data) {
 	let users = await udb.findAllUsers();
 if (users && users.length > 0) {
@@ -17,6 +22,9 @@ if (jarr.indexOf('#nsfw') === -1 || jarr.indexOf('#nsfw') > -1 && user.show_nsfw
 	jarr.match(regex).forEach(function (element) {if (user.subscribes.indexOf(element.substr(1)) > -1) ffl = 1;});
 	
 			if (user.subscribes && user.subscribes.indexOf(login) > -1 || user.subscribes && user.subscribes.length === 0 && user.show_all == true || data.d.r&& user.subscribes && user.subscribes.indexOf(data.d.r.split('@')[1].split('/')[0]) > -1 || ffl == 1) {
+				if (data.d.m) data.d.m = replaceSIAWithHTMLLinks(data.d.m);
+				if (data.d.d) data.d.d = replaceSIAWithHTMLLinks(data.d.d);
+				if (data.d.text) data.d.text = replaceSIAWithHTMLLinks(data.d.text);
 				await i.sendNotify(login, user.lng, user.id, bn, data);
 	}
 } // end if #nsfw.
