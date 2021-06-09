@@ -7,7 +7,7 @@
   },
   "votes": {
     "to": "committee",
-    "vote_price": "100.000 VIZ"
+    "vote_price": "1.000 VIZ"
   },
   "awards_bot": {
     "api_key": "x:y",
@@ -23,7 +23,7 @@
   },
   "viz_projects": {
     "login": "viz-projects",
-    "amount": "100.000 VIZ",
+    "amount": "1.000 VIZ",
     "regular_key": ""
   },
   "chats_channels_bot": {

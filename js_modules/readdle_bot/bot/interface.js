@@ -591,21 +591,14 @@ ${data.d.text}`;
 } else if (!data.t && !data.d.s && data.d.r) {
     text = `<a href="https://readdle.me/#viz://@${login}/${bn}">${lng[lang].type_reply}</a> ${lng[lang].from} ${login} ${lng[lang].type_reply2} <a href="https://readdle.me/#${data.d.r}">${data.d.r}</a>:
     
-    ${data.d.text.substring(0, 400)}`;
+    ${data.d.text}`;
 }
 let user = await udb.getUser(parseInt(id));
 if (user) {
     await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, user.show_nsfw, user.show_all, user.energy_percent, user.coment_account);
     let btns = await keybord(lang, `notify_buttons#viz://@${login}/${bn}`);
-        if (text.length > 4096) {
-            let result_msg = text.match(/.{1,4096}/g)
-        for (let msg of result_msg) {
-            await botjs.sendMSG(id, msg, btns, true);
-        } // end for.
-        } else {
-            await botjs.sendMSG(id, text, btns, true);
+            await botjs.sendMSG(id, text.substring(0, 4096), btns, true);
         }
-}
 } catch(e) {
     console.error(e);
     console.error('Язык: ' + lang + ', id: ' + id);
