@@ -141,8 +141,8 @@ eng_memo = '';
     let benef_shares = parseFloat(benef_awards.shares);
     benef_shares = benef_shares.toFixed(3) + ' Ƶ в соц. капитал';
 
-    let ru_benef_text = `<a href="https://info.viz.plus/accounts/${benefactor}">${benefactor}</a> получил бенефициарские от <a href="https://info.viz.plus/accounts/${initiator}/">${initiator}</a> на ${benef_shares}${ru_custom_sequence} ${ru_memo}`;
-    let eng_benef_text = `user <a href="https://info.viz.plus/accounts/${benefactor}">${benefactor}</a> received beneficiary awards  from <a href="https://info.viz.plus/accounts/${initiator}/">${initiator}</a> on the ${benef_shares}${eng_custom_sequence} ${eng_memo}`;
+    let ru_benef_text = `<a href="https://dpos.space/viz/profiles/${benefactor}/benefactor-awards">${benefactor}</a> получил бенефициарские от <a href="https://dpos.space/viz/profiles/${initiator}/">${initiator}</a> на ${benef_shares}${ru_custom_sequence} ${ru_memo}`;
+    let eng_benef_text = `user <a href="https://dpos.space/viz/profiles/${benefactor}/benefactor-awards">${benefactor}</a> received beneficiary awards  from <a href="https://dpos.space/viz/profiles/${initiator}/">${initiator}</a> on the ${benef_shares}${eng_custom_sequence} ${eng_memo}`;
 benef_arr.push({benefactor: benefactor, ru: ru_benef_text, eng: eng_benef_text});
     } else if (get_award.type === 'receive_award') {
         let receive_awards = get_award.data;
@@ -254,7 +254,7 @@ bot.on(/about|^О боте/i, async function (msg, match) {
 Это бот, который уведомляет о наградах и бенефициарских пользователям, на которых вы подписаны.
 Награда (award) - операция в VIZ. Позволяет награждать кого угодно за что угодно.
 Бенефициары (beneficiaries), Бенефициарская награда (benefactor_award) - это вознаграждение тем, кого указал отправитель награды помимо получателя.
-Автором бота является незрячий программист @denis_skripnik. На Viz логин https://info.viz.plus/accounts/denis-skripnik.
+Автором бота является незрячий программист @denis_skripnik. На Viz логин https://dpos.space/viz/profiles/denis-skripnik.
 Помимо этого бота есть и другие:
 @viz_committee_bot - уведомляет о заявках в комитете,
 <a href="https://dpos.space/viz/awards">Форма для отправки наград</a>
@@ -268,7 +268,7 @@ This is a bot that notifies you about awards and beneficiaries received by users
 Award is an operation in VIZ. Allows you to award anyone for anything.
 The beneficiaries get benefactor_award – it is an award to those indicated by the sender of the award besides the recipient.
 
-The author of the bot is a blind programmer @denis_skripnik. His Viz login is https://info.viz.plus/accounts/denis-skripnik.
+The author of the bot is a blind programmer @denis_skripnik. His Viz login is https://dpos.space/viz/profiles/denis-skripnik.
 In addition to this bot, there are a couple of others:
 @viz_committee_bot – notifies of requests in the committee,
 <a href="https://viz.dpos.space/awards/en/form.html">Form for awards</a>
