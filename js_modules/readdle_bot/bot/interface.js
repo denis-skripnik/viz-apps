@@ -458,7 +458,7 @@ try {
     let custom_data = await methods.getCustomProtocolAccount(login, 'V');
     data.p =         custom_data.custom_sequence_block_num;
     data.d = {};
-            data.d.text = message;
+            data.d.t = message;
             await methods.sendJson(wif, login, 'V', JSON.stringify(data));
             text = lng[user.lng].sended_post;
         } else {
@@ -583,15 +583,15 @@ ${data.d.d}`;
     } else if (!data.t && !data.d.s && !data.d.r) {
         text = `<a href="https://readdle.me/#viz://@${login}/${bn}">${lng[lang].type_note}</a> ${lng[lang].from} ${login}. ${lng[lang].note_text}:
 
-${data.d.text}`;
+${data.d.t}`;
 } else if (!data.t && !data.d.r && data.d.s) {
     text = `<a href="https://readdle.me/#viz://@${login}/${bn}">${lng[lang].type_repost}</a> ${lng[lang].repost_post} <a href="https://readdle.me/#${data.d.s}">${data.d.s}</a> ${lng[lang].from} ${login}:
 
-${data.d.text}`;
+${data.d.t}`;
 } else if (!data.t && !data.d.s && data.d.r) {
     text = `<a href="https://readdle.me/#viz://@${login}/${bn}">${lng[lang].type_reply}</a> ${lng[lang].from} ${login} ${lng[lang].type_reply2} <a href="https://readdle.me/#${data.d.r}">${data.d.r}</a>:
     
-    ${data.d.text}`;
+    ${data.d.t}`;
 }
 let user = await udb.getUser(parseInt(id));
 if (user) {
@@ -619,7 +619,7 @@ if (user) {
                 let custom_data = await methods.getCustomProtocolAccount(acc.login, 'V');
                 data.p =         custom_data.custom_sequence_block_num;
                 data.d = {};
-                        data.d.text = text;
+                        data.d.t = text;
         data.d.r = link + '/';
                         await methods.sendJson(wif, acc.login, 'V', JSON.stringify(data));
                         message = lng[user.lng].sended_reply + acc.login;
@@ -632,7 +632,7 @@ if (user) {
                 let custom_data = await methods.getCustomProtocolAccount(acc.login, 'V');
                 data.p =         custom_data.custom_sequence_block_num;
                 data.d = {};
-                        data.d.text = text;
+                        data.d.t = text;
         data.d.r = link + '/';
                         await methods.sendJson(wif, acc.login, 'V', JSON.stringify(data));
                         message = lng[user.lng].sended_reply + acc.login;

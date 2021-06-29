@@ -15,7 +15,7 @@ async function notify(login, bn, data) {
 if (users && users.length > 0) {
 	for (let user of users) {
 		var ffl = 0;
-		var jarr = [data.d.m, data.d.d, data.d.text].join(' ');
+		var jarr = [data.d.m, data.d.d, data.d.t].join(' ');
 		var regex = /@[A-Z,a-z,.,0-9,\-,_]+/g;
 if (jarr.indexOf('#nsfw') === -1 || jarr.indexOf('#nsfw') > -1 && user.show_nsfw == true) {
 	if(jarr.length > 2 && user.subscribes && jarr.match(regex))
@@ -24,7 +24,7 @@ if (jarr.indexOf('#nsfw') === -1 || jarr.indexOf('#nsfw') > -1 && user.show_nsfw
 			if (user.subscribes && user.subscribes.indexOf(login) > -1 || user.subscribes && user.subscribes.length === 0 && user.show_all == true || data.d.r&& user.subscribes && user.subscribes.indexOf(data.d.r.split('@')[1].split('/')[0]) > -1 || ffl == 1) {
 				if (data.d.m) data.d.m = replaceSIAWithHTMLLinks(data.d.m);
 				if (data.d.d) data.d.d = replaceSIAWithHTMLLinks(data.d.d);
-				if (data.d.text) data.d.text = replaceSIAWithHTMLLinks(data.d.text);
+				if (data.d.t) data.d.t = replaceSIAWithHTMLLinks(data.d.t);
 				await i.sendNotify(login, user.lng, user.id, bn, data);
 	}
 } // end if #nsfw.
