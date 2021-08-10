@@ -12,7 +12,7 @@ async function getPrices() {
 
         const db = client.db("blockchains");
 
-        let collection = db.collection('viz-prices');
+        let collection = db.collection('viz_prices');
 
         let query = {}
 
@@ -40,7 +40,7 @@ async function updatePrices(data) {
 
         const db = client.db("blockchains");
 
-        let collection = db.collection('viz-prices');
+        let collection = db.collection('viz_prices');
 
         let res = await collection.updateOne({}, {$set: {data}}, { upsert: true });
 

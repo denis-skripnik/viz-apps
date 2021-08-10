@@ -1,3 +1,24 @@
+var request = require('request');
+
+async function getBody(url) {
+    const options = {
+      url: url,
+      method: 'GET',
+    };
+  
+    // Return new promise
+    return new Promise(function(resolve, reject) {
+      // Do async job
+      request.get(options, function(err, resp, body) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(body);
+        }
+      })
+    })
+  }
+
 async function sleep(ms) {
     await new Promise(r => setTimeout(r, ms));
     }
@@ -128,7 +149,7 @@ async function stringToHash(string) {
 			return resTxt;
 		}
 		
-
+		module.exports.getBody = getBody;
 module.exports.unixTime = unixTime;
 module.exports.sleep = sleep;
 module.exports.compareShares = compareShares;

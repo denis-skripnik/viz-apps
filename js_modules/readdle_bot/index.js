@@ -11,6 +11,10 @@ function replaceSIAWithHTMLLinks(text) {
 }
 
 async function notify(login, bn, data) {
+	if (typeof data.d === "undefined" || data.d && typeof data.d.m === "undefined" && typeof data.d.d === "undefined" && typeof data.d.t === "undefined") {
+		return;
+	}
+	
 	let users = await udb.findAllUsers();
 if (users && users.length > 0) {
 	for (let user of users) {
