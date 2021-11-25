@@ -20,6 +20,10 @@
   "committee_bot": {
     "api_key": "z:a",
     "admin_id": 2
+  },  "mg_bot": {
+    "bot_api_key": "ADD_HEAR_API_KEY",
+    "admins": [1234567890],
+    "award_account": "viz-projects"
   },
   "viz_projects": {
     "login": "viz-projects",

@@ -10,6 +10,7 @@ const top = require("./js_modules/viz_top");
 const awards = require("./js_modules/awards_bot");
 const committee = require("./js_modules/committee_bot");
 const rb = require("./js_modules/readdle_bot");
+const mgb = require("./js_modules/mg_bot");
 const vccb = require("./js_modules/viz_chats_channels_bot");
 const vp = require("./js_modules/viz_projects");
 const wr = require("./js_modules/witness_rewards");
@@ -53,6 +54,12 @@ ok_ops_count += await vp.transferOperation(opbody);
                 ok_ops_count += await rb.notify(opbody.required_regular_auths[0], bn, JSON.parse(opbody.json));
             }
             break;
+            case "award":
+if (opbody.receiver === conf.mg_bot.award_account && opbody.memo.indexOf('ft:') > -1 && opbody.memo.split(':').length === 2) {
+    await mgb.futureTellingNotify(bn, opbody.memo);
+    ok_ops_count +=  1;
+}
+                break;
             case "benefactor_award":
                 ok_ops_count += await awards.processBlock(op, opbody);
                 break;

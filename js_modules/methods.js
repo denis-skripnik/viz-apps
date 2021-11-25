@@ -1,6 +1,8 @@
 var conf = require('../config.json');
 var viz = require('viz-js-lib');
 viz.config.set('websocket',conf.node);
+let keccak = require("keccak");
+let BigI = require("big-integer");
 
 async function getOpsInBlock(bn) {
     return await viz.api.getOpsInBlockAsync(bn, false);
@@ -89,6 +91,34 @@ energy = parseInt(energy);
 return await viz.broadcast.awardAsync(wif,initiator,receiver,energy,0,memo,beneficiaries);
 }
 
+async function getBlockSignature(block) {
+    var b = await viz.api.getBlockAsync(block);
+    if(b && b.witness_signature) {
+        return b.witness_signature;
+    } 
+    throw "unable to retrieve signature for block " + block;
+}
+
+async function randomGenerator(start_block, end_block, maximum_number) {
+    let hasher = new keccak("keccak256");
+    let sig = await getBlockSignature(end_block);
+    let prevSig = await getBlockSignature(start_block);
+    hasher.update(prevSig + sig);
+        let sha3 = hasher.digest().toString("hex");
+    let random = BigI(sha3, 16).mod(maximum_number);
+    return parseInt(random);
+}
+
+async function randomWithHash(hash, block, maximum_number) {
+    let hasher = new keccak("keccak256");
+    let sig = await getBlockSignature(block);
+    let prevSig = hash;
+    hasher.update(prevSig + sig);
+        let sha3 = hasher.digest().toString("hex");
+    let random = BigI(sha3, 16).mod(maximum_number);
+    return parseInt(random);
+}
+
 module.exports.getOpsInBlock = getOpsInBlock;
 module.exports.getProps = getProps;      
 module.exports.getConfig = getConfig;
@@ -104,3 +134,5 @@ module.exports.verifyData = verifyData;
 module.exports.getSubscriptionStatus = getSubscriptionStatus;
 module.exports.sendJson = sendJson;
 module.exports.award = award;
+module.exports.randomGenerator = randomGenerator;
+module.exports.randomWithHash = randomWithHash;

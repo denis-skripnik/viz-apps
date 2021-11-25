@@ -1,12 +1,12 @@
 const conf = require(process.cwd() + '/config.json');
-const udb = require(process.cwd() + "/databases/readdle_bot/usersdb");
+const udb = require(process.cwd() + "/databases/mg_bot/usersdb");
 const TeleBot = require('telebot');
-const bot = new TeleBot(conf.readdle_bot.bot_api_key);
+const bot = new TeleBot(conf.mg_bot.bot_api_key);
 bot.start();
 const i = require("./interface");
 
 async function ids(uid) {
-    if (conf.readdle_bot.admins.indexOf(uid) > -1) {
+    if (conf.mg_bot.admins.indexOf(uid) > -1) {
         return {status: 2, id: uid};
     } else {
         return {status: 1, id: uid};

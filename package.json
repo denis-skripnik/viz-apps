@@ -1,8 +1,10 @@
 {
   "dependencies": {
     "axios": "^0.21.1",
+    "big-integer": "^1.6.51",
     "cron": "^1.8.2",
     "express": "^4.16.4",
+    "keccak": "^3.0.2",
     "mongodb": "latest",
     "sjcl": "^1.0.8",
     "telebot": "^1.4.1",
