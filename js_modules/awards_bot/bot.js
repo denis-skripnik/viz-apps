@@ -5,15 +5,6 @@ bot.start();
 const udb = require(process.cwd() + "/databases/awards_bot/usersdb");
 const methods = require("../methods");
 
-Array.prototype.remove = function(value) {
-    var idx = this.indexOf(value);
-    if (idx != -1) {
-        // Второй параметр - число элементов, которые необходимо удалить
-        return this.splice(idx, 1);
-    }
-    return false;
-}
-
 async function ru_keybord(variant) {
     let replyMarkup;
     if (variant === 'standart') {
@@ -388,7 +379,10 @@ await sendMSG(fromId, text, 'standart', 'Ru');
                         sp.forEach(async function (sub_user) {
                     if (user.subscribe && user.subscribe.includes(sub_user)) {
                         user_subscribes = user.subscribe;
-                                                user_subscribes.remove(sub_user);
+                                                let search_sub = user_subscribes.indexOf(sub_user);
+                        if (search_sub !== -1) {
+                            user_subscribes.splice(search_sub,1);
+                        }
                     }
                 });
                     
@@ -559,7 +553,10 @@ await sendMSG(fromId, text, 'standart', 'Ru');
                         sp.forEach(async function (sub_user) {
                     if (user.stopped && user.stopped.includes(sub_user)) {
                         user_stopped = user.stopped;
-                                                user_stopped.remove(sub_user);
+                        let search_sub = user_stopped.indexOf(sub_user);
+                        if (search_sub !== -1) {
+                            user_stopped.splice(search_sub,1);
+                        }                        
                     }
                 });
                     
