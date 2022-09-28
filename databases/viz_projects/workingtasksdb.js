@@ -13,6 +13,7 @@ async function getWorkingTasks(query, page) {
         const db = client.db("viz_projects");
 
         let collection = db.collection('working_tasks');
+        if (isNaN(page) || !isNaN(page) && page <= 0) return;
         let skip = page * 10 - 10;
 
         const res = [];

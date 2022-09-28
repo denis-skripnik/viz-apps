@@ -13,6 +13,7 @@ async function getTop(type, page) {
         const db = client.db("blockchains");
 
         let collection = db.collection('viztop');
+        if (isNaN(page) || !isNaN(page) && page <= 0) return;
         const query = {}
         query[type] = { $exists: true }
         const sorting = {};

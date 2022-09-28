@@ -16,7 +16,7 @@ async function getHashById(id) {
 		let res = await collection.findOne({
 			id
 		});
-
+		if (!res) res = {};
 		return res;
 	} catch (err) {
 
@@ -89,7 +89,7 @@ async function updateHashData(hash, text, id) {
 	}
 }
 
-async function removeHashData(id, hash) {
+async function removeHashData(id) {
 
 	let client = await pool.getClient()
 	if (!client) {
@@ -102,9 +102,8 @@ async function removeHashData(id, hash) {
 
 		let collection = db.collection('ftq');
 
-		let res = await collection.deleteOne({
-			id,
-			hash
+		let res = await collection.deleteMany({
+			id
 		});
 
 		return res;

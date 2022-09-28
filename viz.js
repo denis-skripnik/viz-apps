@@ -1,10 +1,11 @@
+const conf = require("./config.json");
+const methods = require("./js_modules/methods");
 require("./databases/@db.js").initialize({
     url: 'mongodb://localhost:27017',
     poolSize: 15
 });
 require("./js_modules/api");
 const CronJob = require('cron').CronJob;
-const conf = require("./config.json");
 const prices = require("./js_modules/vizprice");
 const top = require("./js_modules/viz_top");
 const awards = require("./js_modules/awards_bot");
@@ -17,18 +18,18 @@ const wr = require("./js_modules/witness_rewards");
 const links = require("./js_modules/links");
 const votes = require("./js_modules/votes");
 const helpers = require("./js_modules/helpers");
-const methods = require("./js_modules/methods");
 const bdb = require("./databases/blocksdb");
 const LONG_DELAY = 12000;
 const SHORT_DELAY = 3000;
 const SUPER_LONG_DELAY = 1000 * 60 * 15;
 
 async function processBlock(bn) {
-    if (bn%1200 == 0)         await prices.getPrices();
-
-    if (bn%28800 == 0) {
-        await links.updateShares();
-            await vccb.run();
+    if (bn%1200 == 0)         prices.getPrices();
+if (bn % 100 == 0) await mgb.cryptoBidsResults();
+        if (bn%28800 == 0) {
+            mgb.scoresAward();
+            links.updateShares();
+          vccb.run();
     }
         
     const block = await methods.getOpsInBlock(bn);
@@ -54,20 +55,17 @@ ok_ops_count += await vp.transferOperation(opbody);
                 ok_ops_count += await rb.notify(opbody.required_regular_auths[0], bn, JSON.parse(opbody.json));
             }
             break;
-            case "award":
-if (opbody.receiver === conf.mg_bot.award_account && opbody.memo.indexOf('ft:') > -1 && opbody.memo.split(':').length === 2) {
-    await mgb.futureTellingNotify(bn, opbody.memo);
-    ok_ops_count +=  1;
-}
-                break;
             case "benefactor_award":
-                ok_ops_count += await awards.processBlock(op, opbody);
+                ok_ops_count += await awards.benefactorAward(opbody);
                 break;
                 case "receive_award":
-ok_ops_count += await awards.processBlock(op, opbody);
+                ok_ops_count += await awards.receiveAward(opbody);
 let data = opbody.memo.split(',');
 if (opbody.receiver === 'committee' && data.length === 3) {
     ok_ops_count += await links.receiveAwardOperation(opbody.custom_sequence, parseFloat(opbody.shares), data);
+} else if (opbody.receiver === conf.mg_bot.award_account && opbody.memo.indexOf('ft:') > -1 && opbody.memo.split(':').length === 2 && parseFloat(opbody.shares) >= 0.001) {
+    await mgb.futureTellingNotify(bn, opbody.memo);
+    ok_ops_count +=  1;
 }
 break;
 case "committee_worker_create_request":
@@ -134,7 +132,8 @@ getNullTransfers()
 new CronJob('0 30 * * * *', top.run, null, true);
 new CronJob('0 0 3 * * *', wr.producersDay, null, true);    
 new CronJob('0 0 3 1 * *', wr.producersMonth, null, true);
-
-awards.noReturn();
-
 committee.noReturn();
+
+const cleanup = require("./databases/@db.js").cleanup;
+process.on('SIGINT', cleanup);
+process.on('SIGTERM', cleanup);

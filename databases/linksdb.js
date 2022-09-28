@@ -96,7 +96,7 @@ try {
     const db = client.db("viz-links");
 
     let collection = db.collection('links');
-
+    if (isNaN(page) || !isNaN(page) && page <= 0) return;
     const sorting = {};
     sorting['shares'] = -1;
     let skip = page * 100 - 100;

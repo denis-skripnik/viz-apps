@@ -32,3 +32,7 @@ me.initialize = async function(args){
 const reconnect = function(){
     setTimeout(me.initialize, 1000)
 }
+
+me.cleanup = async function() {
+    await clients.close(); 
+}

@@ -26,7 +26,7 @@ return err;
     }
 }
 
-async function addUser(uid, username, subscribe, stopped, state, lang) {
+async function addUser(uid, lang, prev_status, status, subscribe) {
 
     const client = await db.getClient();
 
@@ -40,7 +40,7 @@ async function addUser(uid, username, subscribe, stopped, state, lang) {
 
         let collection = db.collection('users');
 
-        let res = await collection.insertOne({uid, username, subscribe, stopped, state, lang});
+        let res = await collection.insertOne({uid, lang, prev_status, status, subscribe});
 
 return res;
 
@@ -53,7 +53,7 @@ return res;
     }
 }
 
-async function updateUser(uid, username, subscribe, stopped, state, lang) {
+async function updateUser(uid, lang, prev_status, status, subscribe) {
 
     const client = await db.getClient();
 
@@ -67,7 +67,7 @@ async function updateUser(uid, username, subscribe, stopped, state, lang) {
 
       let collection = db.collection('users');
 
-      let res = await collection.updateOne({uid}, {$set: {uid, username, subscribe, stopped, state, lang}}, {});
+      let res = await collection.updateOne({uid}, {$set: {uid, lang, prev_status, status, subscribe}}, {});
 
 return res;
 
