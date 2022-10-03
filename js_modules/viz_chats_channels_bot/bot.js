@@ -1,19 +1,19 @@
 const conf = require(process.cwd() + "/config.json");
-const TeleBot = require('telebot');
-const bot = new TeleBot(conf.chats_channels_bot.api_key);
+const { Bot } = require("grammy");
+const bot = new Bot(conf.chats_channels_bot.api_key);
 bot.start();
 const helpers = require("../helpers");
 
     async function sendMSG(userId, text) {
         await new Promise(r => setTimeout(r, 50));
         var buttons = {
-            parseMode: 'Html',
+            parse_mode: 'HTML',
             webPreview: false};
-    await bot.sendMessage(userId, text, buttons);
+    await bot.api.sendMessage(userId, text, buttons);
 }
 
 async function startMSG() {
-return bot.on(/start|старт/, async function (msg, match) {
+return bot.hears(/start|старт/, async function (msg, match) {
     var userId = msg.from.id;
     var username = msg.from.username;
 

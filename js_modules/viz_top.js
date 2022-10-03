@@ -7,9 +7,17 @@ async function run() {
 	let users = await udb.getTop('viz');
 	let k = 0;
 try {
+	const params = await methods.getProps();
+
+	const {total_vesting_fund, total_vesting_shares, current_supply, total_reward_fund} = params;
+
+	const total_viz = parseFloat(total_vesting_fund.split(" ")[0]);
+	const total_vests = parseFloat(total_vesting_shares.split(" ")[0]);
+
+const all_viz = parseFloat(current_supply) - parseFloat(total_vesting_fund) - parseFloat(total_reward_fund);
+
 	while(1) {
 		//if(k++ > 10) break;
-console.log("Viz curr", curr_acc, Object.keys(gests).length);
 		const accs = await await methods.lookupAccounts(curr_acc);
 		if (accs[0] === curr_acc) {
 			accs.splice(0, 1);
@@ -17,15 +25,6 @@ console.log("Viz curr", curr_acc, Object.keys(gests).length);
 		if(accs.length == 0) {
 			break;
 		}
-
-		const params = await methods.getProps();
-
-		const {total_vesting_fund, total_vesting_shares, current_supply, total_reward_fund} = params;
-	
-		const total_viz = parseFloat(total_vesting_fund.split(" ")[0]);
-		const total_vests = parseFloat(total_vesting_shares.split(" ")[0]);
-	
-const all_viz = parseFloat(current_supply) - parseFloat(total_vesting_fund) - parseFloat(total_reward_fund);
 
 		for(let acc of accs) {
 			try {

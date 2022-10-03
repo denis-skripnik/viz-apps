@@ -1,0 +1,27 @@
+{
+    "start": "Start",
+    "home": "Home",
+    "home_message": "Welcome to @viz_awards_bot, which will allow you to receive new rewards.",
+    "lang": "Choose language",
+    "selected_language": "select the language: English.",
+    "add_subscription": "Subscribe",
+    "enter_login": "Enter the login(s) of the accounts you want to subscribe to.",
+    "subscribes": "My subscriptions",
+    "subscribes_list": "a List of your subscriptions (login with unsub to unsubscribe):",
+    "subscribes_list_is_empty": "You haven't subscribed to anyone.",
+    "unsubscribed": "You have unsubscribed from the user ",
+    "not_subscription": "You were not subscribed to this user or the list of subscriptions is empty.",
+    "subscription_added": "You have successfully subscribed to the following users: ",    
+    
+    "custom_sequence": "Custom operation number",
+"memo": "Note to the award",
+"received_benefactor": "received beneficiary from",
+"to_amount": "on",
+"awarded": "awarded",
+
+    "back": "back",
+    "cancel": "Cancel",
+    "news": "News",
+    "help": "Help",
+    "help_text": "Almost all commands are executed via buttons. Only unsubscribe via unsub login\r\nAre the buttons gone? Click on the bot's keyboard button or type /start.\r\nIf you have any questions or problems, write to the chat @dpos_space or personal @denis_skripnik"
+}

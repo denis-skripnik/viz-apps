@@ -8,9 +8,19 @@ async function getOpsInBlock(bn) {
     return await viz.api.getOpsInBlockAsync(bn, false);
   }
 
-  async function getProps() {
-      return await viz.api.getDynamicGlobalPropertiesAsync();
+  let time_start = new Date().getTime();
+  let properties = {};
+        async function getProps() {
+      let old_time = time_start;
+    time_start = new Date().getTime();
+let time_call = time_start - old_time;
+    if (time_call < 0) time_call = 0;
+    if (time_call === 0 || time_call >= 3000 || Object.keys(properties).length === 0) {
+    properties = await viz.api.getDynamicGlobalPropertiesAsync();
+}
+return properties;
       }
+
 
       async function getConfig() {
         return await viz.api.getConfigAsync();
@@ -48,8 +58,13 @@ async function getAccounts(accs) {
     return await viz.api.getAccountsAsync(accs);
 }
 
-async function send(operations, posting) {
-    return await viz.broadcast.sendAsync({extensions: [], operations}, [posting]);
+async function send(operations, regular_wif) {
+try {
+    return await viz.broadcast.sendAsync({extensions: [], operations}, [regular_wif]);
+} catch(e) {
+    console.error(e);
+    console.log('Операции: ', JSON.stringify(operations));
+}
 }
 
 async function wifToPublic(key) {
@@ -119,6 +134,19 @@ async function randomWithHash(hash, block, maximum_number) {
     return parseInt(random);
 }
 
+async function getWitnessByAccount(login) {
+    return await viz.api.getWitnessByAccountAsync(login)
+}
+
+async function getWitnessesByVote(login, limit) {
+    return await viz.api.getWitnessesByVoteAsync(login,limit);
+}
+
+async function getWitnessSchedule() {
+    return await viz.api.getWitnessScheduleAsync();
+}
+
+
 module.exports.getOpsInBlock = getOpsInBlock;
 module.exports.getProps = getProps;      
 module.exports.getConfig = getConfig;
@@ -136,3 +164,6 @@ module.exports.sendJson = sendJson;
 module.exports.award = award;
 module.exports.randomGenerator = randomGenerator;
 module.exports.randomWithHash = randomWithHash;
+module.exports.getWitnessByAccount = getWitnessByAccount;
+module.exports.getWitnessesByVote = getWitnessesByVote;
+module.exports.getWitnessSchedule = getWitnessSchedule;

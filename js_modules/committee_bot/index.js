@@ -45,19 +45,6 @@ async function committeePayRequestOperation(opbody) {
 
 setInterval(botjs.langNotifyMSG, 3600000);
 
-async function noReturn() {
-        await botjs.startMSG();
-        await botjs.list_msg();
-        await botjs.voteInfo();
-        await botjs.voteing();
-        await botjs.adminCommand();
-        await botjs.yesCommand();
-        await botjs.supportCommand();
-        await botjs.nullSupportCommand();
-        await botjs.langEngCommand()
-        await botjs.langRuCommand();
-        }
-        
 module.exports.committeeWorkerCreateRequestOperation = committeeWorkerCreateRequestOperation;
 module.exports.committeePayRequestOperation = committeePayRequestOperation;
-module.exports.noReturn = noReturn;
+module.exports.noReturn = botjs.allCommands;

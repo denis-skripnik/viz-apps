@@ -13,6 +13,7 @@ const committee = require("./js_modules/committee_bot");
 const rb = require("./js_modules/readdle_bot");
 const mgb = require("./js_modules/mg_bot");
 const vccb = require("./js_modules/viz_chats_channels_bot");
+const watchdog = require("./js_modules/watchdog");
 const vp = require("./js_modules/viz_projects");
 const wr = require("./js_modules/witness_rewards");
 const links = require("./js_modules/links");
@@ -88,12 +89,14 @@ let last_bn = 0;
 let delay = SHORT_DELAY;
 
 async function getNullTransfers() {
+    await watchdog.runBot();
     PROPS = await methods.getProps();
             const block_n = await bdb.getBlock(PROPS.last_irreversible_block_num);
 bn = block_n.last_block;
 
 delay = SHORT_DELAY;
 while (true) {
+    await watchdog.getWitnessesByBlock();
     try {
         if (bn > PROPS.last_irreversible_block_num) {
             // console.log("wait for next blocks" + delay / 1000);

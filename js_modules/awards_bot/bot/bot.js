@@ -1,12 +1,12 @@
 const conf = require(process.cwd() + '/config.json');
-const udb = require(process.cwd() + "/databases/readdle_bot/usersdb");
+const udb = require(process.cwd() + "/databases/awards_bot/usersdb");
 const { Bot } = require("grammy");
-const bot = new Bot(conf.readdle_bot.bot_api_key);
+const bot = new Bot(conf.awards_bot.api_key);
 bot.start();
 const i = require("./interface");
 
 async function ids(uid) {
-    if (conf.readdle_bot.admins.indexOf(uid) > -1) {
+    if (conf.awards_bot.admins.indexOf(uid) > -1) {
         return {status: 2, id: uid};
     } else {
         return {status: 1, id: uid};
@@ -39,7 +39,7 @@ async function keybord(btn_list, inline) {
     keyboard[n].push({text: btn});
     }
             }
-            reply_markup = {keyboard, resize_keyboard: true};
+            reply_markup = {keyboard, resresize_keyboard: true};
     }
     var buttons = {
         parse_mode: 'HTML',

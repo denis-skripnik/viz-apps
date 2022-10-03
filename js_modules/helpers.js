@@ -51,6 +51,17 @@ async function getRandomInRange(min, max) {
 	  return Math.floor(Math.random() * (max - min + 1)) + min;
 	}
 
+	async function randomNumberWithoutRepeats(simbols) {
+		let n = '';
+while (true) {
+if (n.length === simbols) return n;
+			rn = Math.floor(Math.random() * (9 - 0 + 1)) + 0;
+if (n.indexOf(rn) === -1) {
+		n += rn;
+			}
+}
+			}
+
 	async function generateRandomCode(length)
 	{
 			charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
@@ -73,7 +84,7 @@ return results;
 }
 
 async function stringToHash(string) {
-	string += 'user_id_golos_stake_bot';
+	string += 'user_id_mg_bot';
 	                var hash = 0;
 	                if (string.length == 0) return hash;
 	                for (i = 0; i < string.length; i++) {
@@ -148,12 +159,19 @@ async function stringToHash(string) {
 			
 			return resTxt;
 		}
-		
+
+		function addslashes( str ) {
+			return str.replace(/("|'|<|>|`|')/g, function(s) {
+			  return `\\${s}`;
+			});
+			}
+
 		module.exports.getBody = getBody;
 module.exports.unixTime = unixTime;
 module.exports.sleep = sleep;
 module.exports.compareShares = compareShares;
 module.exports.getRandomInRange = getRandomInRange;
+module.exports.randomNumberWithoutRepeats = randomNumberWithoutRepeats;
 module.exports.isJsonString = isJsonString;
 module.exports.generateRandomCode = generateRandomCode;
 module.exports.objectSearch = objectSearch;
@@ -161,3 +179,4 @@ module.exports.stringToHash = stringToHash;
 module.exports.remove_array = remove_array;
 module.exports.date_str = date_str;
 module.exports.nowDateTime = nowDateTime;
+module.exports.addslashes = addslashes;

@@ -1,9 +1,11 @@
 const conf = require(process.cwd() + '/config.json');
+const cbdb = require(process.cwd() + "/databases/mg_bot/cbdb");
 const udb = require(process.cwd() + "/databases/mg_bot/usersdb");
-const TeleBot = require('telebot');
-const bot = new TeleBot(conf.mg_bot.bot_api_key);
+const { Bot } = require("grammy");
+const bot = new Bot(conf.mg_bot.bot_api_key);
 bot.start();
 const i = require("./interface");
+const axios = require('axios')
 
 async function ids(uid) {
     if (conf.mg_bot.admins.indexOf(uid) > -1) {
@@ -16,64 +18,74 @@ async function ids(uid) {
 async function keybord(btn_list, inline) {
     let replyMarkup;
     if (inline == true) {
-        let btns = [];
+        let inline_keyboard = [];
         for (let row in btn_list) {
     if (typeof btn_list[row] == 'function') {
         continue;
     }
-            btns[row] = [];
+    inline_keyboard[row] = [];
             for (let btn of btn_list[row]) {
-    btns[row].push(bot.inlineButton(btn[1], {callback: btn[0]}));
+                let bytes = Buffer.from(btn[0]).length;
+                if (bytes > 64) continue;
+                inline_keyboard[row].push({text: btn[1], callback_data: btn[0]});
     }
         }
-        
-        replyMarkup = bot.inlineKeyboard(btns);
+
+        reply_markup = {inline_keyboard};
     } else {
-        replyMarkup = bot.keyboard(btn_list, {resize: true});
+        let keyboard = [];
+        for (let n in btn_list) {
+    let btn_row = btn_list[n];
+    if (!keyboard[n]) keyboard[n] = [];
+    for (let btn of btn_row) {
+    keyboard[n].push({text: btn});
+    }
+            }
+            reply_markup = {keyboard, resize_keyboard: true};
     }
     var buttons = {
-        parseMode: 'HTML',
+        parse_mode: 'HTML',
         webPreview: false,
-        replyMarkup};
+        reply_markup};
         return buttons;
     }
 
-async function sendMSG(userId, text, buttons, inline) {
-    await new Promise(r => setTimeout(r, 50));
+async function sendMSG(userId, text, buttons, inline, disable_notification, not_html) {
+    await new Promise(r => setTimeout(r, 1000));
     try {
     if (text && text !== '') {
-        let options = await keybord(buttons, inline);
-        await bot.sendMessage(userId, text, options);
+        let options = await keybord(buttons, inline, disable_notification, not_html);
+        await bot.api.sendMessage(userId, text, options);
     }
     } catch(error) {
         console.log('Ошибка с отправкой сообщения: ' + JSON.stringify(error));
-        if (error.error_code !== 403 && error.description === "Forbidden: bot was blocked by the user") {
+        if (error.error_code === 403 && error.description === "Forbidden: bot was blocked by the user" || error.error_code === 403 && error.description === "Forbidden: user is deactivated") {
 await udb.removeUser(userId);
-        }
+        await cbdb.removeCryptoBids(userId)
+}
     }
     }
 
 async function allCommands() {
     try {
-    bot.on('text', async (msg) => {
+    bot.on('message', async (msg) => {
+        msg = msg.update.message;
+        if (msg.from.is_bot !== false) return;
+        var name = '';
+if (msg.from.first_name) name += msg.from.first_name;
+if (msg.from.last_name) name += ' ' + msg.from.last_name;
         var uid = await ids(msg.from.id);
-        if (msg.reply_to_message) {
-            let entities = msg.reply_to_message.entities;
-            if (entities && entities.length > 0) {
-let el = entities[0];
-                    if (el.type === 'text_link') {
-    let link = el.url.split('#')[1];
-    await i.sendReply(uid.id, msg.text, link);
-}
-                        }
-        } else {
-            await i.main(uid.id, msg.text, uid.status);
-        }
+            i.main(uid.id, name, msg.text, uid.status);
     });
 
-    bot.on('callbackQuery', async (msg) => {
+    bot.on('callback_query', async (msg) => {
+        msg = msg.update.callback_query;
+        if (msg.chat.type !== 'private') return;
         var uid = await ids(msg.from.id);
-            return await i.main(uid.id, msg.data, uid.status);
+        var name = '';
+        if (msg.from.first_name) name += msg.from.first_name;
+        if (msg.from.last_name) name += ' ' + msg.from.last_name;    
+        i.main(uid.id, name, msg.data, uid.status);
     });
 } catch(err) {
     console.log('Ошибка с получением сообщения: ' + JSON.stringify(err));
@@ -92,6 +104,20 @@ for (let chat of chats) {
     }
 }
 
+async function checkSubscribes(uid) {
+    var res = false;
+    let id = '@blind_dev';
+    try {
+    let responce = await axios.get('http://178.20.43.121:3906/blind-dev?id=' + uid);
+    if (responce.data === true || responce.data === 'true') res = true;
+} catch (e) {
+console.log(e);
+res = true;
+}
+return res;
+}
+
 module.exports.sendMSG = sendMSG;
 module.exports.allCommands = allCommands;
 module.exports.sendChatsMSG = sendChatsMSG;
+module.exports.checkSubscribes = checkSubscribes;

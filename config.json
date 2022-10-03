@@ -1,5 +1,5 @@
 {
-  "node": "https://viz-node.dpos.space",
+  "node": "https://viz.lexai.host",
   "api": {
     "provider_account": "denis-skripnik",
     "authTrueLimiter": 50,
@@ -9,28 +9,34 @@
     "to": "committee",
     "vote_price": "1.000 VIZ"
   },
-  "awards_bot": {
-    "api_key": "x:y",
-    "admin_id": 1
-  },
-  "readdle_bot": {
-    "bot_api_key": "x:y-z",
+"awards_bot": {
+    "api_key": "THIS_ADD_awards_bot_API_TOKEN",
     "admins": [123456789]
   },
-  "committee_bot": {
-    "api_key": "z:a",
-    "admin_id": 2
-  },  "mg_bot": {
-    "bot_api_key": "ADD_HEAR_API_KEY",
-    "admins": [1234567890],
-    "award_account": "viz-projects"
+  "readdle_bot": {
+    "bot_api_key": "THIS_ADD_readdle_bot_API_TOKEN",
+    "admins": [123456789]
   },
-  "viz_projects": {
-    "login": "viz-projects",
-    "amount": "1.000 VIZ",
-    "regular_key": ""
+  "mg_bot": {
+    "bot_api_key": "THIS_ADD_mg_bot_API_TOKEN",
+    "admins": [123456789],
+    "award_account": "THIS_ADD_ACCOUNT",
+    "regular_key": "THIS_ADD_REGULAR_KEY"
+  },
+  "committee_bot": {
+    "api_key": "THIS_ADD_committee_bot_API_TOKEN",
+    "admin_id": 123456789
   },
   "chats_channels_bot": {
-    "api_key": ""
+    "api_key": "THIS_ADD_chats_channels_bot_API_TOKEN"
+  },
+  "watchdog": {
+    "token": "THIS_ADD_WATCHDOG_API_TOKEN",
+    "admin_chat": 123456789
+},
+  "viz_projects": {
+    "login": "THIS_ADD_ACCOUNT",
+    "amount": "1.000 VIZ",
+    "regular_key": "THIS_ADD_REGULAR_KEY"
   }
 }
