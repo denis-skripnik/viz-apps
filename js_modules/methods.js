@@ -146,6 +146,15 @@ async function getWitnessSchedule() {
     return await viz.api.getWitnessScheduleAsync();
 }
 
+async function sendReblog(account, wif, author, block) {
+    let data = {};
+    let custom_data = await getCustomProtocolAccount(account, 'V');
+    data.p =         custom_data.custom_sequence_block_num;
+    data.d = {};
+            data.d.t = '';
+            data.d.s = `viz://@${author}/${block}`;
+            await sendJson(wif, account, 'V', JSON.stringify(data));
+}
 
 module.exports.getOpsInBlock = getOpsInBlock;
 module.exports.getProps = getProps;      
@@ -167,3 +176,4 @@ module.exports.randomWithHash = randomWithHash;
 module.exports.getWitnessByAccount = getWitnessByAccount;
 module.exports.getWitnessesByVote = getWitnessesByVote;
 module.exports.getWitnessSchedule = getWitnessSchedule;
+module.exports.sendReblog = sendReblog;

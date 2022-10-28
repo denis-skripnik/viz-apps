@@ -59,20 +59,24 @@ async function onMsg(msg) {
 }
 
 async function getWitnessesByBlock() {
-            const witnesses = await methods.getWitnessesByVote("",100);
-            for(let w of witnesses) {
+try {
+    const witnesses = await methods.getWitnessesByVote("",100);
+    for(let w of witnesses) {
 
-                let saved = await memory.loadWitness(w.owner);
+        let saved = await memory.loadWitness(w.owner);
 
-                log.debug("witness", w.owner, "missed", w.total_missed)
+        log.debug("witness", w.owner, "missed", w.total_missed)
 
-                if(saved) {
+        if(saved) {
 
-                    await check(w, saved);
-                } 
+            await check(w, saved);
+        } 
 
-                await memory.saveWitness(w);
-            }
+        await memory.saveWitness(w);
+    }
+} catch(e) {
+    // Error.
+}
 }
 
 async function runBot() {

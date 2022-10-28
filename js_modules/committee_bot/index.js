@@ -43,6 +43,29 @@ async function committeePayRequestOperation(opbody) {
 }
 }
 
+async function checkRequests() {
+let now_time = new Date().getTime();
+        try {
+let res = await cdb.findAllCommittee();
+if (res && res.length === 0) return;
+for (let request of res) {
+let remained = parseInt(now_time / 1000) - parseInt(request.end / 1000);
+if (remained === 86400 || remained === 7200) {
+        let users = await udb.findAllUsers();
+if (users && users.length > 0) {
+    for (var i = 0; i < users.length; i++) {
+        await botjs.endingRequest(users[i]['uid'], users[i]['lng'], request, remained / 3600);
+}
+}
+} // end if remained is 2 hour's or 1 day.
+}
+} catch(e) {
+    console.log(e);
+    return 0;
+}
+}
+
+setInterval(checkRequests, 1000);
 setInterval(botjs.langNotifyMSG, 3600000);
 
 module.exports.committeeWorkerCreateRequestOperation = committeeWorkerCreateRequestOperation;

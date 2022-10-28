@@ -251,6 +251,20 @@ await sendMSG(uid, text, 'application', res.id, 'Eng');
         }    
 }
 
+async function endingRequest(uid, lang, res, remained) {
+if (lang === 'Ru') {
+    var text = `Заявка № <a href="https://control.viz.world/committee/${res.id}/">${res.id}</a> завершится через ${parseInt(remained)} часа. Не забудьте проголосовать!`;
+await sendMSG(uid, text, 'application', res.id, 'Ru');
+} else if (lang === 'Eng') {
+    var text = `There is a new request to the Viz Committee № <a href="https://control.viz.world/committee/${res.id}/">${res.id}</a>
+Author: <a href="https://control.viz.world/@${res.creator}/">${res.creator}</a>, worker: <a href="https://control.viz.world/@${res.worker}/">${res.worker}</a>, <a href="${res.url}">A link to a description of the request</a>
+Minimum amount of tokens to satisfy the request: ${res.required_amount_min}
+The maximum amount of token requests: ${res.required_amount_max}
+End Date and time: ${end_time}`;
+await sendMSG(uid, text, 'application', res.id, 'Eng');
+}
+}
+
 async function adminCommand(fromId, message) {
 let props = {};
 props.match = message.split(' ');

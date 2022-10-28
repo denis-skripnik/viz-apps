@@ -192,10 +192,11 @@ async function receiveAward(opbody) {
 for (let user of users) {
     let initiator = opbody.initiator;
     let receiver = opbody.receiver;
-if (user.subscribe.indexOf(receiver) === -1) continue;
-    let cs = '';
+    if (user.subscribe.indexOf(receiver) === -1) continue;
+let cs = '';
 if (opbody.custom_sequence > 0) cs = `${lng[user.lang].custom_sequence}: ${opbody.custom_sequence}`;
 let memo = '';
+if (opbody.memo !== '' && opbody.memo.indexOf('channel:@') > -1) opbody.memo = `<a href="https://t.me/${opbody.memo.split('channel:@')[1].split(':').join('/')}">${opbody.memo}</a>`;
 if (opbody.memo !== '') memo = `${lng[user.lang].memo}: ${opbody.memo}`;
             let receiver_shares = parseFloat(opbody.shares);
             receiver_shares = receiver_shares.toFixed(3) + ' Ƶ VIZ';

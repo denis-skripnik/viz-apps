@@ -37,6 +37,20 @@
   "viz_projects": {
     "login": "THIS_ADD_ACCOUNT",
     "amount": "1.000 VIZ",
-    "regular_key": "THIS_ADD_REGULAR_KEY"
+    "regular_key": "THIS_ADD_REGULAR_KEY",
+    "tags": ["viz", "viznews", "viz_projects_news"],
+          "sandbox": {
+              "allow": true,
+              "type": "shares",
+      "value": "100000",
+      "account": "sandbox.viz-login",
+      "regular_key": "THIS_SANDBOX_PRIVATE_KEY"
+          },
+          "popular": {
+              "allow": true,
+              "award_amount": 1000,
+              "account": "popular.viz-login",
+      "regular_key": "THIS_POPULAR_PRIVATE_KEY"
+          }
   }
 }

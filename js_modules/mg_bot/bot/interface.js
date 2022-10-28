@@ -1,5 +1,4 @@
 var Big = require('big.js');
-var axios = require('axios');
 const methods = require(process.cwd() + '/js_modules/methods');
 let lng = {};
 lng['Русский'] = require('./languages/ru.js');
@@ -10,6 +9,7 @@ const udb = require(process.cwd() + "/databases/mg_bot/usersdb");
 const ftqdb = require(process.cwd() + "/databases/mg_bot/ftqdb");
 const cbdb = require(process.cwd() + "/databases/mg_bot/cbdb");
 const bkdb = require(process.cwd() + "/databases/mg_bot/bkdb");
+const ccdb = require(process.cwd() + "/databases/ccdb");
 const helpers = require(process.cwd() + "/js_modules/helpers");
 const conf = require(process.cwd() + "/config.json");
 var crypto = require('crypto');
@@ -329,10 +329,23 @@ await createRefererScores(score, user.referers);
     let text = lng[user.lng].rn_text;
             let btns = await keybord(user.lng, 'games_buttons');
     await botjs.sendMSG(id, text, btns, false);        
-} else if (user && user.lng && message.indexOf(lng[user.lng].crypto_bids) > -1) {
+} else if (user && user.lng && message.indexOf(lng[user.lng].crypto_bids) > -1 || user && user.lng && message === '.bids' || user && user.lng && message === '.стк') {
+    if (message === '.bids') message = lng[user.lng].crypto_bids;
+    if (message === '.стк') message = lng[user.lng].crypto_bids;
     let end_bids_round = Math.ceil(bn / 100) * 100;
     if (bn >= end_bids_round - 50 && bn <= end_bids_round) {
-        let text = lng[user.lng].crypto_bids_active;
+        let end_round_block = 100 - (bn % 100);
+        let timestamp = parseInt(end_round_block * 3);
+        var hours = Math.floor(timestamp / 60 / 60);
+        var minutes = Math.floor(timestamp / 60) - (hours * 60);
+        var seconds = timestamp % 60;
+        var end_round_time = [
+            hours.toString().padStart(2, '0'),
+            minutes.toString().padStart(2, '0'),
+            seconds.toString().padStart(2, '0')
+          ].join(':');
+        
+        let text = lng[user.lng].crypto_bids_active + ` ${end_round_time}`;
         let btns = await keybord(user.lng, 'games_buttons');        
         await botjs.sendMSG(id, text, btns, false);        
         await udb.updateUserStatus(id, names, user.prev_status, lng[user.lng].home, send_time);
@@ -520,7 +533,18 @@ await udb.updateUserStatus(id, names, user.status, lng[user.lng].home, send_time
 } else if (user && user.lng && lng[user.lng] && user.status.indexOf(lng[user.lng].crypto_bids + '|') > -1) {
     let end_bids_round = Math.ceil(bn / 100) * 100;
     if (bn >= end_bids_round - 50 && bn <= end_bids_round) {
-        let text = lng[user.lng].crypto_bids_active;
+        let end_round_block = 100 - (bn % 100);
+        let timestamp = parseInt(end_round_block * 3);
+        var hours = Math.floor(timestamp / 60 / 60);
+        var minutes = Math.floor(timestamp / 60) - (hours * 60);
+        var seconds = timestamp % 60;
+        var end_round_time = [
+            hours.toString().padStart(2, '0'),
+            minutes.toString().padStart(2, '0'),
+            seconds.toString().padStart(2, '0')
+          ].join(':');
+        
+        let text = lng[user.lng].crypto_bids_active + ` ${end_round_time}`;
         let btns = await keybord(user.lng, 'games_buttons');        
         await botjs.sendMSG(id, text, btns, false);        
         await udb.updateUserStatus(id, names, user.prev_status, lng[user.lng].home, send_time);
@@ -539,7 +563,18 @@ await botjs.sendMSG(id, text, btns, false);
 } else if (user && user.lng && lng[user.lng] && user.status.indexOf('cb_direction|') > -1) {
     let end_bids_round = Math.ceil(bn / 100) * 100;
     if (bn >= end_bids_round - 50 && bn <= end_bids_round) {
-        let text = lng[user.lng].crypto_bids_active;
+        let end_round_block = 100 - (bn % 100);
+        let timestamp = parseInt(end_round_block * 3);
+        var hours = Math.floor(timestamp / 60 / 60);
+        var minutes = Math.floor(timestamp / 60) - (hours * 60);
+        var seconds = timestamp % 60;
+        var end_round_time = [
+            hours.toString().padStart(2, '0'),
+            minutes.toString().padStart(2, '0'),
+            seconds.toString().padStart(2, '0')
+          ].join(':');
+        
+        let text = lng[user.lng].crypto_bids_active + ` ${end_round_time}`;
         let btns = await keybord(user.lng, 'games_buttons');        
         await botjs.sendMSG(id, text, btns, false);        
         await udb.updateUserStatus(id, names, user.prev_status, lng[user.lng].home, send_time);
@@ -687,8 +722,10 @@ await botjs.sendMSG(msg.id, msg.text, btns, false, true);
 
 async function cryptoBidsResults() {
     await helpers.sleep(1000);
-    let responce = await axios.get('https://api.coingecko.com/api/v3/coins/markets?vs_currency=USD&ids=bitcoin');
-    let now_price = responce.data[0].current_price;
+    console.log('test')
+    let responce = await ccdb.getCoinsByIds(['bitcoin']);
+    let now_price = responce[0].current_price;
+    console.log(now_price);
     if (!now_price || typeof now_price === 'undefined') return;
     let timestamp = new Date().getTime();
 await cbdb.updateBTCPrice(now_price, timestamp);
