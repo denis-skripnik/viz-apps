@@ -283,11 +283,11 @@ ${top_list}`;
                 let btns = await keybord(user.lng, 'cancel');
                 if (ftq_data && Object.keys(ftq_data).length > 0) {
     text = lng[user.lng].ft_no_work;
-    btns = await keybord(user.lng, 'games_buttons');
+    btns = await keybord(user.lng, 'games');
     await udb.updateUserStatus(id, names, user.prev_status, lng[user.lng].home, send_time);
 } else if (user.ft_counter > 100) {
     text = lng[user.lng].ft_tomorrow;
-    btns = await keybord(user.lng, 'games_buttons');
+    btns = await keybord(user.lng, 'games');
     await udb.updateUserStatus(id, names, user.prev_status, lng[user.lng].home, send_time);
 } else {
     await udb.plusFTCounter(id);
@@ -346,7 +346,7 @@ await createRefererScores(score, user.referers);
           ].join(':');
         
         let text = lng[user.lng].crypto_bids_active + ` ${end_round_time}`;
-        let btns = await keybord(user.lng, 'games_buttons');        
+        let btns = await keybord(user.lng, 'games');        
         await botjs.sendMSG(id, text, btns, false);        
         await udb.updateUserStatus(id, names, user.prev_status, lng[user.lng].home, send_time);
         return;
@@ -354,7 +354,7 @@ await createRefererScores(score, user.referers);
     let bids = await cbdb.findCryptoBids(id);
     let btc_price = await cbdb.getBTCPrice();
     let text = lng[user.lng].yes_crypto_bid;
-    let btns = await keybord(user.lng, 'games_buttons');
+    let btns = await keybord(user.lng, 'games');
     if (btc_price && typeof btc_price !== 'undefined' && btc_price.price > 0 && bids.length === 0 && user.scores > 0) {
         let x =  await minusNumbers(2, level_k);
         if (x < 1.2) x = 1.2;
@@ -434,7 +434,7 @@ if (counter >= 12 && spases.length >= 2 && /[a-zа-яё]/i.test(message)) {
     await udb.updateUserStatus(id, names, lng[user.lng].home, `ft_send|${message}`, send_time);
 } else {
     let text = lng[user.lng].ft_no_correct;
-    let btns = await keybord(user.lng, 'home');
+    let btns = await keybord(user.lng, 'games');
     await botjs.sendMSG(id, text, btns, false);
 }
     } else if (user && user.lng && lng[user.lng] && user.status === lng[user.lng].random_numbers) {
@@ -468,11 +468,11 @@ let rn = String(number);
                                                                                         let bk_level = parseInt(user.status.split(' ')[1]);
                                                                 let max_n = (10 ** (bk_level + 2)) -1;
                                                                 let text = lng[user.lng].not_number;
-                                                                let btns = await keybord(user.lng, 'games_buttons');
+                                                                let btns = await keybord(user.lng, 'games');
                                                                 let simbols = bk_level + 2;
                                                                 let staps = '';
                                                                 if (!isNaN(message) && parseInt(message) > 0 && parseInt(message) <= max_n && message.length === simbols) {
-                                                                let game = await bkdb.getGameSession(id, bk_level);
+                                                                    let game = await bkdb.getGameSession(id, bk_level);
                                                                 if (game || typeof game !== 'undefined') {
                                                                         if (game.text.length < 4000) staps = game.text;
                                                                         let res = countBullsAndCows(game.number, message);
@@ -509,8 +509,8 @@ let scores = user.scores;
                                                                                                         } // end if maximum bulls.
                                                                     else {
                                                                         await udb.updateUserStatus(id, names, user.prev_status, user.status, send_time);                                
+                                                                        btns = await keybord(user.lng, 'bk_game_buttons');
                                                                     }
-                                                                    btns = await keybord(user.lng, 'bk_game_buttons');
                                                                 } // end game.
                                                                 } else if (message === lng[user.lng].reset_game) {
                                                                     text = lng[user.lng].reset_text;
@@ -545,7 +545,7 @@ await udb.updateUserStatus(id, names, user.status, lng[user.lng].home, send_time
           ].join(':');
         
         let text = lng[user.lng].crypto_bids_active + ` ${end_round_time}`;
-        let btns = await keybord(user.lng, 'games_buttons');        
+        let btns = await keybord(user.lng, 'games');        
         await botjs.sendMSG(id, text, btns, false);        
         await udb.updateUserStatus(id, names, user.prev_status, lng[user.lng].home, send_time);
         return;
@@ -575,7 +575,7 @@ await botjs.sendMSG(id, text, btns, false);
           ].join(':');
         
         let text = lng[user.lng].crypto_bids_active + ` ${end_round_time}`;
-        let btns = await keybord(user.lng, 'games_buttons');        
+        let btns = await keybord(user.lng, 'games');        
         await botjs.sendMSG(id, text, btns, false);        
         await udb.updateUserStatus(id, names, user.prev_status, lng[user.lng].home, send_time);
         return;
@@ -584,7 +584,7 @@ await botjs.sendMSG(id, text, btns, false);
     let scores = parseFloat(user.status.split('|')[1]);
 let price = parseFloat(user.status.split('|')[2]);
 let text = lng[user.lng].crypto_bids_failed;
-let btns = await keybord(user.lng, 'games_buttons');
+let btns = await keybord(user.lng, 'games');
 if (message === lng[user.lng].cb_more || message === lng[user.lng].cb_less) {
     let direction = '<';
     if (message === lng[user.lng].cb_more) direction = '>';
@@ -725,8 +725,8 @@ async function cryptoBidsResults() {
     console.log('test')
     let responce = await ccdb.getCoinsByIds(['bitcoin']);
     let now_price = responce[0].current_price;
-    console.log(now_price);
-    if (!now_price || typeof now_price === 'undefined') return;
+    let time_has_passed = new Date().getTime() - responce[0].updated;
+    if (!now_price || typeof now_price === 'undefined' || responce && responce.length > 0 && time_has_passed >= 300000) return;
     let timestamp = new Date().getTime();
 await cbdb.updateBTCPrice(now_price, timestamp);
 

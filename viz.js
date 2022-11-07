@@ -89,18 +89,23 @@ let last_bn = 0;
 let delay = SHORT_DELAY;
 
 async function getNullTransfers() {
-    await watchdog.runBot();
     PROPS = await methods.getProps();
             const block_n = await bdb.getBlock(PROPS.last_irreversible_block_num);
+if (typeof block_n === 'undefined') {
+    await helpers.sleep(3000);
+    getNullTransfers();
+    return;
+}
+await watchdog.runBot();
 bn = block_n.last_block;
 
 delay = SHORT_DELAY;
 while (true) {
-    await watchdog.getWitnessesByBlock();
     try {
         if (bn > PROPS.last_irreversible_block_num) {
             // console.log("wait for next blocks" + delay / 1000);
             await helpers.sleep(delay);
+            watchdog.getWitnessesByBlock();
             PROPS = await methods.getProps();
         } else {
             if(0 < await processBlock(bn)) {

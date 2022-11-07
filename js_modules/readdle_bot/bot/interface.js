@@ -572,7 +572,8 @@ text = lng[user.lng].award_sended;
 }
 
 async function sendNotify(login, lang, id, bn, data) {
-try {
+if (typeof lang === 'undefined' || lang && lang === '') return;
+    try {
     let text = '';
     if (data.t && data.t === 'p' && !data.d.r && !data.d.s) {
         text = `<a href="https://readdle.me/#viz://@${login}/${bn}/publication/">${lng[lang].type_publication}</a> ${lng[lang].from} ${login}.
