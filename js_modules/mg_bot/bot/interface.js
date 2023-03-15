@@ -149,7 +149,7 @@ await udb.addUser(id, names, '', '', 'start', send_time, 0, refs, id_hash, [], '
     } // end if no referer in command.
     } // end if not user.
     else { // yes user.
-        if (user && user.lng && user.lng !== '' && message.indexOf(lng[user.lng].back) > -1 || user && user.lng && user.lng !== '' && message.indexOf(lng[user.lng].cancel) > -1) message = user.prev_status;
+        if (typeof message !== 'undefined' && user && user.lng && user.lng !== '' && message.indexOf(lng[user.lng].back) > -1 || user && user.lng && user.lng !== '' && message.indexOf(lng[user.lng].cancel) > -1) message = user.prev_status;
         let last_time = send_time - user.send_time;
         if (user.send_time && typeof user.send_time !== 'undefined' && last_time < 1000 && message !== lng[user.lng].home && message !== lng[user.lng].check_subscribes && message !== '/start') return;
         
@@ -594,10 +594,6 @@ let user_scores = user.scores;
 user_scores = await minusNumbers(user_scores, scores);
 let locked_scores = parseFloat(new Big(user.locked_scores).plus(scores));
 await udb.updateUserStatus(id, names, user.status, lng[user.lng].games, send_time, -Math.abs(scores), scores);
-let admin_text = `Пользователь ${names} с id ${id} сделал ставку.
-${scores} баллов,
-Направление: ${message}`;
-await botjs.sendMSG(conf.mg_bot.admins[0], admin_text, [], false);
 }
 
 await botjs.sendMSG(id, text, btns, false);
@@ -722,7 +718,6 @@ await botjs.sendMSG(msg.id, msg.text, btns, false, true);
 
 async function cryptoBidsResults() {
     await helpers.sleep(1000);
-    console.log('test')
     let responce = await ccdb.getCoinsByIds(['bitcoin']);
     let now_price = responce[0].current_price;
     let time_has_passed = new Date().getTime() - responce[0].updated;
