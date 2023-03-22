@@ -124,11 +124,13 @@ For questions about Viz, write to @eng_viz_faq`,
 "crypto_bids_active": "The collection of bids is completed. Wait for the next round, which starts about once every 5 minutes.",
 "new_bids_round": "Раунд ставок завершён. Начался новый. Просьба дождаться окончания выбора победителей и проигравших, после чего ввести заново.",
 "yes_crypto_bid": "You have already placed a bet. or you have 0 points.",
-"crypto_bids_text": function(scores, btc_price, datetime, level, x) {
+"crypto_bids_text": function(scores, btc_price, datetime, totalProfitCoefficients) {
     return `Enter the amount of points up to ${scores} that you are ready to bet on the movement of the BTC rate.
-    At your ${level} level, if you win, your bet will increase by ${x} times, otherwise you will lose it.
-Formula:
-multiplier - (level * 0.05);
+    If you win, you will receive your points + the points of the losers according to your share.
+
+    Profitability coefficients:
+For growth: ${totalprofitcoeffients[">"]}.
+To drop: ${totalprofitcoeffients["<"]}.
 
 <b>Check the time before the distribution of awards in the top by points, because if there are less than 30 minutes left, there is a risk of zeroing the bets, because they do not go to the next day.</b>
 
@@ -140,8 +142,8 @@ The BTC rate for ${datetime}: ${btc_price} $ (fixed at the beginning of the roun
 "cb_less": "Less",
 "crypto_bids_ok": "The bid is accepted. Expect results.",
 "crypto_bids_failed": "An error occurred while entering data",
-"crypto_bids_winn": function(x) {
-    return `You've won. The number of points awarded has been increased in ${x} times.`;
+"crypto_bids_winn": function(amount) {
+    return `You've won! The number of points awarded has been increased by ${amount}.`;
 },
 "crypto_bids_lost": "You lost by losing your points.",
 "crypto_bids_data": function(old_price, now_price, direction, bid_amount) {

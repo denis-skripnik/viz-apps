@@ -27,26 +27,21 @@ async function minusNumbers(n1, n2, isBig = false) {
     return parseFloat(n.toFixed(2));
 }
 
-function countBullsAndCows(secret, suggestition) {
-      let bulls = 0, cows = 0;
-    suggestition = suggestition.toString();
+function countBullsAndCows(secret, suggestion) {
+    let bulls = 0, cows = 0;
+    suggestion = suggestion.toString();
     secret = secret.toString();
-    let search_secret = secret;
+    
     for (let i = 0; i < secret.length; i++) {
-        if (suggestition[i] === secret[i]) {
-          bulls++;
-          let search_number = search_secret.indexOf(suggestition[i]);
-          if (search_number > -1) {
-search_number += 1;
-search_secret = search_secret.substring(0, search_number - 1) + search_secret.substring(search_number, search_secret.length);
-}
-        }
-      else if (search_secret.includes(suggestition[i])) {
-          cows++;
-        }
+      if (suggestion[i] === secret[i]) {
+        bulls++;
+      } else if (secret.includes(suggestion[i])) {
+        cows++;
+      }
     }
-      return [bulls, cows];
-    }
+    
+    return [bulls, cows];
+  }
      
 // Клавиатура
 async function keybord(lang, variant) {
@@ -351,18 +346,39 @@ await createRefererScores(score, user.referers);
         await udb.updateUserStatus(id, names, user.prev_status, lng[user.lng].home, send_time);
         return;
     }
-    let bids = await cbdb.findCryptoBids(id);
+    let bids = await cbdb.findCryptoBids();
     let btc_price = await cbdb.getBTCPrice();
+  // Проверяем наличие пользователя в списке ставок
+  let userBidExists = bids.some((bid) => bid.id === id);
+
     let text = lng[user.lng].yes_crypto_bid;
     let btns = await keybord(user.lng, 'games');
-    if (btc_price && typeof btc_price !== 'undefined' && btc_price.price > 0 && bids.length === 0 && user.scores > 0) {
-        let x =  await minusNumbers(2, level_k);
-        if (x < 1.2) x = 1.2;
+    if (btc_price && typeof btc_price !== 'undefined' && btc_price.price > 0 && userBidExists === false && user.scores > 0) {
+  // Инициализируем переменные для хранения сумм и коэффициентов
+  let totalBids = { ">": 0, "<": 0 };
+  let totalProfitCoefficients = { ">": 0, "<": 0 };
+
+  // Считаем суммы ставок и вычисляем коэффициенты прибыльности для каждого направления
+  bids.reduce((total, bid) => {
+    if (bid.id === id) {
+      return total;
+    }
+
+    total[bid.direction] += bid.scores;
+    let profitCoefficient = (bid.direction === ">")
+      ? bid.scores / bid.btc_price
+      : bid.btc_price / bid.scores;
+    totalProfitCoefficients[bid.direction] += profitCoefficient;
+
+    return total;
+  }, totalBids);
+
+
         let now_datetime = new Date(btc_price.timestamp).toLocaleString("ru-RU", {timeZone: "Europe/Moscow"});
         let [date, time] = now_datetime.split(', ');
         let [month, day, year] = date.split('/');
         let datetime = `${day}.${month}.${year} ${time.split(' AM')[0]} GMT+3`;
-        text = lng[user.lng].crypto_bids_text(user.scores, btc_price.price, datetime, level, x);
+        text = lng[user.lng].crypto_bids_text(user.scores, btc_price.price, datetime, totalProfitCoefficients);
                 btns = await keybord(user.lng, 'cancel');
                 await udb.updateUserStatus(id, names, user.prev_status, lng[user.lng].crypto_bids + '|' + btc_price.price, send_time, 0);
             } else {
@@ -730,6 +746,7 @@ await cbdb.updateBTCPrice(now_price, timestamp);
         bids_status = false;
         return;
     }
+    
     const bids_ids = bids.reduce((previousValue, currentValue) => {
         previousValue.push(currentValue.id);
         return previousValue;
@@ -746,6 +763,9 @@ await botjs.sendMSG(user.id, lng[user.lng].new_bids_round, btns, false, true);
 }
 
 
+let all_bids = new Big(0);
+let winners_bids = new Big(0);
+let winners = [];
         let admin_text = `В этом раунде сделали ставки следующие пользователи:
 `;
         for (let bid of bids) {
@@ -756,30 +776,21 @@ if (user && Object.keys(user).length > 0) {
     if (user.lng && user.lng !== '' && res === 'not_subscribe') continue;
     let direction = '<';
 if (now_price > bid.btc_price) direction = '>';
-let price_difference = await minusNumbers(now_price, bid.btc_price, true);
-let change_percent = price_difference.div(new Big(bid.btc_price));
 if (user.lng === '' && user.locked_scores === 0) continue;
-    let text = lng[user.lng].crypto_bids_lost;
-    let btns = await keybord(user.lng, 'no');
+let text = lng[user.lng].crypto_bids_lost;
+let btns = await keybord(user.lng, 'no');
+let bid_scores = new Big(bid.scores);
+    all_bids = all_bids.plus(bid_scores);
     if (bid.direction === direction) {
-let level = parseInt(new Big(user.scores).plus(bid.scores).div(100))
-if (level < 0) level = 0;
-let level_k = new Big(level).times(0.05);
-        let x =  await minusNumbers(2, level_k)
-        if (x < 1.2) x = 1.2;
-        let score = new Big(bid.scores).times(x);
-        let scores = parseFloat(new Big(user.scores).plus(score));
-        text = lng[user.lng].crypto_bids_winn(x);
+        winners_bids = winners_bids.plus(bid_scores);
+        winners.push(bid);
         admin_text += `${user.names} выиграл, поставив ${bid.scores} баллов.
 Курс BTC:
 был: ${bid.btc_price}, Сейчас: ${now_price}`;
-                let locked_scores = parseFloat(new Big(user.locked_scores).minus(bid.scores));
-                if (locked_scores < 0) locked_scores = 0;
-                await udb.updateUserStatus(bid.id, user.names, user.prev_status, user.status, user.send_time, score, -Math.abs(bid.scores));
-                await helpers.sleep(500);
-                await createRefererScores(score, user.referers);
-            } // you winn.
+            continue;
+} // you winn.
                  else {
+                    await cbdb.removeCryptoBids(bid.id);
                     admin_text += `${user.names} проиграл, поставив ${bid.scores} баллов.
 Курс BTC:
 Был: ${bid.btc_price}, сейчас: ${now_price}`;                   
@@ -790,10 +801,36 @@ let level_k = new Big(level).times(0.05);
                 }
     text += lng[user.lng].crypto_bids_data(bid.btc_price, now_price, bid.direction, bid.scores);
     await botjs.sendMSG(bid.id, text, btns, false);
+} // end if user.
+        } // end for bids.
+
+        for (let bid of winners) {
+            let user = users[bid.id];
+if (user && Object.keys(user).length > 0) {
+    if (!user.lng || user.lng && user.lng === '') user.lng = 'English';
+    let direction = '<';
+if (now_price > bid.btc_price) direction = '>';
+if (user.lng === '' && user.locked_scores === 0) continue;
+    let text = lng[user.lng].crypto_bids_lost;
+    let btns = await keybord(user.lng, 'no');
+    let bid_scores = new Big(bid.scores);
+    if (bid.direction === direction) {
+        let bid_share = bid_scores.div(winners_bids);
+        let score = all_bids.times(bid_share);
+        let scores = parseFloat(new Big(user.scores).plus(score));
+        text = lng[user.lng].crypto_bids_winn(parseFloat(score));
+let locked_scores = parseFloat(new Big(user.locked_scores).minus(bid.scores));
+                if (locked_scores < 0) locked_scores = 0;
+                await udb.updateUserStatus(bid.id, user.names, user.prev_status, user.status, user.send_time, score, -Math.abs(bid.scores));
+                await helpers.sleep(500);
+                await createRefererScores(score, user.referers);
+            } // you winn.
+    text += lng[user.lng].crypto_bids_data(bid.btc_price, now_price, bid.direction, bid.scores);
+    await botjs.sendMSG(bid.id, text, btns, false);
     await cbdb.removeCryptoBids(bid.id);
 } // end if user.
-        }
-await botjs.sendMSG(conf.mg_bot.admins[0], admin_text, [], false);
+        } // end for bids.
+        await botjs.sendMSG(conf.mg_bot.admins[0], admin_text, [], false);
 await helpers.sleep(1000);
 }
 
