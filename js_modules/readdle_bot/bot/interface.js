@@ -38,7 +38,7 @@ if (variant === 'lng') {
         buttons = [[lng[lang].note, lng[lang].post], [lng[lang].back, lng[lang].home]];
     }     else if (variant.indexOf('notify_buttons#') > -1) {
         let post = variant.split('#')[1];
-        buttons = [[[lng[lang].award + ' ' + post, lng[lang].award]]];
+        buttons = [[[lng[lang].award + ' ' + post, lng[lang].award], [lng[lang].reblog + ' ' + post, lng[lang].reblog]]];
     }     else if (variant === 'back') {
     buttons = [[lng[lang].back, lng[lang].home]];
 }     else if (variant === 'send_award') {
@@ -51,6 +51,7 @@ if (variant === 'lng') {
 
 // Команды
 async function main(id, message, status) {
+    if (typeof message === 'undefined') return;
     let user = await udb.getUser(id);
     if (!user) {
         await udb.addUser(id, '', '', 'start', [], true, true, 0, '');
@@ -65,7 +66,7 @@ async function main(id, message, status) {
             }
     }
 
-    if (message.indexOf('start') > -1) {
+    if (typeof message !== 'undefined' && message.indexOf('start') > -1) {
 let text = '';
 let btns;
 if (message.indexOf('start') > -1 && user && user.lng && user.lng !== '') {
@@ -87,7 +88,7 @@ await botjs.sendMSG(id, text, btns, false);
         let text = lng[user.lng].home_message;
         let btns = await keybord(user.lng, 'home');
         await botjs.sendMSG(id, text, btns, false);        
-    } else if (user && user.lng && message.indexOf(lng[user.lng].settings) > -1 && message.indexOf(lng[user.lng].news) === -1 && message.indexOf(lng[user.lng].award) === -1 && user.status.indexOf('publish_') === -1 && user.status.indexOf('postcontent') === -1 && user.status.indexOf('note_') === -1) {
+    } else if (user && user.lng && message.indexOf(lng[user.lng].settings) > -1 && message.indexOf(lng[user.lng].news) === -1 && message.indexOf(lng[user.lng].award) === -1 && message.indexOf(lng[user.lng].reblog) === -1 && user.status.indexOf('publish_') === -1 && user.status.indexOf('postcontent') === -1 && user.status.indexOf('note_') === -1) {
         let text = lng[user.lng].settings_text;
                 let btns = await keybord(user.lng, 'settings' + JSON.stringify([user.show_all, user.show_nsfw]));
         await botjs.sendMSG(id, text, btns, false);        
@@ -216,7 +217,7 @@ await botjs.sendMSG(id, text, btns, true);
                                                                             let text = lng[user.lng].delete_conferm + login;
                                                     let btns = await keybord(user.lng, 'conferm');
                                                     await botjs.sendMSG(id, text, btns, false);
-                                                } else if (message.indexOf('@') > -1 && message.indexOf(lng[user.lng].news) === -1 && message.indexOf(lng[user.lng].award) === -1 && user.status.indexOf('publish_') === -1 && user.status.indexOf('postcontent') === -1 && user.status.indexOf('note_') === -1 && user.status.indexOf('publish') === -1 &&  message.indexOf('publish') === -1) {
+                                                } else if (message.indexOf('@') > -1 && message.indexOf(lng[user.lng].news) === -1 && message.indexOf(lng[user.lng].award) === -1 && message.indexOf(lng[user.lng].reblog) === -1 && user.status.indexOf('publish_') === -1 && user.status.indexOf('postcontent') === -1 && user.status.indexOf('note_') === -1 && user.status.indexOf('publish') === -1 &&  message.indexOf('publish') === -1) {
                                                     let acc = await adb.getAccount(message.split('@')[1]);
 if (acc && acc.id === id) {
     let text = lng[user.lng].change_account + message;
@@ -331,7 +332,12 @@ let last_vote_time = acc.last_vote_time;
     btns = await keybord(user.lng, 'back');
 }
 await botjs.sendMSG(id, text, btns, keyboard_type);
-                                                                                    } else if (user && user.lng && message.indexOf(lng[user.lng].news) > -1) {
+} else if (user && user.lng && message.indexOf(lng[user.lng].reblog) > -1) {                                                                                    
+    let link = message.split(' ')[1];
+    let text = lng[user.lng].typeing_reblog_comment;
+    let btns = await keybord(user.lng, 'cancel');
+    await botjs.sendMSG(id, text, btns, false);
+} else if (user && user.lng && message.indexOf(lng[user.lng].news) > -1) {
                                                                                                                                                         if (status === 2) {
                                                                 let text = message.split('Новости:')[1];
                                                                 let btns = await keybord(user.lng, 'home');
@@ -567,6 +573,39 @@ text = lng[user.lng].award_sended;
         let btns = await keybord(user.lng, 'home');
         await botjs.sendMSG(id, text, btns, false);
         await udb.updateUser(id, user.lng, user.prev_status, lng[user.lng].home, user.subscribes, user.show_nsfw, user.show_all, parseFloat(message), user.coment_account);
+    } else if (user && user.lng && lng[user.lng] && user.status.indexOf(lng[user.lng].reblog) > -1) {
+        let [author, block] = user.status.split(' ')[1].split('@')[1].split('/');
+        let account;
+        if (!user.coment_account || user.coment_account && user.coment_account === '') {
+            let accs = await adb.getAccounts(id);
+            if (accs && accs.length > 0) account = accs[0];
+        } else {
+            account = await adb.getAccount(user.coment_account);
+        }
+        let text = '';
+        let btns;
+        if (account) {
+            let get_account = await methods.getAccount(account.login);
+        if (get_account && get_account.length > 0) {
+            let acc = get_account[0];
+            let wif = sjcl.decrypt(account.login + '_postingKey_readdle_bot', account.posting_key);        
+            try {
+                        if (message === '0') message = '';
+                await methods.sendReblog(account.login, wif, author, block, message);
+                    text = `${lng[user.lng].type_reblog} ${account.login} ${lng[user.lng].reblog_sended}`;
+                                    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, user.show_nsfw, user.show_all, user.energy_percent, user.coment_account);
+                    } catch(e) {
+                        text = lng[user.lng].reblog_error + e;
+                        await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, user.show_nsfw, user.show_all, user.energy_percent, user.coment_account);
+                    }
+                            btns = await keybord(user.lng, 'home');
+                }
+        } else {
+            text = lng[user.lng].not_connection;
+            btns = await keybord(user.lng, 'back');
+        }
+        await botjs.sendMSG(id, text, btns, false);
+        await udb.updateUser(id, user.lng, user.prev_status, lng[user.lng].home, user.subscribes, user.show_nsfw, user.show_all, parseFloat(message), user.coment_account);
     }
 }
 }
@@ -576,6 +615,7 @@ if (typeof lang === 'undefined' || lang && lang === '') return;
     try {
     let text = '';
     if (data.t && data.t === 'p' && !data.d.r && !data.d.s) {
+        data.d.d = data.d.d.replace(/<\/?[^>]+(>|$)/g, "");
         text = `<a href="https://readdle.me/#viz://@${login}/${bn}/publication/">${lng[lang].type_publication}</a> ${lng[lang].from} ${login}.
 ${lng[lang].publication_title}: ${data.d.t}
 
@@ -602,7 +642,6 @@ if (user) {
         }
 } catch(e) {
     console.error(e);
-    console.error('Язык: ' + lang + ', id: ' + id);
 }
 }
 
