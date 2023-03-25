@@ -103,7 +103,6 @@ async function main(id, names, message, status, isReturn = false) {
     let send_time = new Date().getTime();
         let user = await udb.getUser(id);
     let level = 0;
-        let level_k = 0;
     if (!user) {
         let not_refs = -127525490;
         let not_refs_users = await udb.getUsersByPrize('🐅');
@@ -150,7 +149,6 @@ await udb.addUser(id, names, '', '', 'start', send_time, 0, refs, id_hash, [], '
         
         level = parseInt(new Big(user.scores).plus(new Big(user.locked_scores)).div(100))
         if (level < 0) level = 0;
-        level_k = new Big(level).times(0.05);
 
         if (user.status === message) {
             await udb.updateUserStatus(id, names, user.prev_status, message, send_time);
@@ -304,9 +302,10 @@ await ftqdb.updateHashData(hash, q, id);
     let random_variant = await helpers.getRandomInRange(1, variant.length);
     
     let ft_result = variant[random_variant - 1];
-    let score = await minusNumbers((number * 5), level_k);
+    let max_score = 5;
+    let score = number * 5;
+    score = Math.max(0, Math.floor(score * (max_score / 100) * (1 - (level - 1) * 0.05) * 100) / 100);
 if (score < 0) score = 0;
-    score = await helpers.getRandomInRange(0, score);
 let text = `${q}
 ${ft_result}
 ${lng[user.lng].more}:
@@ -459,16 +458,17 @@ if (counter >= 12 && spases.length >= 2 && /[a-zа-яё]/i.test(message)) {
                         let btns = await keybord(user.lng, 'games_buttons');
                         if (!isNaN(message) && parseInt(message) > 0 && parseInt(message) <= 999 && message.length === 3) {
 let rn = String(number);
-                            let b = 0;
+                            let score = 0;
                             for (let n of message) {
                                 let search_number = rn.indexOf(n);
                                 if (search_number > -1) {
-    b += 1;
+    score += 1;
     search_number += 1;
     rn = rn.substring(0, search_number - 1) + rn.substring(search_number, rn.length);
 }
                                 }
-                                let score = await minusNumbers(b, level_k);
+                                let max_score = 3;
+                                score = Math.max(0, Math.floor(score * (max_score / 100) * (1 - (level - 1) * 0.05) * 100) / 100);
                                 if (score < 0) score = 0;
                                 let scores = user.scores;
                                 scores = await sumNumbers(scores, score);
@@ -504,18 +504,16 @@ text = lng[user.lng].bk_game_text(bk_level, staps);
                                                                         let max_staps = simbols ** 2 + 10;
                                                                         if (res[0] === simbols) {
                                                                             let bkl_for_scores = 1;
-                                                                            if (bk_level === 2) bkl_for_scores = 2;
+                                                                            if (bk_level === 2) bkl_for_scores = 2.5;
                                                                             if (bk_level === 3) bkl_for_scores = 5;
                                                                             let max_score = new Big(100).times(bkl_for_scores);
                                                                             let score_by_stap = max_score.div(max_staps);
                                                                             if (now_stap > max_staps) now_stap = max_staps;
                                                                             let no_steps = await minusNumbers(max_staps, now_stap, true);
                                                                             let staps_for_scores = new Big(1).plus(no_steps);
-let level_percent = await minusNumbers(1, level_k, true);
-if (level_percent.lt(0)) level_percent = new Big(0);
-let score = score_by_stap.times(staps_for_scores).times(level_percent);
-                                                                           
-let score_number = parseFloat(score.toString());
+let calc_score = score_by_stap.times(staps_for_scores);
+let score = parseFloat(score.toString());
+score = Math.max(0, Math.floor(score * (max_score / 100) * (1 - (level - 1) * 0.05) * 100) / 100);
 let scores = user.scores;
                                                                             scores = await sumNumbers(scores, score);
                                                                             text = lng[user.lng].bk_gameing_text(game.number, now_stap, score_number, scores);
@@ -645,10 +643,10 @@ if (type && id) {
         let ft_result = variant[random_variant - 1];
         let level = parseInt(new Big(user.scores).plus(new Big(user.locked_scores)).div(100))
         if (level < 0) level = 0;
-        let level_k = new Big(level).times(0.05);
-        let score = await minusNumbers((number * 10), level_k);
+        let max_score = 10;
+        let score = number * 10;
         if (score < 0) score = 0;
-        score = await helpers.getRandomInRange(0, score);
+        score = Math.max(0, Math.floor(score * (max_score / 100) * (1 - (level - 1) * 0.05) * 100) / 100);
         let text = `${q}
 ${ft_result}
 ${lng[user.lng].more}:
@@ -817,6 +815,11 @@ if (user.lng === '' && user.locked_scores === 0) continue;
     if (bid.direction === direction) {
         let bid_share = bid_scores.div(winners_bids);
         let score = all_bids.times(bid_share);
+        if (winners.length === bids.length) {
+            score = score.times(1.05);
+        } else {
+            score = score.times(0.95);
+        }
         let scores = parseFloat(new Big(user.scores).plus(score));
         text = lng[user.lng].crypto_bids_winn(parseFloat(score));
 let locked_scores = parseFloat(new Big(user.locked_scores).minus(bid.scores));
