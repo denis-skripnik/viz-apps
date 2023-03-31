@@ -58,6 +58,8 @@ if (variant === 'lng') {
         buttons = [[lng[lang].scores_top, lng[lang].artifacts_owners, lng[lang].home]]
     } else if (variant === 'fortune_telling') {
         buttons = [[lng[lang].ft_award, lng[lang].ft_standart, lng[lang].back]];
+    } else if (variant === 'ft_award_buttons') {
+        buttons = [[lng[lang].ft_cancel, lng[lang].back], [lng[lang].games, lng[lang].home]];
     } else if (variant === 'bids_direction') {
         buttons = [[lng[lang].cb_more, lng[lang].cb_less], [lng[lang].back, lng[lang].home]];
     } else if (variant === 'not_subscribe') {
@@ -290,9 +292,14 @@ ${top_list}`;
 let q = user.status.split('|')[1];
 var hash = crypto.createHash('md5').update(q).digest('hex');
         let text = lng[user.lng].ft_award_text(conf.mg_bot.award_account, `ft:${id}`);
-        let btns = await keybord(user.lng, 'home');
+        let btns = await keybord(user.lng, 'ft_award_buttons');
         await botjs.sendMSG(id, text, btns, false);        
 await ftqdb.updateHashData(hash, q, id);
+} else if (user && user.lng && message.indexOf(lng[user.lng].ft_cancel) > -1) {
+    await ftqdb.removeHashData(parseInt(id));
+    let text = lng[user.lng].ft_cancel_text;
+            let btns = await keybord(user.lng, 'games_buttons');
+            await botjs.sendMSG(id, text, btns, false);        
 } else if (user && user.lng && message.indexOf(lng[user.lng].ft_standart) > -1 && user.status.indexOf('ft_send') > -1) {
     let q = user.status.split('|')[1];
     var hash = crypto.createHash('md5').update(q).digest('hex');
@@ -304,7 +311,7 @@ await ftqdb.updateHashData(hash, q, id);
     let ft_result = variant[random_variant - 1];
     let max_score = 5;
     let score = number * 5;
-    score = Math.max(0, Math.floor(score * (max_score / 100) * (1 - (level - 1) * 0.05) * 100) / 100);
+    score = Math.min(Math.max(0, Math.floor(score * Math.pow(0.95, level) * 100) / 100), max_score);
 if (score < 0) score = 0;
 let text = `${q}
 ${ft_result}
@@ -468,7 +475,7 @@ let rn = String(number);
 }
                                 }
                                 let max_score = 3;
-                                score = Math.max(0, Math.floor(score * (max_score / 100) * (1 - (level - 1) * 0.05) * 100) / 100);
+                                score = Math.min(Math.max(0, Math.floor(score * Math.pow(0.95, level) * 100) / 100), max_score);
                                 if (score < 0) score = 0;
                                 let scores = user.scores;
                                 scores = await sumNumbers(scores, score);
@@ -512,13 +519,13 @@ text = lng[user.lng].bk_game_text(bk_level, staps);
                                                                             let no_steps = await minusNumbers(max_staps, now_stap, true);
                                                                             let staps_for_scores = new Big(1).plus(no_steps);
 let calc_score = score_by_stap.times(staps_for_scores);
-let score = parseFloat(score.toString());
-score = Math.max(0, Math.floor(score * (max_score / 100) * (1 - (level - 1) * 0.05) * 100) / 100);
+let score = parseFloat(calc_score.toString());
+score = Math.min(Math.max(0, Math.floor(score * Math.pow(0.95, level) * 100) / 100), max_score);
 let scores = user.scores;
-                                                                            scores = await sumNumbers(scores, score);
-                                                                            text = lng[user.lng].bk_gameing_text(game.number, now_stap, score_number, scores);
-                                                                            await udb.updateUserStatus(id, names, user.prev_status, user.status, send_time, parseFloat(score_number));                                
-                                                                                                            await createRefererScores(score_number, user.referers);
+                                                                            scores = await sumNumbers(calc_score, scores);
+                                                                            text = lng[user.lng].bk_gameing_text(game.number, now_stap, calc_score, scores);
+                                                                            await udb.updateUserStatus(id, names, user.prev_status, user.status, send_time, parseFloat(calc_score));                                
+                                                                                                            await createRefererScores(calc_score, user.referers);
                                                                         await bkdb.removeGameSession(id, bk_level);
                                                                                                         } // end if maximum bulls.
                                                                     else {
@@ -646,7 +653,7 @@ if (type && id) {
         let max_score = 10;
         let score = number * 10;
         if (score < 0) score = 0;
-        score = Math.max(0, Math.floor(score * (max_score / 100) * (1 - (level - 1) * 0.05) * 100) / 100);
+        score = Math.min(Math.max(0, Math.floor(score * Math.pow(0.95, level) * 100) / 100), max_score);
         let text = `${q}
 ${ft_result}
 ${lng[user.lng].more}:
@@ -797,7 +804,7 @@ let bid_scores = new Big(bid.scores);
                     await udb.updateUserStatus(bid.id, user.names, user.prev_status, user.status, user.send_time, 0, -Math.abs(bid.scores));
                     await helpers.sleep(500);
                 }
-    text += lng[user.lng].crypto_bids_data(bid.btc_price, now_price, bid.direction, bid.scores);
+    text += lng[user.lng].crypto_bids_data(helpers.adaptiveFixed(bid.btc_price, 2), helpers.adaptiveFixed(now_price, 2), bid.direction, bid.scores);
     await botjs.sendMSG(bid.id, text, btns, false);
 } // end if user.
         } // end for bids.
@@ -828,7 +835,7 @@ let locked_scores = parseFloat(new Big(user.locked_scores).minus(bid.scores));
                 await helpers.sleep(500);
                 await createRefererScores(score, user.referers);
             } // you winn.
-    text += lng[user.lng].crypto_bids_data(bid.btc_price, now_price, bid.direction, bid.scores);
+    text += lng[user.lng].crypto_bids_data(helpers.adaptiveFixed(bid.btc_price, 2), helpers.adaptiveFixed(now_price, 2), bid.direction, bid.scores);
     await botjs.sendMSG(bid.id, text, btns, false);
     await cbdb.removeCryptoBids(bid.id);
 } // end if user.

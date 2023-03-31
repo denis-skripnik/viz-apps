@@ -9,13 +9,17 @@ async function getOpsInBlock(bn) {
   }
 
   let time_start = new Date().getTime();
+  let time_start2 = new Date().getTime();
   let properties = {};
         async function getProps() {
       let old_time = time_start;
     time_start = new Date().getTime();
 let time_call = time_start - old_time;
-    if (time_call < 0) time_call = 0;
+if (time_call < 0) time_call = 0;
     if (time_call === 0 || time_call >= 3000 || Object.keys(properties).length === 0) {
+        let old_time2 = time_start2;
+        time_start2 = new Date().getTime();
+    let time_call2 = time_start2 - old_time2;
     properties = await viz.api.getDynamicGlobalPropertiesAsync();
 }
 return properties;
@@ -146,12 +150,13 @@ async function getWitnessSchedule() {
     return await viz.api.getWitnessScheduleAsync();
 }
 
-async function sendReblog(account, wif, author, block) {
+async function sendReblog(account, wif, author, block, text) {
     let data = {};
     let custom_data = await getCustomProtocolAccount(account, 'V');
     data.p =         custom_data.custom_sequence_block_num;
     data.d = {};
             data.d.t = '';
+            if (typeof text !== 'undefined') data.d.t = text;
             data.d.s = `viz://@${author}/${block}`;
             await sendJson(wif, account, 'V', JSON.stringify(data));
 }

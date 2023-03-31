@@ -70,11 +70,12 @@ if (service === 'top' && type && page) {
     let users = [];
     if (data && data.length > 0) {
         let collums = {};
-        collums['shares'] = ['shares', 'shares_percent', 'delegated_shares', 'received_shares', 'effective_shares', 'viz', 'viz_percent'];
-        collums['delegated_shares'] = ['delegated_shares', 'shares', 'shares_percent', 'received_shares', 'effective_shares', 'viz', 'viz_percent'];
-        collums['received_shares'] = ['received_shares', 'shares', 'shares_percent', 'delegated_shares', 'effective_shares', 'viz', 'viz_percent'];
-        collums['effective_shares'] = ['effective_shares', 'shares', 'shares_percent', 'delegated_shares', 'received_shares', 'viz', 'viz_percent'];
-        collums['viz'] = ['viz', 'viz_percent', 'shares', 'shares_percent', 'delegated_shares', 'received_shares', 'effective_shares'];
+        collums['shares'] = ['shares', 'shares_percent', 'delegated_shares', 'received_shares', 'effective_shares', 'vesting_withdraw_rate', 'viz', 'viz_percent'];
+        collums['delegated_shares'] = ['delegated_shares', 'shares', 'shares_percent', 'received_shares', 'effective_shares', 'vesting_withdraw_rate', 'viz', 'viz_percent'];
+        collums['received_shares'] = ['received_shares', 'shares', 'shares_percent', 'delegated_shares', 'effective_shares', 'vesting_withdraw_rate', 'viz', 'viz_percent'];
+        collums['effective_shares'] = ['effective_shares', 'shares', 'shares_percent', 'delegated_shares', 'received_shares', 'vesting_withdraw_rate', 'viz', 'viz_percent'];
+        collums['viz'] = ['viz', 'viz_percent', 'shares', 'shares_percent', 'delegated_shares', 'received_shares', 'effective_shares', 'vesting_withdraw_rate'];
+        collums['vesting_withdraw_rate'] = ['vesting_withdraw_rate', 'shares', 'shares_percent', 'delegated_shares', 'received_shares', 'effective_shares', 'viz', 'viz_percent'];
         let users_count = 0;
         for (let user of data) {
                 users[users_count] = {};

@@ -58,11 +58,12 @@ ${top_list}`;
 "ft_award": "Reward a fortune teller",
 "ft_standart": "No reward",
 "ft_award_text": function(to, memo) {
-return `Ты выбрал награду. Благодарю тебя.
-Для начала хочу сказать, что для награждения тебе нужен Viz аккаунт в @viz_social_bot или Viz логин, если хотите воспользоваться другими ссылками.
-Нажми на одну из ссылок для награждения:
-${awardsLinks(to, 200, memo)}.`;
-    },
+    return `You chose the reward. Thank you.
+    To begin with, I want to say that for the award you need a Viz account in @viz_social_bot with a Viz login. Award <code>${to}</code> to <code>2</code>% with a note <code>${memo}</code> or choose another method:
+    ${awardsLinks(to, 200, memo)}.`;
+        },
+        "ft_cancel": "Cancel fortune-telling",
+    "ft_cancel_text": "You canceled fortune-telling through a reward - sorry...",
 "ft_type_text": "Tell me, what do you want me to tell fortunes on?",
 "ft_type_text": "Tell me what you want me to tell fortunes?",
 0: [
@@ -236,7 +237,7 @@ If you have any questions or problems, write to the chat @dpos_space or personal
 About the levels.
 They are created for the competitiveness of games and greater competition between players.
 Formula:
-score = Math.max(0, Math.floor(score * Math.pow(0.95, level) * 100) / 100);
+score = Math.min(Math.max(0, Math.floor(score * Math.pow(0.95, level) * 100) / 100), maxScore);
 
 To clarify:
 In simple terms, to calculate the number of points you will earn at the second level with a maximum of 50 points and 35 points awarded, you need to multiply the number of points awarded (35) by 0.95 in the second degree (which gives 31.58).

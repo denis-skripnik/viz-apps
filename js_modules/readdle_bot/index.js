@@ -24,12 +24,13 @@ let str_data = '';
 	}
 str_data = str_data.toLowerCase();
 
-if (str_data.indexOf('рашк') > -1 || str_data.indexOf('фашис') > -1 || str_data.indexOf('полити') > -1 || str_data.indexOf('украин') > -1 || login === 'stefan99') {
+if (str_data.indexOf('рашк') > -1 || str_data.indexOf('фашис') > -1 || str_data.indexOf('полити') > -1 || str_data.indexOf('украин') > -1 || login === 'stefan99' || login === 'virt') {
 	return;
 }
 	let users = await udb.findAllUsers();
 if (users && users.length > 0) {
 	for (let user of users) {
+		if (user.lng === '') continue;
 		var ffl = 0;
 		var jarr = [data.d.m, data.d.d, data.d.t].join(' ');
 		var regex = /@[A-Z,a-z,.,0-9,\-,_]+/g;

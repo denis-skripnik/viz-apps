@@ -166,7 +166,27 @@ async function stringToHash(string) {
 			});
 			}
 
-		module.exports.getBody = getBody;
+			function adaptiveFixed(num, needNonZero) {
+				if (num > 1 || num < -1) return parseFloat(num.toFixed(needNonZero));
+				let res = Math.trunc(num);
+				let frac = Math.abs(num - res);
+				if (frac === 0)
+				  return res;
+				res += '.';
+				let numNonZero = 0;
+				while (frac !== 0 && numNonZero < needNonZero) {
+				  frac *= 10;
+				  const cur = Math.floor(frac);
+				  res += cur;
+				  frac -= cur;
+				  if (cur !== 0)
+					numNonZero++;
+				}
+		if (num < 0) res *= -1;
+				return res;
+			  }
+		
+			  module.exports.getBody = getBody;
 module.exports.unixTime = unixTime;
 module.exports.sleep = sleep;
 module.exports.compareShares = compareShares;
@@ -180,3 +200,4 @@ module.exports.remove_array = remove_array;
 module.exports.date_str = date_str;
 module.exports.nowDateTime = nowDateTime;
 module.exports.addslashes = addslashes;
+module.exports.adaptiveFixed = adaptiveFixed;

@@ -3,7 +3,7 @@ const pdb = require("../databases/pricesdb");
 const axios = require('axios')
 
 async function getPrices() {
-    let accs = await methods.getAccounts(['bts.quotes.bank.viz.plus', 'gph.quotes.bank.viz.plus']);
+    let accs = await methods.getAccounts(['mnt.quotes.bank.viz.plus', 'gph.quotes.bank.viz.plus']);
     if (accs[0] && accs[1]) {
     let prices = {};
         let custom_sequence_block_num1 = accs[0].custom_sequence_block_num;
@@ -54,16 +54,6 @@ if (custom_sequence_block_num1 === custom_sequence_block_num2) {
         } // end if blocks.
         
         let datetime = new Date().toISOString();
-        let minter_sell_data = (await axios.get('https://explorer-api.minter.network/api/v2/pools/coins/VIZCHAIN/USDTE/route?amount=100000000000000000000&type=output')).data;
-let minter_buy_data = (await axios.get('https://explorer-api.minter.network/api/v2/pools/coins/USDTE/VIZCHAIN/route?amount=100000000000000000000&type=input')).data;
-if (minter_sell_data && minter_buy_data) {
-    let minter_sell_price = parseFloat(minter_sell_data.amount_out) / parseFloat(minter_sell_data.amount_in);
-    minter_sell_price = parseFloat(minter_sell_price.toFixed(5))
-    let minter_buy_price = parseFloat(minter_buy_data.amount_in) / parseFloat(minter_buy_data.amount_out);
-    minter_buy_price = parseFloat(minter_buy_price.toFixed(5))
-    prices['minter'] = {average_ask_price: minter_buy_price, quote: 'VIZCHAIN', base_depth: 100, average_bid_price: minter_sell_price, datetime}
-}
-
 let average_ask_price = 0;
 let average_bid_price = 0;
 for (let chain in prices) {
