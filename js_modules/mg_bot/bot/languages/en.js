@@ -5,142 +5,135 @@ function awardsLinks(to, energy, memo) {
     return links;
 }
 
-module.exports = 
-{
-"start": "Start",
-"wait_award": "There are < 2 minutes left before the distribution of awards. Wait for her: then you can play on.",
-"home": "Main",
-"home_message": function(names, referer, referer_code, scores, level, locked_scores) {
-        let hello = 'Здравствуйте';
-if (names !== '') hello += `, ${names}`;
-        return `${hello}! Добро пожаловать в @viz_mg_bot.
-Играйте в игры  и набирайте баллы. Раз в сутки будет рассылка наград с Viz аккаунта среди получивших баллы пропорционально им.
-Периодичность: 28800 блоков Viz: около 24 часов.
-
-Зарабатывайте 0.08 балла с каждого балла реферала 1 уровня и 0.02 балла с реферала второго уровня.
-Ваш пригласитель: ${referer}.
-Ваша реферальная ссылка: https://t.me/viz_mg_bot?start=r${referer_code}
-
-У вас за сегодня накоплено ${scores} баллов,
-Заблокировано в играх: ${locked_scores} баллов,
-Уровень (зависит от количества накопленных баллов, включая заблокированные; служит антиспамом): ${level}`;
+module.exports = {
+    "start": "Start",
+    "wait_award": "Less than 2 minutes left until the award distribution. Please wait to continue playing.",
+    "home": "Home",
+    "home_message": function(names, referer, referer_code, scores, level, locked_scores, viz_scores) {
+    let hello = 'Hello';
+    if (names !== '') hello += `, ${names}`;
+    return `${hello}! Welcome to @viz_mg_bot.
+    Play games and earn points. Once a day, rewards will be distributed from the Viz account among those who have earned points proportionally.
+    Frequency: approximately every 24 hours or 28,800 Viz blocks.
+    Earn 0.08 points from each point of your 1st-level referral and 0.02 points from each point of your 2nd-level referral.
+    Your inviter: ${referer}.
+    Your referral link: https://t.me/viz_mg_bot?start=r${referer_code}
+    Today you have accumulated ${scores} points,
+    Viz points: ${viz_scores},
+    Points locked in games: ${locked_scores},
+    Level (depends on the total accumulated points, including locked ones; serves as anti-spam): ${level}`;
     },
-"new_referal1": "A first-level referral has been registered using your link. Invite more and earn: ",
-"new_referal2": "A second-level referral has been registered using your link. Invite more and earn: ",
-"lang": "Choose a language",
-"selected_language": "You have chosen the language: Russian.",
-"games": "Games",
-"games_text": "Choose a game",
-"reytings": "Ratings",
-"reytings_text": "Select a rating. Top scores and a list of artifact owners are available.",
-"scores_top": "Top in points",
-"scores_top_text": function(before_award, top_list) {
-    let timer_text = '';
-    if (before_award !== '') {
-        timer_text = `До рассылки наград осталось ${before_award}.`;
-    }
-    return `${timer_text}
-Список участников с баллами больше 0 (обращайте внимание на процент энергии: если он меньше 0.01, вы не получите награду; всего распределяется 20% в сутки в соответствии со скоростью восстановления):
-${top_list}`;
-   },
-"is_blocks": "blocks",
-"approximately": "approximately",
-"scores": "Points",
-"of_energy": "energy",
-"artifacts_owners": "Owners of artifacts and prizes",
-"artifacts_owners_text": "List of artifact owners (prizes, if any)",
-"fortune_telling": "Divination",
-"ft_no_work": "I won't guess until you get the result of the previous guessing!",
-"ft_tomorrow": "I only guess a hundred times a day. Come back tomorrow.",
-"ft_text": "Gild the pen: I will tell your future. Just specify what you want to know about, and I will answer: it will be or it will not be, yes or no. There are no divinations left: ",
-"ft_no_correct": "You did not enter a question or the algorithm of protection against fraudsters considered that it has signs of an attempt to cheat... If this is still a question, write it to @blind_dev_chat - the algorithms will be tweaked.",
-"ft_message": "Good. Now choose whether you want to reward me for my work. If you do this, divination may be more accurate! In addition, with ordinary fortune-telling, 5 points will be awarded for a successful number minus the amount per level, and when awarding 10 - the amount per level (see the formula for calculating the level in the help).",
-"ft_award": "Reward a fortune teller",
-"ft_standart": "No reward",
-"ft_award_text": function(to, memo) {
-    return `You chose the reward. Thank you.
-    To begin with, I want to say that for the award you need a Viz account in @viz_social_bot with a Viz login. Award <code>${to}</code> to <code>2</code>% with a note <code>${memo}</code> or choose another method:
-    ${awardsLinks(to, 200, memo)}.`;
+    "new_referal1": "A 1st-level referral has registered using your referral link. Invite more and earn: ",
+    "new_referal2": "A 2nd-level referral has registered using your referral link. Invite more and earn: ",
+    "lang": "Select language",
+    "selected_language": "You have selected the language: English.",
+    "games": "Games",
+    "games_text": "Choose a game",
+    "reytings": "Ratings",
+    "reytings_text": "Choose a rating. Available options are top by points and a list of artifact owners.",
+    "scores_top": "Top by Points",
+    "scores_top_text": function(before_award, top_list) {
+        let timer_text = '';
+        if (before_award !== '') {
+            timer_text = `Less than ${before_award} left until the award distribution.`;
+        }
+        return `${timer_text}
+        List of participants with points greater than 0 (pay attention to the energy percentage: if it is less than 0.01, you will not receive a reward; only 20% is distributed per day according to the recovery rate):
+        ${top_list}`;
         },
-        "ft_cancel": "Cancel fortune-telling",
-    "ft_cancel_text": "You canceled fortune-telling through a reward - sorry...",
-"ft_type_text": "Tell me, what do you want me to tell fortunes on?",
-"ft_type_text": "Tell me what you want me to tell fortunes?",
+        "is_blocks": "blocks",
+        "approximately": "approximately",
+        "scores": "Points",
+        "of_energy": "of energy",
+        "added_viz_scores": "Added Viz points",
+"all_scores": "total",
+"add_viz_scores": "+ Viz points",
+"viz_scores_adding": function(to, memo) {
+    return `Send a reward via the Viz blockchain to get Viz points (x10 is the amount of the reward received). You will not be able to receive a reward at midnight until you use it in games such as betting on the cryptocurrency exchange rate. If you win, you will get real points.
+    First of all, to reward you, you need a Viz account in @viz_social_bot with a Viz login. Reward <code>${to}</code> with <code>2</code>% and add the memo <code>${memo}</code>, or choose another method:
+    ${awardsLinks(to, 200, memo)}.`;
+},
+
+    "artifacts_owners": "Owners of Artifacts and Prizes",
+"artifacts_owners_text": "List of artifact owners (prizes, if any)",
+"fortune_telling": "Fortune Telling",
+"ft_no_work": "I won't be able to tell your fortune until you receive the result of the previous fortune telling!",
+"ft_tomorrow": "I only do fortune telling a hundred times a day. Come back tomorrow.",
+"ft_text": "Take a golden pen: I will tell your future. Just specify what you want to know, and I will answer: yes or no. Remaining fortune tellings: ",
+"ft_no_correct": "You didn't ask a question or the anti-fraud algorithm detected something suspicious... If it's indeed a question, please contact @blind_dev_chat, and the algorithms will be adjusted.",
+"ft_message": "Alright. Now choose whether you want to reward me for my work. If you do, the fortune telling may be more accurate! Also, during a regular fortune telling, you will earn 5 points for a successful guess minus the level score, and with a reward of 10, you will earn the level score (see the calculation formula in the help).",
+"ft_award": "Reward the fortune teller",
+"ft_standart": "Without a reward",
+"ft_award_text": function(to, memo) {
+return `You have chosen a reward. Thank you. To reward me, you need a Viz account in @viz_social_bot with a Viz login. Reward <code>${to}</code> with <code>2</code>% and a note <code>${memo}</code>, or choose another method: ${awardsLinks(to, 200, memo)}.`;
+},
+"ft_cancel": "Cancel the fortune telling",
+"ft_cancel_text": "You canceled the fortune telling through a reward - what a pity...",
+"ft_type_text": "Tell me, what do you want me to tell your fortune about?",
 0: [
-    `It doesn't make sense to make any long-term forecasts here. The situation is so unpredictable that any little thing can turn it 180 degrees.
-    Try to be prepared for any outcome.`,
-    `Along with this question comes negative energy. Perhaps you yourself don't want this to happen, or related topics cause you a lot of negative emotions. Or maybe this path lies through conflicts and difficulties.`,
-    `Now is an unfavorable time for the realization of such desires and it will be very difficult to achieve this.
-    The stars advise you to wait and gain strength.`,
-    'The outcome is unlikely. Even if you give it your all, circumstances will take you out of your comfort zone and provoke outbursts of emotional distress. Leave it alone or learn not to take failure to heart.',
-    `The desired is unlikely to happen, but the efforts that you will spend on the implementation of your plans will make you wiser, more reasonable, more focused. This will certainly contribute to the disclosure of your personality. And all this, of course, will benefit you.`,
-    `You shouldn't expect something extremely extraordinary. Some little things about what you want will certainly give you pleasure, but otherwise you may have difficulties. Especially carefully calculate all the elements of risk in this matter.`,
-    ],
+`Making any long-term predictions here doesn't make sense. The situation is so unpredictable that any small detail can turn it around by 180 degrees. Try to be prepared for any outcome.`,
+`With this question comes negative energy. Perhaps you yourself do not want it to happen or related topics evoke a lot of negative emotions in you. Or maybe this path lies through conflicts and difficulties.`,
+`Now is not a favorable time to fulfill such desires, and achieving it will be very difficult. The stars advise you to wait and gather strength.`,
+`The outcome is unlikely. Even if you devote all your efforts to it, circumstances will take you out of your comfort zone and provoke emotional outbursts. Leave this matter or learn not to take failures to heart.`,
+`Your desire is unlikely to come true, but the efforts you put into achieving it will make you wiser, more prudent, and more focused. This will undoubtedly benefit you.`,
+`You should not expect something extraordinary. Some details relative to your desire will certainly bring you pleasure, but you may encounter difficulties in other aspects. Pay special attention to assessing all the risk elements in this matter.`,
+],
 1: [
-    `The future holds for you an exceptionally positive set of circumstances. Everything will turn out so perfectly that you can't even imagine.
-    However, obstacles and doubts may appear on the way to the desired.`,
-    'The energy of the universe in this matter strives for harmony and stability. So, even if there are no visible prerequisites for this, everything will work out in the best way.',
-    `Now is a very favorable period for a positive combination of circumstances. The universe does not prepare any obstacles for you.
-    Such periods are also great for resolving misunderstandings and contradictions. And, if you have something like this in mind, then take advantage of the opportunity.`,
-    'The future quite harmoniously puts events around you. Luck smiles on you and everything turns out. If you really want a successful resolution of this issue, then so be it.',
-    `The universe is well disposed towards you and people trust you. In their eyes, the image of a reliable, mature person was formed. You are capable of a lot in life, and this is undoubtedly an exceptionally attractive moment for a favorable combination of circumstances.`,
-    `It's definitely possible. Moreover, this future is very positive for you, because it brings calmness and stability. At the same time, it will add new colors to what is interesting and pleasant for you.`
-    ],
-"more": "Since I am an honest fortune teller, I say that I used it when guessing",
-"block_hash": "Block hash",
-"text_hash": "Hash of the text",
-"number_types": "Number: 0 (will not be) or 1 (will be)",
-"generated_number": "Dropped out",
+`The future holds exceptionally positive circumstances for you. Everything will work out so perfectly that you can't even imagine. However, there may be obstacles and doubts along the way to your desired outcome.`,
+`The energy of the universe in this matter strives for harmony and stability. Therefore, even if there are no visible prerequisites for it, everything will work out for the best.`,
+`Now is a very favorable period for positive circumstances. The universe does not prepare any obstacles for you. Such periods are also great for resolving misunderstandings and contradictions. So if you have something like that in mind, take advantage of the opportunity.`,
+`The future harmoniously shapes events around you. Luck smiles upon you, and everything goes well. If you really want a successful resolution to this matter, then so it shall be.`,
+`The universe is favorable to you, and people trust you. In their eyes, you have become a reliable, mature person. You are capable of many things in life, and this is undoubtedly an attractive aspect for a favorable turn of events.`,
+`This is definitely possible. Moreover, this future is quite positive for you, as it brings tranquility and stability. Additionally, it will add new colors to what interests and pleases you.`
+],
+"more": "As an honest fortune teller, I have used",
+"block_hash": "Block Hash",
+"text_hash": "Text Hash",
+"number_types": "Number: 0 (no) or 1 (yes)",
+"generated_number": "Generated Number",
 "and_hash": "and its hash",
-"random_numbers": "Guess the number",
+"random_numbers": "Guess the Number",
 "rn_text": `Enter a three-digit number from 100 to 999.
-If you guess one of the three, you will get 1 point at the zero level, 2 out of 3 - 2, 3 out of 3 - 3 points. Once a day, everyone will receive a reward according to the number of points.
-With an increase in the difficulty level, which depends on the number of points, you will receive fewer of them.
-The level increases when passing a score multiple of 100 (100 - 1 level, 200 - 2, 300 - 3, etc.).
-The final score is equal to subtracting the number per level from the score (formula with explanations in the help).
-
-At the same time, each number is compared in parts. For example, if you entered 294, and the bot specified 428, there will be such a comparison: 4 - you do not have, 2 - there is (deleted - becomes 48), 8 - you do not have, so 1 point.
-Example 2: you have the number 521, and in the bot 121: 5 is not, 2 is (deleted, 11 remains), 1 is (deleted, 1 remains). That is, you got 2 out of 3 points.
-
-To finish the game, click "Back" or "Home".`,
-"rn_gameing_text": function(n, un, b, scores) {
-    return `Выпало число ${n}. Ваше число: ${un}. Баллов: +${b}, всего за день: ${scores}`;
+If you guess one of the three digits, you will receive 1 point at level 0, 2 out of 3 - 2 points, 3 out of 3 - 3 points. Once a day, everyone will receive a reward according to the number of points.
+With an increase in the difficulty level, which depends on the number of points, you will receive fewer points.
+The level increases with each multiple of 100 (100 - level 1, 200 - level 2, 300 - level 3, and so on).
+The final score is obtained by subtracting the level score from the total score (see the formula in the explanation in the help).
+At the same time, each number is compared in parts. For example, if you enter 294 and the bot indicates 428, the comparison will be as follows: 4 - you don't have it, 2 - you have it (it is removed, leaving 48), 8 - you don't have it, so you get 1 point.
+Example 2: Your number is 521, and the bot's number is 121: 5 - no, 2 - yes (it is removed, leaving 11), 1 - yes (it is removed, leaving 1). In this case, you get 2 out of 3 points.
+To end the game, press "Back" or "Home".`, "rn_gameing_text": function(n, un, b, scores) { return `The number is ${n}. Your number: ${un}. Points: +${b}, total for the day: ${scores}`;
 },
-"not_number": "Not a number or extra characters are entered",
-"rn_finish": "The game is over",
-"rn_error": "Mistake. You probably entered a non-three-digit number",
+"not_number": "Not a number or extra characters entered",
+"rn_finish" : "Game Over",
+"rn_error": "Error. You probably entered a non-three-digit number",
 "my_viz_login": "Specify Viz login",
-"viz_login_text": `Enter the Viz login.
-You can find out about it at https://viz.plus , https://viz.dpos.space
-Register at @viz_social_bot or here: https://start.viz.plus
-For questions about Viz, write to @viz_support`,
+"viz_login_text": `Enter your Viz login. You can find it at https://viz.plus, https://viz.dpos.space. Register at @viz_social_bot or here: https://start.viz.plus. For questions about Viz, contact @viz_support`,
 "account_added": "Account added.",
-"not_account": "There is no such account or a connection error with Viz.",
-"crypto_bids": "Rate on the crypt rate",
-"crypto_bids_active": "The collection of bids is completed. Wait for the next round, which starts about once every 5 minutes.",
-"new_bids_round": "The betting round is over. A new one has begun. Please wait until the end of the selection of winners and losers, and then enter again.",
-"yes_crypto_bid": "You have already placed a bet. or you have 0 points.",
+"not_account": "No such account or connection error with Viz.",
+"crypto_bids": "Crypto rate bid",
+"crypto_bids_active": "Bidding is complete. Wait for the next round, which starts approximately every 10 minutes.",
+"new_bids_round": "Bidding round is complete. A new one has started. Please wait for the selection of winners and losers to finish, and then enter again.",
+"yes_crypto_bid": "You have already placed a bid or you have 0 points.",
 "crypto_bids_text": function(scores, btc_price, datetime, totalProfitCoefficients) {
-    return `Введите сумму баллов до ${scores}, которую готовы поставить на движение курса BTC.
-В случае победы вы получите свои баллы + баллы проигравших согласно своей доле - 5% от суммы получаемых баллов.
-Если все победили, добавится 5% к поставленным баллам.
+return `Enter the amount of points up to ${scores} that you are willing to bet on the movement of the BTC rate.
+If you win, you will receive your points + the points of the losers according to your share.
+If everyone wins, the winnings will be added depending on the bet: the more you bet, the lower the coefficient (minimum - +5% to the bet). For example, if you bet up to 100 points, you will get an increase of 1.5 times, from 100 to 200 a little less, etc... But it is important that the above is without taking into account the reduction of charges due to the level in the bot.
 
-Коэффициенты прибыльности:
-На рост: ${totalProfitCoefficients[">"]}.
-На падение: ${totalProfitCoefficients["<"]}.
-
-<b>Проверяыйте время до рассылки наград в топе по баллам, потому что если осталось меньше 30 минут, есть риск обнуления ставок, т. к. они на следующий день не переходят.</b>
-
-Курс BTC на ${datetime}: ${btc_price} $ (фиксируется в начале раунда).
-`;
-},
-"crypto_bids_direction": "Choose the direction where the BTC rate will go: more or less than the current level",
-"cb_more": "More",
-"cb_less": "Less",
-"crypto_bids_ok": "The bid is accepted. Expect results.",
-"crypto_bids_failed": "An error occurred while entering data",
-"crypto_bids_winn": function(amount) {
-    return `Вы выиграли! Количество поставленных баллов увеличено на ${amount}.`;
+Profitability coefficients:
+For growth: ${totalProfitCoefficients[">"]}.
+For decline: ${totalProfitCoefficients["<"]}.
+<b>Check the time until rewards are sent to the top by points, because if there is less than 30 minutes left, there is a risk of resetting the bids as they do not carry over to the next day.</b>
+BTC rate at ${datetime}: ${btc_price} $ (fixed at the beginning of the round).
+`; },
+"crypto_bids_direction": "Choose the direction where the BTC rate will go: higher or lower than the current level",
+"cb_more": "Higher",
+"cb_less": "Lower",
+"crypto_bids_ok": "Bid accepted. Wait for the results.",
+"crypto_bids_failed": "An error occurred while entering the data",
+"crypto_bids_winn": function(amount, bid_scores, result_scores) {
+    return `You've won!
+    Bet: ${bid_scores}
+Points won: ${amount    }
+Winning amount: ${result_scores}`;
 },
 "crypto_bids_lost": "You lost by losing your points.",
 "crypto_bids_data": function(old_price, now_price, direction, bid_amount) {
@@ -150,99 +143,137 @@ For questions about Viz, write to @viz_support`,
         direction = 'Меньше или равно';
     }
     return `
-Курс BTC в предыдущий раз: ${old_price} $,
-Сейчас: ${now_price} $,
-Выбранное вами направление: ${direction},
-Сумма ставки: ${bid_amount} баллов.`;
+    BTC rate:
+The beginning of the round - ${old_price} $,
+End of round - ${now_price} $,
+Direction: ${direction},
+
+The source of the rate: coincap.io`;
 },
 "not_scores_award": function(scores, all_scores) {
 let share = (scores / all_scores) * 100;
-    let energy_percent = 20 * (share / 100);
-return `К сожалению вы не получите награду, потому что накопленных баллов недостаточно для её получения: процент энергии меньше 0.01%.
-У вас баллов: ${scores},
-Всего: ${all_scores},
-Доля: ${share},
-Вычисляем процент энергии:
-20 * (${share} / 100) = ${energy_percent}.`;
+let energy_percent = 20 * (share / 100);
+return `Unfortunately, you will not receive a reward because you have not accumulated enough points to qualify: the energy percentage is less than 0.01%. You have points: ${scores}, Total: ${all_scores}, Share: ${share}, Calculating the energy percentage: 20 * (${share} / 100) = ${energy_percent}.`;
 },
-"yes_scores_award": `Hurray! You have accumulated the right amount of points to receive a reward! Congratulations!
-You will be able to see them either in the social network. the capital of the account linked to the bot (if you did it), or in @viz_social_bot.
-Sending will happen after sending messages to the participants.`,
-"bk_game": "Bulls-cows",
-"bk_text": `1. The bot will guess a number. the number of characters depends on the level:
-Level 1 - 3 characters, 2 - 4, 3 - 5;
-2. You have to guess the right one several times (the fewer moves you make, the more points).
-3. As hints, you will be given information:
-How many bulls are numbers that are in their place,
-Cows are numbers that are in the number, but which are not in their place.
-The numbers in the number are not repeated.
-
-Maximum:
-+100 points on the 1st level of difficulty (excluding the level in the bot),
-+ 250 points on the second 
-
-level
-and +500 on the third.
-
-For the formula for reducing the number of points depending on the level, see the help.
-Select the difficulty level.`,
-"bk_level": "Level ",
-"bk_game_text": function(level, staps) {
-let text = '';
-if (staps !== '') {
-text = `Ваши шаги:
-${staps}`;
-}
-    let number = 3;
-    if (level === 2) number = 4;
-if (level === 3) number = 5;
-return `Уровень сложности: ${level} (в числе ${number} символов).
-${text}`;
+"yes_scores_award": `Hooray! You have accumulated the required number of points to receive the award! Congratulations! You can see them either in the social capital of the linked account (if you have done so) or in @viz_social_bot. The delivery will occur after sending messages to the participants.`,
+"bk_game": "Bulls and Cows",
+"bk_text": `1. The bot will generate a number. The number of characters depends on the level:
+Level 1 - 3 characters, Level 2 - 4 characters, Level 3 - 5 characters;
+2. You have to guess the correct number in several attempts (the fewer moves you make, the more points you earn).
+3. You will be given hints in the form of:
+•
+Bulls: the number of digits that are in their correct positions,
+•
+Cows: the number of digits that are present in the number but are not in their correct positions.
+The digits in the number do not repeat.
+Maximum points:
++10 points in Level 1 (excluding the bot level),
++25 points in Level 2,
+and +50 points in Level 3.
+To learn how the reduction of awarded points depends on the level, refer to the help section.
+Choose the difficulty level.`, "bk_level": "Level ", "bk_no_level": "You have selected an incorrect level. Press the corresponding button.", "bk_game_text": function(level, steps) { let text = ''; if (steps !== '') { text = `Your steps:
+${steps}`; } let number = 3; if (level === 2) number = 4; if (level === 3) number = 5; return `Difficulty level: ${level} (number with ${number} characters).
+${text}`; }, "bulls": "Bulls", "cows": "Cows", "bk_step": "step", "bk_number": "Number", "bk_error": function(n) { return `Error: you entered either a non-number or a number that does not consist of ${n} digits.`; }, "bk_gameing_text": function(n, sn, b, scores) { return `You found all the bulls in ${sn} steps! Congratulations!
+Number: ${n}.
+${b} points awarded, total: ${scores} points.`;
 },
-"bulls": "Bulls",
-"cows": "Cows",
-"bk_stap": "step",
-"bk_number": "Number",
-"bk_error": function(n) {
-    return `Ошибка: вы ввели либо не число, либо число, состоящее не из ${n} знаков.`;
-},
-"bk_gameing_text": function(n, sn, b, scores) {
-    return `
-Вы нашли всех быков за ${sn} шагов! Поздравляем!
-Число: ${n}.
-Начислено ${b} баллов, всего: ${scores} баллов.`;
-},
-"reset_game": "Reset the game",
-"reset_text": "Do you really want to permanently destroy all your moves on the current game session?",
+"reset_game": "Reset Game",
+"reset_text": "Are you sure you want to permanently erase all your steps in the current game session?",
 "reset_yes": function(bk_level) {
-    return `Игровой сеанс уровня ${bk_level} сброшен.`;
+return `Game session of Level ${bk_level} has been reset.`;
 },
-"reset_no": `Reset canceled.
-Go to the "Games" section to continue the game.`,
+"reset_no": `Reset canceled. Go to the "Games" section to continue playing.`,
+"tamagotchi": "Tamagotchi",
+"tamagotchi_params": {
+health: "Health",
+satiety: "Satiety",
+happiness: "Happiness",
+energy: "Energy",
+cleanliness: "Cleanliness",
+age: "Age",
+inventory: "Inventory"
+},
+"tamagotchi_stats": function(tamagotchi, action_changes) {
+if (tamagotchi && Object.keys(tamagotchi).length === 0) return `Unfortunately, you don't have a tamagotchi yet... Create one by entering a name!`;
+let exclude_params = ["name", "lastAgeUpdate", "sleap_time", "sleepEnergy"];
+let data = `<a href="https://telegra.ph/The-game-Tamogochi-in-viz-mg-bot-04-28">About the game</a>.
+Your tamagotchi named ${tamagotchi.name}`; for (let key in tamagotchi) { if (exclude_params.indexOf(key) > -1) continue; let action_change = ''; if (typeof action_changes !== 'undefined' && typeof action_changes[key] !== 'undefined') action_change = `(${action_changes[key]})`; data += `${this.tamagotchi_params[key]}: ${tamagotchi[key]}${action_change}`; } data +=`
+Choose an action...`;
+return data;
+},
+tamagotchi_sleeping: function(tamagotchi) {
+const sleepTime = new Date(tamagotchi.sleap_time);
+const now = new Date();
+const sleepDuration = (now.getTime() - sleepTime.getTime()) / (1000 * 60); // in minutes
+const remainingSleep = Math.max(100 - sleepDuration, 0); // remaining sleep time in minutes
+
+return `Tamagotchi fell asleep at ${sleepTime.toLocaleTimeString()} and will sleep for another ${remainingSleep.toFixed(1)} minutes.
+Currently at ${tamagotchi.energy}% energy.
+After reaching 100% energy, it will wake up, and you can play with it again.`;
+},
+"t_game": "Play",
+"t_feed": "Feed",
+"t_heal": "Heal",
+"t_wash": "Wash",
+"t_sleep": "Sleep",
+
+"t_shop": "Shop",
+"t_shop_text": "Item - cost: description\nEnergetic_100, Energetic_50, Energetic_20 - 100, 50, or 20 points: restores Tamagotchi's energy to 100%, 50%, or 20%, but not exceeding 100%. Can be activated once, after which the item is removed from the inventory, but you can buy multiple.",
+"energetic": "Energetic",
+"t_shop_buy": "Your Tamagotchi's inventory now includes",
+"not_tamagotchi": "You don't have a Tamagotchi.",
+"not_in_inv": "The item is not in your inventory.",
+"buy_no_scores": "Insufficient points to make a purchase.",
+"product_applied": "applied.",
+"inventory": "Inventory",
+"not_inventory": "There are no items in the inventory.",
+"inventory_select": "Select what you want to spend from the inventory.",
+"product_not_found": "Product not found.",
+"t_shop_elements": ["Energetic_100", "Energetic_50", "Energetic_20"],
+"t_shop_prices": [100, 50, 20],
+
+"tamagotchi_action": "action",
+"tamagotchi_not_wants": "Tamagotchi doesn't want to",
+"tm_with_actions": {
+"t_game": "play",
+"t_feed": "eat",
+"t_heal": "heal",
+"t_wash": "wash",
+"t_sleep": "sleep",
+},
+"tm_ok_actions": {
+"t_game": "played",
+"t_feed": "ate",
+"t_heal": "healed",
+"t_wash": "washed",
+"t_sleep": "is sleeping",
+},
+"tamagotchi_ok": "Tamagotchi is happy that",
+"tamagotchi_set_name": "A tamagotchi named",
+"tamagotchi_died": "Unfortunately, your tamagotchi has died... Create a new one...",
+
 "yes": "Yes",
 "no": "No",
-"back": "back",
+
+"back": "Back",
 "cancel": "Cancel",
+"to_game": "Go to Game",
 "partners": "Bot Partners",
 "partners_text": `1. @viz_dice_bot and @viz_quiz_bot from @viz_cx;
 2. @viz_social_bot.`,
-"check_subscribes": "Check your subscription",
-"checking_subscribes": "To use the bot, you need to subscribe to the @blind_dev channel. Once you have done this, click on the subscription verification button.",
+"check_subscribes": "Check Subscription",
+"checking_subscribes": "To use the bot, you need to subscribe to the @blind_dev channel. Once you have done that, click the subscription check button.",
 "news": "News",
 "help": "Help",
-"help_text": `To get started, just select one of the menu items.
-If the buttons are not visible, enter /start or click on "Show the bot keyboard".
-If you have any questions or problems, write to the chat @dpos_space or personal @denis_skripnik
-
-About the levels.
-They are created for the competitiveness of games and greater competition between players.
+"help_text": `To get started, simply select one of the menu items.
+If you don't see the buttons, enter /start or click on "Show Bot Keyboard".
+If you have any questions or issues, contact @dpos_space or @denis_skripnik.
+About levels:
+They are designed to increase competitiveness in games and foster competition among players.
 Formula:
 score = Math.min(Math.max(0, Math.floor(score * Math.pow(0.95, level) * 100) / 100), maxScore);
-
-To clarify:
-In simple terms, to calculate the number of points you will earn at the second level with a maximum of 50 points and 35 points awarded, you need to multiply the number of points awarded (35) by 0.95 in the second degree (which gives 31.58).
-Then round the result to two decimal places and make sure that the result does not exceed the maximum number of points (50).
-
-PS Ideas of new games published in the chat, which will be worthwhile, will be rewarded.`,
-
+In simple terms, to calculate the number of points you will earn at the second level with a maximum score of 50 and awarded points of 35, you need to multiply the awarded points (35) by 0.95 raised to the power of 2 (resulting in 31.58).
+Then round the result to two decimal places and make sure it does not exceed the maximum score (50).
+<a href="https://telegra.ph/The-game-Tamogochi-in-viz-mg-bot-04-28">About Tamagotchi</a>
+P.S. Ideas for new games posted in the chat that turn out to be valuable will be rewarded.`
 }

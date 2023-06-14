@@ -6,5 +6,6 @@ const i = require("./bot/interface");
 	botjs.allCommands();
 
 module.exports.futureTellingNotify = i.futureTellingNotify;
-	module.exports.scoresAward = i.scoresAward;
+module.exports.addVizScores = i.addVizScores;
+module.exports.scoresAward = i.scoresAward;
 	module.exports.cryptoBidsResults = i.cryptoBidsResults;

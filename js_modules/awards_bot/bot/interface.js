@@ -61,7 +61,7 @@ await botjs.sendMSG(id, text, btns, false);
         let text = lng[user.lang].enter_login;
         let btns = await keybord(user.lang, 'cancel');
         await botjs.sendMSG(id, text, btns, false);
-    } else if (user && user.lang && message.indexOf(lng[user.lang].subscribes) > -1) {
+    } else if (user && user.lang && message.indexOf(lng[user.lang].subscribes) > -1 || message === '/subscribes') {
         let text = lng[user.lang].subscribes_list;
 let subs = user.subscribe;
 if (subs && subs.length > 0) {
@@ -112,7 +112,7 @@ for (let one_user of all_users) {
     await helpers.sleep(1000);
 }
                                                                 }                                                            
-                                                            } else if (user && user.lang && message.indexOf(lng[user.lang].help) > -1) {
+                                                            } else if (user && user.lang && message.indexOf(lng[user.lang].help) > -1 || message === '/help') {
                                                                 let text = lng[user.lang].help_text;
                                                                 let btns = await keybord(user.lang, 'home');
                                                                             await botjs.sendMSG(id, text, btns, false);

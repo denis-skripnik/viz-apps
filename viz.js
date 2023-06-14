@@ -26,17 +26,24 @@ const SUPER_LONG_DELAY = 1000 * 60 * 15;
 
 async function processBlock(bn) {
     if (bn%1200 == 0)         prices.getPrices();
-if (bn % 100 == 0) await mgb.cryptoBidsResults();
+if (bn % 200 == 0) await mgb.cryptoBidsResults();
         if (bn%28800 == 0) {
             mgb.scoresAward();
             links.updateShares();
           vccb.run();
     }
         
+    let update_account_ops = ["account_create", "transfer_to_vesting", "delegate_vesting_shares", "transfer", "create_invite", "invite_registration", "claim_invite_balance", "use_invite_balance", "receive_award", "benefactor_award", "committee_pay_request", "paid_subscription_action"];
+let update_account_creators = ["creator", "from", "delegator", "from", "creator", "initiator", "initiator", "initiator", "", "", "worker", "subscriber"]
+let update_account_targets = ["new_account_name", "to", "delegatee", "to", "", "new_account_name", "receiver", "receiver", "receiver", "benefactor", "", "account"]
     const block = await methods.getOpsInBlock(bn);
 let ok_ops_count = 0;
     for(let tr of block) {
         const [op, opbody] = tr.op;
+        let find_op = update_account_ops.indexOf(op);
+        if (find_op > -1) {
+await top.updateAccounts([opbody[update_account_creators[find_op]], opbody[update_account_targets[find_op]]]);
+        }
         switch(op) {
             case "witness_reward":
                 ok_ops_count += await wr.witnessRewardOperation(opbody, tr.timestamp);
@@ -66,6 +73,9 @@ if (opbody.receiver === 'committee' && data.length === 3) {
     ok_ops_count += await links.receiveAwardOperation(opbody.custom_sequence, parseFloat(opbody.shares), data);
 } else if (opbody.receiver === conf.mg_bot.award_account && opbody.memo.indexOf('ft:') > -1 && opbody.memo.split(':').length === 2 && parseFloat(opbody.shares) >= 0.001) {
     await mgb.futureTellingNotify(bn, opbody.memo);
+    ok_ops_count +=  1;
+} else if (opbody.receiver === conf.mg_bot.award_account && opbody.memo.indexOf('scores:') > -1 && opbody.memo.split(':').length === 2 && parseFloat(opbody.shares) >= 0.001) {
+    await mgb.addVizScores(bn, opbody.memo, parseFloat(opbody.shares));
     ok_ops_count +=  1;
 }
 break;
@@ -137,7 +147,6 @@ setInterval(() => {
 
 getNullTransfers()
 
-new CronJob('0 30 * * * *', top.run, null, true);
 new CronJob('0 0 3 * * *', wr.producersDay, null, true);    
 new CronJob('0 0 3 1 * *', wr.producersMonth, null, true);
 committee.noReturn();

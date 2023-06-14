@@ -17,8 +17,7 @@ async function send(chat_id, msg, kbd) {
         }
         await bot.api.sendMessage(chat_id, msg, opts)
     } catch(e) {
-        log.error("unable to send message")
-        log.error(e);
+log.error('Chat id: ' + chat_id);
         if (e.error_code === 403 && e.description === "Forbidden: bot was blocked by the user" || e.error_code === 403 && e.description === "Forbidden: user is deactivated") {
 await memory.removeChat(chat_id)
                     }

@@ -1,3 +1,4 @@
+const { userInfo } = require('os');
 const pool = require('./../@db.js')
 
 async function getUser(id) {
@@ -47,7 +48,7 @@ return err;
     }
 }
 
-async function addUser(id, names, lng, prev_status, status, send_time, scores, referers, referer_code, artifacts, prize, viz_login) {
+async function addUser(id, names, lng, prev_status, status, send_time, scores, referers, referer_code, artifacts, prize, viz_login, tamagotchi) {
     let client = await pool.getClient()
 
     if (!client) {
@@ -61,7 +62,7 @@ async function addUser(id, names, lng, prev_status, status, send_time, scores, r
         let collection = db.collection('users');
 
         let locked_scores = 0;
-        let res = await collection.insertOne({id, names, lng, prev_status, status, send_time, scores, locked_scores, referers, referer_code, artifacts, prize, viz_login});
+        let res = await collection.insertOne({id, names, lng, prev_status, status, send_time, scores, locked_scores, referers, referer_code, artifacts, prize, viz_login, tamagotchi, viz_scores: 0});
 
 return res;
 
@@ -74,7 +75,7 @@ return res;
     }
 }
 
-async function updateUser(id, names, lng, prev_status, status, send_time, referers, referer_code, artifacts, prize, viz_login) {
+async function updateUser(id, names, lng, prev_status, status, send_time, referers, referer_code, artifacts, prize, viz_login, viz_scores, tamagotchi) {
 
     let client = await pool.getClient()
 
@@ -88,7 +89,7 @@ async function updateUser(id, names, lng, prev_status, status, send_time, refere
 
       let collection = db.collection('users');
 
-      let res = await collection.updateOne({id}, {$set: {id, names, lng, prev_status, status, send_time, referers, referer_code, artifacts, prize, viz_login}}, {});
+      let res = await collection.updateOne({id}, {$set: {id, names, lng, prev_status, status, send_time, referers, referer_code, artifacts, prize, viz_login, tamagotchi}}, {});
 
 return res;
 
@@ -101,7 +102,7 @@ return res;
   }
 }
 
-async function updateUserStatus(id, names, prev_status, status, send_time, scores = 0, locked_scores = 0) {
+async function updateUserStatus(id, names, prev_status, status, send_time, scores = 0, locked_scores = 0, viz_scores = 0, tamagotchi) {
 
     let client = await pool.getClient()
 
@@ -115,7 +116,10 @@ async function updateUserStatus(id, names, prev_status, status, send_time, score
 
       let collection = db.collection('users');
 
-      let res = await collection.updateOne({id}, {$set: {id, names, prev_status, status, send_time}, $inc: {scores: parseFloat(scores.toString()), locked_scores: parseFloat(locked_scores.toString())}}, {});
+let set_params = {id, names, prev_status, status, send_time};
+if (typeof tamagotchi !== 'undefined') set_params.tamagotchi = tamagotchi;
+
+let res = await collection.updateOne({id}, {$set: set_params, $inc: {scores: parseFloat(scores.toString()), locked_scores: parseFloat(locked_scores.toString()), viz_scores: parseFloat(viz_scores.toString())}}, {});
 
 return res;
 

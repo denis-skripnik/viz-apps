@@ -15,7 +15,7 @@ async function ids(uid) {
     }
 }
 
-async function keybord(btn_list, inline) {
+async function keybord(btn_list, inline, preview) {
     let replyMarkup;
     if (inline == true) {
         let inline_keyboard = [];
@@ -47,14 +47,18 @@ async function keybord(btn_list, inline) {
         parse_mode: 'HTML',
         webPreview: false,
         reply_markup};
+        if (typeof preview !== 'undefined') {
+            buttons.webPreview = preview;
+            buttons.disable_web_page_preview = true;
+        }
         return buttons;
     }
 
-async function sendMSG(userId, text, buttons, inline, disable_notification, not_html) {
+async function sendMSG(userId, text, buttons, inline, preview) {
     await new Promise(r => setTimeout(r, 1000));
     try {
     if (text && text !== '') {
-        let options = await keybord(buttons, inline, disable_notification, not_html);
+        let options = await keybord(buttons, inline, preview);
         await bot.api.sendMessage(userId, text, options);
     }
     } catch(error) {
@@ -80,7 +84,7 @@ if (msg.from.last_name) name += ' ' + msg.from.last_name;
 
     bot.on('callback_query', async (msg) => {
         msg = msg.update.callback_query;
-        if (msg.chat.type !== 'private') return;
+        if (typeof msg.chat !== 'undefined' && typeof msg.chat.type  !== 'undefined' && msg.chat.type !== 'private') return;
         var uid = await ids(msg.from.id);
         var name = '';
         if (msg.from.first_name) name += msg.from.first_name;

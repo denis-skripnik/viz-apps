@@ -43,7 +43,7 @@ async function getTop(type, page) {
     }
 }
 
-async function updateTop(name, shares, shares_percent, delegated_shares, received_shares, effective_shares, viz, viz_percent) {
+async function updateTop(name, shares, shares_percent, delegated_shares, received_shares, effective_shares, vesting_withdraw_rate, viz, viz_percent) {
 
     const client = await db.getClient();
 
@@ -62,7 +62,7 @@ async function updateTop(name, shares, shares_percent, delegated_shares, receive
             }
               });
 
-              let res = await collection.updateOne({name}, {$set: {name, shares, shares_percent, delegated_shares, received_shares, effective_shares, viz, viz_percent}}, { upsert: true });
+              let res = await collection.updateOne({name}, {$set: {name, shares, shares_percent, delegated_shares, received_shares, effective_shares, vesting_withdraw_rate, viz, viz_percent}}, { upsert: true });
 
 return res;
     } catch (err) {

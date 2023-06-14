@@ -20,6 +20,7 @@ try {
             if(!chat.isWatching(witness.owner)) {return};
             let username = (chat.witness == witness.owner?" (@"+chat.username+")":"");
             let text_blocks = m.get_text_blocks(missed);
+            if (typeof chat === 'undefined' || typeof chat.chat_id === 'undefined') return;
             await telegram.send(chat.chat_id, `Делегат ${witness.owner}${username} пропустил ${missed} ${text_blocks}!
             /help - Список команд.`);
         } catch(error) {
