@@ -18,7 +18,8 @@ async function send(chat_id, msg, kbd) {
         await bot.api.sendMessage(chat_id, msg, opts)
     } catch(e) {
 log.error('Chat id: ' + chat_id);
-        if (e.error_code === 403 && e.description === "Forbidden: bot was blocked by the user" || e.error_code === 403 && e.description === "Forbidden: user is deactivated") {
+log.error('Details: ' + e);
+        if (e.error_code === 403 && e.description === "Forbidden: bot was blocked by the user" || e.error_code === 403 && e.description === "Forbidden: user is deactivated" || e.error_code === 403 && e.description === "Forbidden: bot can't send messages to bots" || e.error_code === 400 && e.description === "Bad Request: user not found" || e.error_code === 400 && e.description === "Bad Request: chat not found") {
 await memory.removeChat(chat_id)
                     }
     }

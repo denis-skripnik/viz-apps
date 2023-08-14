@@ -175,10 +175,62 @@ newTamagotchi.satiety -= await helpers.getRandomInRange(1, 10);
         }
 
         let positiveChanges = Object.values(changes).filter(val => parseInt(val) > 0); // выбираем только положительные изменения
-        let max_score = params.age + (positiveChanges.reduce((sum, val) => sum + parseInt(val), 0) / 10); // добавляем баллы за возраст и положительные изменения
+        let max_score = ((positiveChanges.reduce((sum, val) => sum + parseInt(val), 0) + params.age) / 10); // добавляем баллы за возраст и положительные изменения
         let score = Math.round((positiveChanges.reduce((sum, val) => sum + parseInt(val), 0) + params.age) / 10); // вычисляем баллы
                const plus_score = Math.min(Math.max(0, Math.floor(score* Math.pow(0.95, level) * 100) / 100), max_score);
         return { changes, params, plus_score };
+      },
+
+      performAttack: function (t1, t2) {
+        if (t1.health <= 0) {
+          return { target: t2, status: 0, damage: 0 };
+        }
+      
+        if (!t1.power || typeof t1.power ==='undefined') t1.power = 0;
+      
+        // Рассчитываем силу атаки и силу защиты
+        const attackStrength = t1.energy / 100 + t1.satiety / 100 + t1.power / 100;
+        const defenseStrength = t2.energy / 100 + t2.satiety / 100 + t2.power / 100;
+      
+        // Рассчитываем вероятность успешного нанесения удара после защиты
+        let successProbability;
+        if (attackStrength === defenseStrength) {
+          successProbability = 0.5;
+        } else {
+          successProbability = 0.5 + 0.25 * (attackStrength / defenseStrength);
+        }
+      
+        // Генерируем случайное число от 0 до 1 для атаки и вероятности критического удара
+        const randomValue = Math.random();
+        const criticalChance = 0.1; // 10% вероятности критического удара
+      
+        // Проверяем, успешно ли удар от t1 к t2
+        let status = 1;
+        if (randomValue <= successProbability) {
+if(t1.power === 0) t1.power = 1;
+
+          const maxDamage = 20; // Максимальное значение урона
+          const powerMultiplier = maxDamage / 20; // Множитель, определяющий урон от силы
+      
+          // Рассчитываем урон в зависимости от силы t1, но не более maxDamage
+          let damage = Math.min(maxDamage, Math.floor(t1.power * powerMultiplier));
+
+          // Проверяем, произошел ли критический удар
+          if (Math.random() <= criticalChance) {
+            // Увеличиваем урон в 1.5 раза при критическом ударе
+            damage = Math.floor(damage * 1.5);
+            status = 2;
+          }
+      
+          // Уменьшаем здоровье t2 на значение урона
+          const changedHealth = Math.max(t2.health - damage, 10);
+          const minusHealth = t2.health - changedHealth;
+          t2.health = changedHealth;
+      
+          return { target: t2, status, damage: minusHealth };
+        }
+      
+        return { target: t2, status: 0, damage: 0 };
       }
-            
+
 };

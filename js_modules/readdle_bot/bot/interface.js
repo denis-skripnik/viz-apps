@@ -622,6 +622,7 @@ ${lng[lang].publication_title}: ${data.d.t}
 ${lng[lang].announcement}:
 ${data.d.d}`;
     } else if (!data.t && !data.d.s && !data.d.r) {
+        data.d.t = data.d.t.replace("\n","<br>");
         text = `<a href="https://readdle.me/#viz://@${login}/${bn}">${lng[lang].type_note}</a> ${lng[lang].from} ${login}. ${lng[lang].note_text}:
 
 ${data.d.t}`;
@@ -630,6 +631,7 @@ ${data.d.t}`;
 
 ${data.d.t}`;
 } else if (!data.t && !data.d.s && data.d.r) {
+    data.d.t = data.d.t.replace("\n","<br>");
     text = `<a href="https://readdle.me/#viz://@${login}/${bn}">${lng[lang].type_reply}</a> ${lng[lang].from} ${login} ${lng[lang].type_reply2} <a href="https://readdle.me/#${data.d.r}">${data.d.r}</a>:
     
     ${data.d.t}`;
@@ -638,7 +640,7 @@ let user = await udb.getUser(parseInt(id));
 if (user) {
     await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, user.show_nsfw, user.show_all, user.energy_percent, user.coment_account);
     let btns = await keybord(lang, `notify_buttons#viz://@${login}/${bn}`);
-            await botjs.sendMSG(id, text.substring(0, 4096), btns, true);
+    await botjs.sendMSG(id, text.substring(0, 4096), btns, true);
         }
 } catch(e) {
     console.error(e);

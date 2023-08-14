@@ -47,7 +47,7 @@ async function checkRequests() {
 let now_time = new Date().getTime();
         try {
 let res = await cdb.findAllCommittee();
-if (res && res.length === 0 || typeof res === 'undefined') return;
+if (!res || res && res.length === 0 || typeof res === 'undefined') return;
 for (let request of res) {
 let remained = parseInt(now_time / 1000) - parseInt(request.end / 1000);
 if (remained === 86400 || remained === 7200) {

@@ -30,7 +30,7 @@ module.exports = {
     "games": "Games",
     "games_text": "Choose a game",
     "reytings": "Ratings",
-    "reytings_text": "Choose a rating. Available options are top by points and a list of artifact owners.",
+    "reytings_text": "Select a rating. The top by points, the top by age of Tamagotchi, their strength and a list of artifact owners are available.",
     "scores_top": "Top by Points",
     "scores_top_text": function(before_award, top_list) {
         let timer_text = '';
@@ -41,12 +41,24 @@ module.exports = {
         List of participants with points greater than 0 (pay attention to the energy percentage: if it is less than 0.01, you will not receive a reward; only 20% is distributed per day according to the recovery rate):
         ${top_list}`;
         },
+        "t_age_top": "Top ages of Tamagotchi",
+        "t_age_top_text": function(top_list) {
+            return `List of participants with Tamagotchi age:
+     ${top_list}`;
+           },
+           "t_power_top": "Top Tamagotchi power",
+           "t_power_top_text": function(top_list) {
+               return `List of participants by Tamagotchi power:
+        ${top_list}`;
+              },
+     
+        
         "is_blocks": "blocks",
         "approximately": "approximately",
         "scores": "Points",
         "of_energy": "of energy",
         "added_viz_scores": "Added Viz points",
-"all_scores": "total",
+"all_scores": "total points",
 "add_viz_scores": "+ Viz points",
 "viz_scores_adding": function(to, memo) {
     return `Send a reward via the Viz blockchain to get Viz points (x10 is the amount of the reward received). You will not be able to receive a reward at midnight until you use it in games such as betting on the cryptocurrency exchange rate. If you win, you will get real points.
@@ -92,6 +104,9 @@ return `You have chosen a reward. Thank you. To reward me, you need a Viz accoun
 "number_types": "Number: 0 (no) or 1 (yes)",
 "generated_number": "Generated Number",
 "and_hash": "and its hash",
+"award_ft_author": `Did you like the fortune teller's answer? Reward the author of the response texts using Viz in the following ways:
+${awardsLinks('optimisticdigit', 200, 'За тексты ответов гадалки в viz_mg_bot.')}.`,
+
 "random_numbers": "Guess the Number",
 "rn_text": `Enter a three-digit number from 100 to 999.
 If you guess one of the three digits, you will receive 1 point at level 0, 2 out of 3 - 2 points, 3 out of 3 - 3 points. Once a day, everyone will receive a reward according to the number of points.
@@ -131,7 +146,6 @@ BTC rate at ${datetime}: ${btc_price} $ (fixed at the beginning of the round).
 "crypto_bids_failed": "An error occurred while entering the data",
 "crypto_bids_winn": function(amount, bid_scores, result_scores) {
     return `You've won!
-    Bet: ${bid_scores}
 Points won: ${amount    }
 Winning amount: ${result_scores}`;
 },
@@ -143,7 +157,9 @@ Winning amount: ${result_scores}`;
         direction = 'Меньше или равно';
     }
     return `
-    BTC rate:
+    Bet: ${bid_amount}
+
+BTC rate:
 The beginning of the round - ${old_price} $,
 End of round - ${now_price} $,
 Direction: ${direction},
@@ -184,6 +200,7 @@ return `Game session of Level ${bk_level} has been reset.`;
 },
 "reset_no": `Reset canceled. Go to the "Games" section to continue playing.`,
 "tamagotchi": "Tamagotchi",
+"from": "from",
 "tamagotchi_params": {
 health: "Health",
 satiety: "Satiety",
@@ -191,6 +208,7 @@ happiness: "Happiness",
 energy: "Energy",
 cleanliness: "Cleanliness",
 age: "Age",
+power: "power",
 inventory: "Inventory"
 },
 "tamagotchi_stats": function(tamagotchi, action_changes) {
@@ -231,6 +249,51 @@ After reaching 100% energy, it will wake up, and you can play with it again.`;
 "product_not_found": "Product not found.",
 "t_shop_elements": ["Energetic_100", "Energetic_50", "Energetic_20"],
 "t_shop_prices": [100, 50, 20],
+
+"t_ring": "Ring",
+"t_ring_with_params": "Ring with parameters:",
+"t_ring_scores": "Specify the bet in points.",
+"t_ring_no_scores": "There are not enough points for the bet. Cancel the action and try again.",
+"t_ring_auto_on": "On auto mode",
+"t_ring_auto_off": "Off auto mode",
+"t_ring_auto_true": "Automatic ring participation mode is enabled",
+"t_ring_auto_false": "Automatic ring participation mode is disabled.",
+"t_ring_text": `Select an active ring or create a new one.
+<b>Warning: pay attention to the power of the opponent (the health spent for 1 successful hit depends on it)</b>.
+The probability of a successful strike or successful defense depends on the satiety of your tamagotchi and on its percentage of energy.
+
+Data structure in buttons:
+Power Number_balls Health Amount_points`,
+"blow": "blow",
+"blows": "blows",
+"create_ring": "🆕",
+"t_ring_created": "The ring is created!",
+"t_ring_active": "The ring is active: gathered 2 participants. Choose another one.",
+"t_ring_no_power": "The power of your tamagotchi differs by more than 2 units from the power of the ring creator or exceeds the power of the ring creator.",
+"t_ring_sleep": "Tamagotchi is sleeping. You can't join the rings.",
+"t_ring_joined": "You have joined the ring.",
+"t_ring_you": "You",
+"t_ring_opponent": "Opponent",
+"t_ring_creator": "You are the creator of this ring. You can delete it. <b>Important: clicking on the button activates an irreversible operation.</b>",
+"t_ring_hit": "Hit",
+"t_ring_no_hit": "You can't hit: it's your opponent's turn",
+"t_ring_failure": "You couldn't hit the opponent: he defended himself.",
+"t_ring_hit_ok": "You successfully hit the opponent, and reduced his health on ",
+"t_ring_critical_strike": "Critical strike! Your tamagotchi inflicted significant damage to the enemy, reducing health by ",
+"t_ring_opponent_crytical_hit": "A critical hit against your Tamagotchi passed, reducing his health by ",
+"your_health": "The health of your Tamagotchi",
+"opponent_health": "The health of the opponent's tamagotchi",
+"t_ring_opponent_no_hit": "The opponent could not strike hit your tamagotchi!",
+"t_ring_opponent_yes_hit": "The opponent hit your tamagotchi, reducing health by",
+"t_ring_winner": "Congratulations! Your Tamagotchi has won in the ring! Points awarded +",
+"t_ring_not_winner": "Your Tamagotchi unfortunately lost. Try your hand in other rounds: maybe then you will come across a less experienced opponent.",
+"t_ring_delete": "Remove the ring",
+"t_ring_deleted": "The ring is removed ...",
+"t_ring_returned": "Bets are refunded.",
+"t_ring_forgotten": "Forgotten",
+"t_ring_forgotten_text": `Select the ring you forgot. Forgotten rings - rings where opponents are waiting for your strike. Tapping automatically activates the kick.
+Data structure in buttons:
+Power number_strikes Amount_points`,
 
 "tamagotchi_action": "action",
 "tamagotchi_not_wants": "Tamagotchi doesn't want to",

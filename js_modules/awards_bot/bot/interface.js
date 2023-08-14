@@ -42,7 +42,7 @@ async function main(id, message, status) {
     if (message.indexOf('start') > -1) {
 let text = '';
 let btns;
-if (message.indexOf('start') > -1 && user && user.lang && user.lang !== '') {
+if (message && typeof message !== 'undefined' && message.indexOf('start') > -1 && user && user.lang && user.lang !== '') {
     await main(id, lng[user.lang].home, status);
 } else {
     text = `Select language: Выберите язык.`;

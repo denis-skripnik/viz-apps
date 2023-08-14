@@ -119,8 +119,24 @@ async function updateUserStatus(id, names, prev_status, status, send_time, score
 let set_params = {id, names, prev_status, status, send_time};
 if (typeof tamagotchi !== 'undefined') set_params.tamagotchi = tamagotchi;
 
-let res = await collection.updateOne({id}, {$set: set_params, $inc: {scores: parseFloat(scores.toString()), locked_scores: parseFloat(locked_scores.toString()), viz_scores: parseFloat(viz_scores.toString())}}, {});
+let incParams = {
+    scores: parseFloat(scores.toString()),
+    locked_scores: parseFloat(locked_scores.toString()),
+    viz_scores: parseFloat(viz_scores.toString())
+  };
+  const hasNegativeValue = Object.values(incParams).some(value => value < 0);
+  if (hasNegativeValue == true) {
+    let user = await getUser(id);
+    for (const field in incParams) {
+        const currentValue = incParams[field];
+    if (currentValue >= 0) continue;
+    const resultValue = user[field] + currentValue;
+if (resultValue < 0) delete incParams[field];
+      }
+  } // end if hasNegativeValue == true.
 
+  let res = await collection.updateOne({ id }, { $set: set_params, $inc: incParams }, {});
+  
 return res;
 
   } catch (err) {
@@ -252,7 +268,7 @@ return err;
 }
 }
 
-async function getScoresTop() {
+async function getTop(sort = 'scores') {
     let client = await pool.getClient()
 
 if (!client) {
@@ -265,8 +281,10 @@ try {
 
     let collection = db.collection('users');
 
+    const sorting = {};
+    sorting[sort] = -1;
     const res = [];
-    let cursor = await collection.find({}).limit(500).sort({scores: -1});
+    let cursor = await collection.find({}).limit(500).sort(sorting);
     let doc = null;
     while(null != (doc = await cursor.next())) {
         res.push(doc);
@@ -317,5 +335,5 @@ module.exports.plusFTCounter = plusFTCounter;
 module.exports.resetUsersScores = resetUsersScores;
 module.exports.removeUser = removeUser;
 module.exports.findAllUsers = findAllUsers;
-module.exports.getScoresTop = getScoresTop;
+module.exports.getTop = getTop;
 module.exports.getUsersByPrize = getUsersByPrize;

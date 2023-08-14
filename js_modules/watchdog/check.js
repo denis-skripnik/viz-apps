@@ -45,7 +45,7 @@ async function sendVersions(chat) {
 
     const acc = witnesses.filter(w => w.signing_key != EMPTY_KEY).reduce((acc, w, i) => {
         acc.all[w.running_version] = ++acc.all[w.running_version] || 1;
-        if(i < 19) {
+        if(i < 11) {
             acc.top[w.running_version] = ++acc.top[w.running_version] || 1;
         }
         return acc;

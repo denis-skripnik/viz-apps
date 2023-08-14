@@ -31,7 +31,9 @@ async function switchWatchAll(chat) {
 async function onMsg(msg) {
     msg = msg.update.message;
     log.trace("onMsg", msg);
-    const chat_id = msg.from.id; 
+    let uid = msg.from.id;
+    if (msg.is_bot == true) uid = msg.chat.id;
+    const chat_id = uid; 
     const username = msg.from.username;
     try {
 
@@ -61,8 +63,8 @@ async function onMsg(msg) {
 async function getWitnessesByBlock() {
 try {
     const witnesses = await methods.getWitnessesByVote("",100);
-    for(let w of witnesses) {
 
+    for(let w of witnesses) {
         let saved = await memory.loadWitness(w.owner);
 
         log.debug("witness", w.owner, "missed", w.total_missed)
@@ -75,6 +77,7 @@ try {
         await memory.saveWitness(w);
     }
 } catch(e) {
+    log.error("Error in getWitnessesByBlock", e)
     // Error.
 }
 }
