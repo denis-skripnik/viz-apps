@@ -18,7 +18,7 @@ return bot.hears(/start|старт/, async function (msg, match) {
     var username = msg.from.username;
 
         var text = `Это бот, который отправляет в канал @viz_chats_channels посты с новыми чатами и каналами.
-        This is a bot that sends posts with new chats and channels to the @viz_chats_channels channel.`;
+This is a bot that sends posts with new chats and channels to the @viz_chats_channels channel.`;
 await sendMSG(userId, text);
 });
 }

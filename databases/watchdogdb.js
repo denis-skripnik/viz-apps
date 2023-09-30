@@ -27,13 +27,9 @@ class Chat {
     }
 
     isWatching(witness) {
-        if(this.watchall || !this.witness && !this.witnesses.length) {
+        if(this.watchall || !this.witnesses.length) {
             return true;
         }
-        if(witness == this.witness) {
-            return true;
-        }
-
         if(this.witnesses.includes(witness)) {
             return true;
         }
