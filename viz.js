@@ -33,8 +33,8 @@ if (bn % 200 == 0) await mgb.cryptoBidsResults();
           vccb.run();
     }
         
-    let update_account_ops = ["account_create", "transfer_to_vesting", "delegate_vesting_shares", "transfer", "create_invite", "invite_registration", "claim_invite_balance", "use_invite_balance", "receive_award", "benefactor_award", "committee_pay_request", "paid_subscription_action"];
-let update_account_creators = ["creator", "from", "delegator", "from", "creator", "initiator", "initiator", "initiator", "", "", "worker", "subscriber"]
+    let update_account_ops = ["account_create", "transfer_to_vesting", "delegate_vesting_shares", "transfer", "create_invite", "invite_registration", "claim_invite_balance", "use_invite_balance", "receive_award", "benefactor_award", "committee_pay_request", "paid_subscription_action", "witness_reward"];
+let update_account_creators = ["creator", "from", "delegator", "from", "creator", "initiator", "initiator", "initiator", "", "", "worker", "subscriber", "witness"]
 let update_account_targets = ["new_account_name", "to", "delegatee", "to", "", "new_account_name", "receiver", "receiver", "receiver", "benefactor", "", "account"]
     const block = await methods.getOpsInBlock(bn);
 let ok_ops_count = 0;
@@ -68,7 +68,7 @@ ok_ops_count += await vp.transferOperation(opbody);
                 break;
                 case "receive_award":
                 ok_ops_count += await awards.receiveAward(opbody);
-let data = opbody.memo.split(',');
+let data = opbody.memo.split('~');
 if (opbody.receiver === 'committee' && data.length === 3) {
     ok_ops_count += await links.receiveAwardOperation(opbody.custom_sequence, parseFloat(opbody.shares), data);
 } else if (opbody.receiver === conf.mg_bot.award_account && opbody.memo.indexOf('ft:') > -1 && opbody.memo.split(':').length === 2 && parseFloat(opbody.shares) >= 0.001) {

@@ -10,7 +10,7 @@ async function getLink(keyword, link, in_link) {
 
     try {
 
-        const db = client.db("viz_links");
+        const db = client.db("viz-links");
 
         let collection = db.collection('links');
 

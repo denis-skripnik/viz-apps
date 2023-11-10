@@ -161,6 +161,10 @@ async function sendReblog(account, wif, author, block, text) {
             await sendJson(wif, account, 'V', JSON.stringify(data));
 }
 
+async function transfer(wif, from, to, amount, memo) {
+return await viz.broadcast.transferAsync(wif, from, to, amount, memo);
+}
+
 module.exports.getOpsInBlock = getOpsInBlock;
 module.exports.getProps = getProps;      
 module.exports.getConfig = getConfig;
@@ -182,3 +186,4 @@ module.exports.getWitnessByAccount = getWitnessByAccount;
 module.exports.getWitnessesByVote = getWitnessesByVote;
 module.exports.getWitnessSchedule = getWitnessSchedule;
 module.exports.sendReblog = sendReblog;
+module.exports.transfer = transfer;

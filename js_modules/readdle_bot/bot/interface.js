@@ -614,7 +614,7 @@ async function sendNotify(login, lang, id, bn, data) {
 if (typeof lang === 'undefined' || lang && lang === '') return;
     try {
     let text = '';
-    if (data.t && data.t === 'p' && !data.d.r && !data.d.s) {
+    if (data.t && data.t === 'p' && !data.d.r && !data.d.s && data.d.d) {
         data.d.d = data.d.d.replace(/<\/?[^>]+(>|$)/g, "");
         text = `<a href="https://readdle.me/#viz://@${login}/${bn}/publication/">${lng[lang].type_publication}</a> ${lng[lang].from} ${login}.
 ${lng[lang].publication_title}: ${data.d.t}

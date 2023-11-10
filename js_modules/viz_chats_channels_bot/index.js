@@ -55,7 +55,6 @@ await chatsdb.updateChat(el.id, el.name, el.title, el.descr);
 
 ${content_counter}. @${el.name}
 <a href="https://telegram.viz.world/@${el.name}">Смотреть на telegram.viz.world</a>
-
 Description - Описание:
 ${el.descr}`;
                                 if (content[msg_counter].length + chunk.length >= 4096) {

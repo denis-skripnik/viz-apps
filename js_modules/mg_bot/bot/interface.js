@@ -12,10 +12,38 @@ const cbdb = require(process.cwd() + "/databases/mg_bot/cbdb");
 const bkdb = require(process.cwd() + "/databases/mg_bot/bkdb");
 const rtdb = require(process.cwd() + "/databases/mg_bot/ringdb");
 const axios = require("axios");
+var crypto = require('crypto');
 const helpers = require(process.cwd() + "/js_modules/helpers");
 const conf = require(process.cwd() + "/config.json");
+const { CryptoPay, Assets, PaidButtonNames } = require('@foile/crypto-pay-api');
+const cryptoPay = new CryptoPay(conf.buy_viz.pay_api, {
+    webhook: {
+        serverHostname: 'backend.dpos.space',
+        serverPort: 3245,
+        path: '/buy-viz/crypto-bot_CBgfgtjuHGJGFHt'
+    },
+  });
+  cryptoPay.on('invoice_paid', async (update) => {
+    console.log(update.payload)
+    if (update.payload.status !== 'paid') return;
+try {
+  let user = await udb.getUser(parseInt(update.payload.payload));
+  if (user && Object.keys(user).length > 0) {
+    let price = parseFloat(update.payload.amount) * parseFloat(update.payload.usd_rate);
+if (price < conf.buy_viz.min_amount) return;
+    let viz_amount = parseFloat(price / conf.buy_viz.price).toFixed(3) + ' VIZ';
+await methods.transfer(conf.buy_viz.wif, conf.buy_viz.account, user.viz_login, viz_amount, 'You bought VIZ - Вы купили VIZ!')
+let text = `${lng[user.lng].bought_viz} ${viz_amount} ${lng[user.lng].buy_viz_to} ${user.viz_login}`;
+    let btns = await keybord(user.lng, 'no');
+    await botjs.sendMSG(user.id, text, btns, false);
+  return;
+}
+} catch(e) {
+  console.error(e);
+}
+  });
+
 const tmc = require('../tamagotchi');
-var crypto = require('crypto');
 var energy = new Big(20);
 
 async function sumNumbers(n1, n2) {
@@ -53,7 +81,7 @@ async function keybord(lang, variant) {
 if (variant === 'lng') {
         buttons = [["English", "Русский"]];
     } else if (variant === 'home') {
-        buttons = [[lng[lang].reytings, lng[lang].games, lng[lang].my_viz_login, lng[lang].add_viz_scores], [lng[lang].lang, lng[lang].help, lng[lang].partners]];
+        buttons = [[lng[lang].reytings, lng[lang].games, lng[lang].my_viz_login, lng[lang].buy_viz], [lng[lang].lang, lng[lang].help, lng[lang].partners]];
     } else if (variant === 'games') {
         buttons = [[lng[lang].fortune_telling, lng[lang].random_numbers, lng[lang].bk_game], [lng[lang].crypto_bids, lng[lang].tamagotchi, lng[lang].home]];
     } else if (variant === 'bk_game') {
@@ -114,7 +142,7 @@ if (variant === 'lng') {
                 let rowData = JSON.parse(row_data);
 buttons.push(rowData);
             }
-                        buttons.push([[lng[lang].inventory, lng[lang].inventory], [lng[lang].t_shop, lng[lang].t_shop], [lng[lang].tamagotchi, lng[lang].tamagotchi]]);
+                        buttons.push([[lng[lang].inventory, lng[lang].inventory], [lng[lang].t_workout, lng[lang].t_workout], [lng[lang].tamagotchi, lng[lang].tamagotchi]]);
                 } else if (variant.indexOf('t_shop') > -1) {
             let data = lng[lang].t_shop_elements;
             const rowSize = 3; // количество кнопок в каждом ряду
@@ -205,7 +233,7 @@ let tamagotchi = {};
             await botjs.sendMSG(referer.id, text, btns, false);
         }
         let id_hash = await helpers.stringToHash(id);
-        if (message.indexOf('r') > -1 && message.indexOf('subscr') === -1) {
+        if (typeof message !== 'undefined' && message !== '' && message.indexOf('r') > -1 && message.indexOf('subscr') === -1) {
             let ref_id = parseInt(message.split(' r')[1]);
             let referer = await udb.getUserByRefererCode(ref_id);
         if (referer) {
@@ -232,13 +260,12 @@ await udb.addUser(id, names, '', '', 'start', send_time, 0, refs, id_hash, [], '
     } // end if no referer in command.
     } // end if not user.
     else { // yes user.
-        if (typeof message !== 'undefined' && user && user.lng && user.lng !== '' && message.indexOf(lng[user.lng].back) > -1 || typeof message !== 'undefined' && user && user.lng && user.lng !== '' && message.indexOf(lng[user.lng].cancel) > -1) message = user.prev_status;
         let last_time = send_time - user.send_time;
         if (user.send_time && typeof user.send_time !== 'undefined' && last_time < 1000 && message !== lng[user.lng].home && message !== lng[user.lng].check_subscribes && message !== '/start') return;
+        if (typeof message !== 'undefined' && user && user.lng && user.lng !== '' && message.indexOf(lng[user.lng].back) > -1 || typeof message !== 'undefined' && user && user.lng && user.lng !== '' && message.indexOf(lng[user.lng].cancel) > -1) message = user.prev_status;
         
         level = parseInt(new Big(user.scores).plus(new Big(user.locked_scores)).div(100))
         if (level < 0) level = 0;
-
         if (user.status === message) {
             await udb.updateUserStatus(id, names, user.prev_status, message, send_time);
             } else {
@@ -277,7 +304,10 @@ if (user && user.lng && user.lng !== '') {
                     }
         }
         let text = lng[user.lng].home_message(user.names, referer, user.referer_code, user.scores, level, user.locked_scores, user.viz_scores);
-                let btns = await keybord(user.lng, 'home');
+        text += `
+
+${lng[user.lng].viz_scores_adding(conf.mg_bot.award_account, `scores:${id}`)}`;        
+        let btns = await keybord(user.lng, 'home');
                 await botjs.sendMSG(id, text, btns, false);        
     } else if (checking && checking === true && isReturn === true) {
         return;
@@ -444,10 +474,6 @@ let btns = await keybord(user.lng, 'home');
 await botjs.sendMSG(id, text, btns, false);
  await udb.updateUserStatus(id, names, user.status, lng[user.lng].home, send_time, score);
 await createRefererScores(score, user.referers);
-} else if (user && user.lng && message.indexOf(lng[user.lng].add_viz_scores) > -1) {
-            let text = lng[user.lng].viz_scores_adding(conf.mg_bot.award_account, `scores:${id}`);
-            let btns = await keybord(user.lng, 'no');
-            await botjs.sendMSG(id, text, btns, false);
 } else if (user && user.lng && message.indexOf(lng[user.lng].random_numbers) > -1) {
     let text = lng[user.lng].rn_text;
             let btns = await keybord(user.lng, 'games_buttons');
@@ -545,7 +571,7 @@ await bkdb.addGameSession(id, bk_level, number)
                             let action_changes = {};
                             let action_scores = 0;
                             
-                            if (typeof action !== 'undefined') {
+                            if (typeof action !== 'undefined' && Object.keys(user.tamagotchi).length > 0) {
                                 let res = tmc.performAction(action, user.tamagotchi, level);
                                 if (res !== false &&  Object.keys(res).length === 0) {
                                                                 action_text = `${lng[user.lng].tamagotchi_not_wants} ${lng[user.lng].tm_with_actions[action]}.
@@ -557,6 +583,7 @@ user.tamagotchi = res.params;
                                                                 action_changes = res.changes;
                                                                 action_text = `${lng[user.lng].tamagotchi_ok} ${lng[user.lng].tm_ok_actions[action]}
 `;
+user.tamagotchi.power = parseFloat((user.tamagotchi.power).toFixed(2));
 if (user.tamagotchi.sleap_time > 0) {
     action_text += `${lng[user.lng].tamagotchi_sleeping(user.tamagotchi)}
 `;
@@ -568,7 +595,7 @@ if (user.tamagotchi.sleap_time > 0) {
                                                                                     }
 
                 let text = `${action_text}${lng[user.lng].tamagotchi_stats(user.tamagotchi, action_changes)}`;
-                                                                                    if (user.tamagotchi.sleap_time > 0 && typeof game === 'undefined') {
+                if (user.tamagotchi.sleap_time > 0 && typeof game === 'undefined') {
                                                                                         text = `${lng[user.lng].tamagotchi_sleeping(user.tamagotchi)}
 `;
                                                                                     }
@@ -579,9 +606,23 @@ let btns = await keybord(user.lng, 'cancel');
 if (user.tamagotchi && Object.keys(user.tamagotchi).length > 0) {
     let actions = tmc.getActions(user.tamagotchi);
     btns = await keybord(user.lng, 'tamagotchi|' + JSON.stringify(actions));
-    await botjs.sendMSG(id, text, btns, true, false);
-} else {
-    await botjs.sendMSG(id, text, btns, false, false);
+    if (!user.tamagotchi.message_id || user.status.indexOf(lng[user.lng].tamagotchi) === -1) {
+        let sended = await botjs.sendMSG(id, text, btns, true, false);
+        if (typeof sended.message_id !== 'undefined') user.tamagotchi.message_id = sended.message_id;
+    } else {
+        let edited = await botjs.editMessage(id, user.tamagotchi.message_id,  text, btns, true, false);
+        if (edited == false) {
+            let sended = await botjs.sendMSG(id, text, btns, true, false);
+            if (typeof sended.message_id !== 'undefined') user.tamagotchi.message_id = sended.message_id;
+        }
+    }
+} else if (Object.keys(user.tamagotchi).length === 0) {
+    if (!user.tamagotchi.message_id) {
+        let sended = await botjs.sendMSG(id, text, btns, false, false);
+        if (typeof sended.message_id !== 'undefined') user.tamagotchi.message_id = sended.message_id;
+    } else {
+        await botjs.editMessage(id, user.tamagotchi.message_id,  text, btns, false, false);
+    }
 }
                                                                                 await udb.updateUserStatus(user.id, user.names, user.status, message, user.send_time, action_scores, 0, 0, user.tamagotchi);
                                                                             } else if (user && user.lng && message.indexOf(lng[user.lng].inventory) > -1) {                                                                                                    
@@ -599,15 +640,29 @@ text = lng[user.lng].inventory_select;
                                                                                                                                                                 let btns = await keybord(user.lng, 't_custom|' + JSON.stringify(actions));
                                                                                 await botjs.sendMSG(id, text, btns, true, false);
                                                                             } else if (user && user.lng && lng[user.lng].t_shop_elements.indexOf(message) > -1) {
+                                                                                if (user.tamagotchi.sleap_time > 0) {
+                                                                                    let text = `${lng[user.lng].tamagotchi_sleeping(user.tamagotchi)}
+`;
+let btns = await keybord(user.lng, 'no');
+await botjs.sendMSG(id, text, btns, true, false);                                                                                
+return;
+}
+                                                                                
                                                                                 let text = lng[user.lng].no_tamagotchi;
                                                                                 let actions = [];
                                                                                 if (user.tamagotchi && Object.keys(user.tamagotchi).length > 0) {
 text = lng[user.lng].not_in_inv;
 if (user.tamagotchi.inventory && user.tamagotchi.inventory.length > 0 && user.tamagotchi.inventory.indexOf(message) > -1) {
     let res = user.tamagotchi.inventory.indexOf(message);
-    let energy = parseInt(message.split('_')[1]);
-user.tamagotchi.energy = await sumNumbers(user.tamagotchi.energy, energy);
-if (user.tamagotchi.energy > 100) user.tamagotchi.energy = 100;
+    let number = parseInt(message.split('_')[1]);
+    if (message.indexOf('Energetic') > -1) {
+        user.tamagotchi.energy = await sumNumbers(user.tamagotchi.energy, number);
+        if (user.tamagotchi.energy > 100) user.tamagotchi.energy = 100;
+    }
+if (message.indexOf('elixir') > -1) {
+    user.tamagotchi.health = await sumNumbers(user.tamagotchi.health, number);
+    if (user.tamagotchi.health > 100) user.tamagotchi.health = 100;
+}
 user.tamagotchi.inventory.splice(res, 1);
 text = `${message} ${lng[user.lng].product_applied}`;
 await udb.updateUserStatus(user.id, user.names, user.status, message, user.send_time, 0, 0, 0, user.tamagotchi);
@@ -660,6 +715,104 @@ if (product_number === -1) text = lng[user.lng].product_not_found;
     }
     let btns = await keybord(user.lng, 't_shop');
     await botjs.sendMSG(id, text, btns, true, false);                                                 
+} else if (user && user.lng && message.indexOf(lng[user.lng].t_workout) > -1) {                        
+    if (!user.tamagotchi || Object.keys(user.tamagotchi).length === 0) return;
+    let buttons = [];
+    if (user.tamagotchi.sleap_time > 0) {
+        let text = lng[user.lng].t_ring_sleep;
+        buttons.push([lng[user.lng].t_ring, lng[user.lng].t_ring])
+let btns = await keybord(user.lng, 't_ring|' + JSON.stringify(buttons));
+await botjs.sendMSG(id, text, btns, true, false);
+return;
+    }
+    if (user.tamagotchi.health <= 10) {
+        text = lng[user.lng].t_ring_small_health;
+        buttons.push([lng[user.lng].t_ring, lng[user.lng].t_ring])
+let btns = await keybord(user.lng, 't_ring|' + JSON.stringify(buttons));
+await botjs.sendMSG(id, text, btns, true, false);
+return;
+    }
+
+    let scores = 100;
+    let active_scores = await sumNumbers(user.scores, user.viz_scores);
+    if (active_scores < scores) {
+        let text = lng[user.lng].t_ring_no_scores;
+        buttons.push([lng[user.lng].t_ring, lng[user.lng].t_ring])
+        let btns = await keybord(user.lng, 't_ring|' + JSON.stringify(buttons));
+await botjs.sendMSG(id, text, btns, true, false);
+return;
+        }
+        let [user_scores, viz_scores] = [user.scores, user.viz_scores];
+        let gamer_scores = 0;
+        let blockchain_scores = 0;
+  let minus_scores = await minusNumbers(viz_scores, scores);
+  if (minus_scores < 0) {
+    blockchain_scores = viz_scores;
+      gamer_scores = await minusNumbers(scores, viz_scores)
+  } else {
+    blockchain_scores = scores;
+  }
+  let t1 = { ...user.tamagotchi };
+  let t2 = { ...user.tamagotchi };
+    let text = lng[user.lng].t_workout_text;
+    for(let i = 0; i < 5; i++) {
+        let hit = await tmc.performAttack(t1, t2);
+        if (hit.status >= 1) {
+            t2 = hit.target;
+            let hit_type = lng[user.lng].t_ring_hit_ok;
+    if (hit.status === 2) {
+        hit_type = lng[user.lng].t_ring_critical_strike;
+    }
+            text += `
+${hit_type} ${hit.damage}
+    ${lng[user.lng].your_health}: ${t1.health},
+    ${lng[user.lng].opponent_health}: ${t2.health}`;
+} // end if it.status >= 1.
+else if (hit.status === 0) {
+    text += `
+${lng[user.lng].t_ring_failure}`;
+}
+let hit2 = await tmc.performAttack(t2, t1);
+if (hit2.status >= 1) {
+    t1 = hit2.target;
+    let hit_type = lng[user.lng].t_ring_opponent_yes_hit;
+    if (hit2.status === 2) {
+        hit_type = lng[user.lng].t_ring_opponent_crytical_hit;
+    }
+            text += `
+${hit_type} ${hit2.damage}
+    ${lng[user.lng].your_health}: ${t1.health},
+    ${lng[user.lng].opponent_health}: ${t2.health}
+    ${lng[user.lng].t_workout_experience}: +${hit2.status / 4}`;
+    user.tamagotchi.xp += hit2.status / 4;
+} // end if it.status == true.
+else if (hit2.status === 0) {
+    text += `
+${lng[user.lng].t_ring_opponent_no_hit}
+${lng[user.lng].t_workout_experience}: +1`;
+user.tamagotchi.xp += 1;
+}
+    } // end for.
+let power = 0.2;
+if (t1.health >= t2.health) {
+    power = 1;
+}
+    user.tamagotchi.power += power;
+text += `
+${lng[user.lng].tamagotchi_params.power}: ${power}`;
+    await udb.updateUserStatus(
+        id,
+        names,
+        user.prev_status,
+user.status,
+        send_time,
+        -Math.abs(gamer_scores),
+        0,
+        -Math.abs(blockchain_scores),
+        user.tamagotchi
+        );
+    let btns = await keybord(user.lng, 'tamagotchi|' + JSON.stringify([]));
+    await botjs.sendMSG(id, text, btns, true, false);    
 } else if (user && user.lng && message.indexOf(lng[user.lng].t_ring) > -1) {                        
     let param = message.split(' ')[1];
     let page = 1;
@@ -669,7 +822,8 @@ if (product_number === -1) text = lng[user.lng].product_not_found;
     let actions = [];
     for (let ring of rings) {
         if (typeof ring.u2 !== 'undefined' && ring.u1.id !== user.id) continue;
-        actions.push([`t_ring join:${ring.timestamp}`, `${ring.power.toFixed()} ${ring.blows}  ${ring.u1.tamagotchi.health.toFixed()} ${ring.u1.scores.toFixed()}`]);
+if (!ring.power && ring.power != 0) continue;
+        actions.push([`t_ring join:${ring.timestamp}`, `${ring.power.toFixed()} ${ring.blows}  ${ring.u1.tamagotchi.health.toFixed()} ${ring.u1.tamagotchi.xp.toFixed()} ${ring.scores.toFixed()}`]);
     }
     if (page >= 1 && rings.length === 9) {
 actions.push([lng[user.lng].t_ring + ` ${page+1}`, '⏩'])
@@ -690,7 +844,7 @@ actions.push([lng[user.lng].t_ring + ` ${page+1}`, '⏩'])
     let actions = [];
     for (let ring of rings) {
         if (typeof ring.u2 !== 'undefined' && ring.u1.id !== user.id) continue;
-        actions.push([`t_ring_hit ${ring.timestamp}`, `${ring.power.toFixed()} ${ring.blows} ${ring.u1.scores.toFixed()}`]);
+        actions.push([`t_ring_hit ${ring.timestamp}`, `${ring.power.toFixed()} ${ring.blows} ${ring.u1.tamagotchi.xp.toFixed()} ${ring.scores.toFixed()}`]);
     }
     if (page >= 1 && rings.length === 9) {
 actions.push([lng[user.lng].t_ring + ` ${page+1}`, '⏩'])
@@ -701,8 +855,6 @@ actions.push([lng[user.lng].t_ring + ` ${page+1}`, '⏩'])
             actions.push([lng[user.lng].t_ring, lng[user.lng].t_ring])
             let btns = await keybord(user.lng, 't_ring|' + JSON.stringify(actions));
     await botjs.sendMSG(id, text, btns, true, false);
-
-
 } else if (user && user.lng && message.indexOf('t_ring ') > -1) {                        
     let [command, action] = message.split(' ');
     let [type, n] = action.split(':');
@@ -738,8 +890,15 @@ let btns = await keybord(user.lng, 't_ring|' + JSON.stringify(buttons));
 await botjs.sendMSG(id, text, btns, true, false);
 return;
     }
-    
-    let scores = ring.u1.scores;
+    if (user.tamagotchi.health <= 10) {
+        text = lng[user.lng].t_ring_small_health;
+        buttons.push([lng[user.lng].t_ring, lng[user.lng].t_ring])
+let btns = await keybord(user.lng, 't_ring|' + JSON.stringify(buttons));
+await botjs.sendMSG(id, text, btns, true, false);
+return;
+    }
+
+    let scores = ring.scores;
     let active_scores = await sumNumbers(user.scores, user.viz_scores);
     if (active_scores < scores) {
         text = lng[user.lng].t_ring_no_scores;
@@ -765,9 +924,9 @@ return;
           locked_scores,
           -Math.abs(blockchain_scores)
           );
-    let data = {timestamp,scores: ring['u1'].scores, u2: {id: user.id, tamagotchi: user.tamagotchi, scores, auto: false}};
+    let data = {timestamp,u2: {id: user.id, tamagotchi: user.tamagotchi, scores: Math.abs(gamer_scores), viz_scores: Math.abs(blockchain_scores), auto: false}};
     await rtdb.updateRing(data);
-    let exclude_params = ["name", "lastAgeUpdate", "sleap_time", "sleepEnergy"];
+    let exclude_params = ["name", "lastAgeUpdate", "sleap_time", "sleepEnergy", "message_id"];
     let t1_text = '';
     let t2_text = '';
     for (let key in ring.u1.tamagotchi) {
@@ -784,7 +943,7 @@ return;
     text = `${lng[user.lng].t_ring_joined}
 ${lng[user.lng].tamagotchi_params.power}: ${ring.power},
 ${lng[user.lng].blows}: ${ring.blows}
-${lng[user.lng].scores}: ${ring.u1.scores}
+${lng[user.lng].scores}: ${ring.scores}
 
 ${lng[user.lng].t_ring_you}:
 ${t2_text}
@@ -793,6 +952,25 @@ ${t1_text}`;
 buttons.push([`t_ring_hit ${timestamp}`, lng[user.lng].t_ring_hit])
 if (data.u2.auto == false) buttons.push([`t_ring_auto ${timestamp}`, lng[user.lng].t_ring_auto_on])
 else if (data.u2.auto == true) buttons.push([`t_ring_auto ${timestamp}`, lng[user.lng].t_ring_auto_off])
+
+let text2 = `${lng[user.lng].t_ring_join}
+${lng[user.lng].tamagotchi_params.power}: ${ring.power},
+${lng[user.lng].blows}: ${ring.blows}
+${lng[user.lng].scores}: ${ring.scores}
+
+${lng[user.lng].t_ring_you}:
+${t1_text}
+${lng[user.lng].t_ring_opponent}:
+${t2_text}`;
+let buttons2 = [];
+buttons2.push([`t_ring_hit ${timestamp}`, lng[user.lng].t_ring_hit])
+if (ring.u1.auto == false) buttons2.push([`t_ring_auto ${timestamp}`, lng[user.lng].t_ring_auto_on])
+else if (ring.u1.auto == true) buttons2.push([`t_ring_auto ${timestamp}`, lng[user.lng].t_ring_auto_off])
+buttons2.push([lng[user.lng].t_ring, lng[user.lng].t_ring])
+let user2 = await udb.getUser(ring.u1.id);
+if (!user2.lng || user2.lng && user2.lng === '') user2.lng = user.lng;
+let btns2 = await keybord(user2.lng, 't_ring|' + JSON.stringify(buttons2));
+await botjs.sendMSG(ring.u1.id, text2, btns2, true, false);
 }
 } // end if ring.u2 undefined.
 buttons.push([lng[user.lng].t_ring, lng[user.lng].t_ring])
@@ -816,7 +994,14 @@ await botjs.sendMSG(id, text, btns, true, false);
     await botjs.sendMSG(id, text, btns, true, false);
     return;
         }
-    
+        if (user.tamagotchi.health <= 10) {
+            text = lng[user.lng].t_ring_small_health;
+            buttons.push([lng[user.lng].t_ring, lng[user.lng].t_ring])
+    let btns = await keybord(user.lng, 't_ring|' + JSON.stringify(buttons));
+    await botjs.sendMSG(id, text, btns, true, false);
+    return;
+        }
+
         let [user_scores, viz_scores] = [user.scores, user.viz_scores];
         let gamer_scores = 0;
         let blockchain_scores = 0;
@@ -840,7 +1025,7 @@ await botjs.sendMSG(id, text, btns, true, false);
           );
           let blows = parseInt(n);
           let timestamp = new Date().getTime();
-          let data = {timestamp, blows, hit: 0, queue: 'u2', power: user.tamagotchi.power, u1: {id: user.id, tamagotchi: user.tamagotchi, scores, auto: false}};
+          let data = {timestamp, blows, hit: 0, queue: 'u2', power: user.tamagotchi.power, scores, u1: {id: user.id, tamagotchi: user.tamagotchi, scores: Math.abs(gamer_scores), viz_scores: Math.abs(blockchain_scores), auto: false}};
           await rtdb.updateRing(data);
           let text = lng[user.lng].t_ring_created;
           let buttons = [];
@@ -887,16 +1072,17 @@ if (typeof ring.u2 !== 'undefined') users['u2'] = await udb.getUser(ring.u2.id);
         await rtdb.removeRing(timestamp);
         for (let gamer in users) {
             let acc = users[gamer];
-                let scores = ring[gamer].scores;
-            let locked_scores = -scores;
-            if (!locked_scores || typeof locked_scores === 'undefined') locked_scores = -ring['u1'].scores;
-            if (!locked_scores && locked_scores !== 0) console.error('test1', typeof locked_scores, locked_scores, typeof scores, scores);
+                if (!ring[gamer].viz_scores) ring[gamer].viz_scores = 0;
+            let scores = ring[gamer].scores;
+            let viz_scores = ring[gamer].viz_scores;
+            let locked_scores = -await sumNumbers(ring[gamer].scores, ring[gamer].viz_scores);
+            if (!locked_scores || typeof locked_scores === 'undefined') locked_scores = -ring.scores;
             acc.tamagotchi.health = ring[gamer].tamagotchi.health;
-            await udb.updateUserStatus(acc.id, acc.names, acc.prev_status, acc.status, acc.send_time, scores, locked_scores, 0, acc.tamagotchi);
+            await udb.updateUserStatus(acc.id, acc.names, acc.prev_status, acc.status, acc.send_time, scores, locked_scores, viz_scores, acc.tamagotchi);
             let text = `${lng[acc.lng].t_ring_deleted}:
             ${lng[acc.lng].tamagotchi_params.power}: ${ring.power},
             ${lng[acc.lng].blows}: ${ring.blows}
-${lng[acc.lng].scores}: ${ring.u1.scores}.
+${lng[acc.lng].scores}: ${ring.scores}.
 ${lng[acc.lng].t_ring_returned}`;
             let buttons = [];
             buttons.push([lng[acc.lng].t_ring, lng[acc.lng].t_ring])
@@ -924,27 +1110,34 @@ let users = {};
      if (ring.u2.tamagotchi.health > ring.u1.tamagotchi.health) {
          winner = 'u2';
          not_winner = 'u1';
-        }
-     let all_scores = await sumNumbers(ring['u1'].scores, ring['u1'].scores);
+     } else if (ring.u2.tamagotchi.health === ring.u1.tamagotchi.health) {
+let random_winner = Math.round(Math.random());
+if (random_winner == 1) {
+    winner = 'u2';
+    not_winner = 'u1';
+}
+                    }
+     let all_scores = await sumNumbers(ring.scores, ring.scores);
      users['u1'] = await udb.getUser(ring.u1.id);
      users['u2'] = await udb.getUser(ring.u2.id);
+     let power_k = parseFloat((ring[not_winner].tamagotchi.power / ring[winner].tamagotchi.power).toFixed(2));
      let texts = {};
-     texts[winner] = lng[user.lng].t_ring_winner + all_scores;
- texts[not_winner] = lng[user.lng].t_ring_not_winner;
- 
+     texts[winner] = `${lng[user.lng].t_ring_winner} ${all_scores}, ${lng[user.lng].tamagotchi_params.power} +${power_k}`;
+ texts[not_winner] = `${lng[user.lng].t_ring_not_winner}. ${lng[user.lng].tamagotchi_params.power} +0.2`;
+
      for (let gamer in users) {
 let acc = users[gamer];
 let txt = texts[gamer];
 let scores = 0;
 if (gamer === winner) {
-    acc.tamagotchi.power += 1;
+    acc.tamagotchi.power = await sumNumbers(parseFloat(acc.tamagotchi.power.toFixed(1)), power_k);
     scores = all_scores;
     await createRefererScores(scores, acc.referers);
 } else {
-    acc.tamagotchi.power += 0.2;
+    acc.tamagotchi.power = await sumNumbers(parseFloat(acc.tamagotchi.power.toFixed(1)), 0.2);
 }
-let locked_scores = -ring[gamer].scores;
-if (!locked_scores || typeof locked_scores === 'undefined') locked_scores = ring['u1'].scores;
+let locked_scores = -await sumNumbers(ring[gamer].scores, ring[gamer].viz_scores);
+if (!locked_scores || typeof locked_scores === 'undefined') locked_scores = ring.scores;
 acc.tamagotchi.health = ring[gamer].tamagotchi.health;
 await udb.updateUserStatus(acc.id, acc.names, acc.prev_status, acc.status, acc.send_time, scores, locked_scores, 0, acc.tamagotchi);
 let b = [];
@@ -975,9 +1168,9 @@ if (hit.status === 2) {
         text = `${hit_type} ${hit.damage}
 ${lng[user.lng].your_health}: ${ring[member].tamagotchi.health},
 ${lng[user.lng].opponent_health}: ${ring[opponent].tamagotchi.health}
-${lng[user.lng].t_ring_with_params}: ${lng[user.lng].tamagotchi_params.power}: ${ring.power}, ${lng[user.lng].blows}: ${ring.blows} ${lng[user.lng].scores}: ${ring.u1.scores}`;
+${lng[user.lng].t_ring_with_params}: ${lng[user.lng].tamagotchi_params.power}: ${ring.power}, ${lng[user.lng].blows}: ${ring.blows} ${lng[user.lng].scores}: ${ring.scores}`;
 hit_status = `${opponent_type_hit} ${hit.damage}
-${lng[user2.lng].t_ring_with_params}: ${lng[user2.lng].tamagotchi_params.power}: ${ring.power}, ${lng[user2.lng].blows}: ${ring.blows} ${lng[user2.lng].scores}: ${ring.u1.scores}`;
+${lng[user2.lng].t_ring_with_params}: ${lng[user2.lng].tamagotchi_params.power}: ${ring.power}, ${lng[user2.lng].blows}: ${ring.blows} ${lng[user2.lng].scores}: ${ring.scores}`;
 } // end if it.status == true.
 await rtdb.updateRing(ring);
 let text2 = `${hit_status}
@@ -1002,7 +1195,18 @@ if (user2 && typeof user2 !== 'undefined' && ring[opponent].auto == true) {
     await main(user2.id, user2.names, `t_ring_hit ${timestamp}`, 1, false)
 }
     }
-        } else if (user && user.lng && message.indexOf(lng[user.lng].my_viz_login) > -1) {
+} else if (user && user.lng && message.indexOf(lng[user.lng].buy_viz) > -1) {
+    if (!user.viz_login || user.viz_login && user.viz_login === '') {
+        let text = lng[user.lng].no_buy_viz;
+        let btns = await keybord(user.lng, 'no');
+await botjs.sendMSG(id, text, btns, false);        
+return;
+    }
+    let text = lng[user.lng].buy_viz_text + ` (>= $ ${conf.buy_viz.min_amount})
+1 VIZ = $ ${conf.buy_viz.price}`;
+            let btns = await keybord(user.lng, 'cancel');
+    await botjs.sendMSG(id, text, btns, false);        
+} else if (user && user.lng && message.indexOf(lng[user.lng].my_viz_login) > -1) {
     let text = lng[user.lng].viz_login_text;
             let btns = await keybord(user.lng, 'cancel');
     await botjs.sendMSG(id, text, btns, false);        
@@ -1232,13 +1436,48 @@ await botjs.sendMSG(id, text, btns, false);
 }
 await botjs.sendMSG(id, text, btns, false);
 } else if (user && user.lng && lng[user.lng] && user.status === lng[user.lng].tamagotchi && Object.keys(user.tamagotchi).length === 0) {
-    let tamagotchi = {name: message, health: 100, satiety: 100, happiness: 100, energy: 100, cleanliness: 100, age: 0, power: 0, lastAgeUpdate: new Date().getTime(), sleap_time: 0, inventory: []};
-user.tamagotchi = tamagotchi;
+    let tamagotchi = {name: message, health: 100, satiety: 100, happiness: 100, energy: 100, cleanliness: 100, age: 0, power: 0, xp: 0, lastAgeUpdate: new Date().getTime(), sleap_time: 0, inventory: []};
+    user.tamagotchi = tamagotchi;
 await udb.updateUserStatus(user.id, user.names, user.prev_status, user.status, user.send_time, 0, 0, 0, user.tamagotchi);
 let text = `${lng[user.lng].tamagotchi_set_name} ${message}!`;
 let btns = await keybord(user.lng, 'to_game|' + user.status);
                                         await botjs.sendMSG(id, text, btns, true);
-} else if (user && user.lng && lng[user.lng] && user.status === lng[user.lng].my_viz_login) {
+                                    } else if (user && user.lng && lng[user.lng] && user.status === lng[user.lng].buy_viz) {
+                                        if (!user.viz_login || user.viz_login && user.viz_login === '') {
+                                            let text = lng[user.lng].no_buy_viz;
+                                            let btns = await keybord(user.lng, 'no');
+                                    await botjs.sendMSG(id, text, btns, false);        
+                                    return;
+                                        }
+                                        let amount = 10;
+                                        if (!isNaN(message)) amount = parseFloat(message);
+if (amount < conf.buy_viz.min_amount) {
+    let text = lng[user.lng].small_buy_viz + conf.buy_viz.min_amount;
+    let btns = await keybord(user.lng, 'no');
+await botjs.sendMSG(id, text, btns, false);        
+return;
+}
+                                        const assets = ['USDT', 'USDC', 'BUSD']
+                                        const crypto_pay_options = {
+                                            description: 'Покупка VIZ',
+                                            paid_btn_name: PaidButtonNames.OPEN_BOT,
+                                            paid_btn_url: 'https://t.me/viz_mg_bot',
+                                            payload: id
+                                          };
+                                        const invoices = {};
+                                        for (let asset of assets) {
+                                            const invoice = await cryptoPay.createInvoice(asset, amount, crypto_pay_options);
+                                            invoices[asset] = invoice.pay_url;
+                                        }
+                        let text = lng[user.lng].buy_viz_select;
+                        for (let asset in invoices) {
+let url = invoices[asset];
+text += `
+${asset}: ${url}`;
+                        }
+                        let btns = await keybord(user.lng, 'home_button');
+                        await botjs.sendMSG(id, text, btns, false);                                    
+                    } else if (user && user.lng && lng[user.lng] && user.status === lng[user.lng].my_viz_login) {
     let viz_login = message.toLowerCase();
     let get_account = await methods.getAccount(viz_login);
     let text = lng[user.lng].not_account;
@@ -1395,11 +1634,11 @@ await cbdb.updateBTCPrice(now_price, timestamp);
         return previousValue;
         }, []);
     
-    let users = await udb.findAllUsers('object');
+        let users = await udb.findAllUsers('object');
 if (!users || typeof users === 'undefined' || Object.keys(users).length === 0) return;
 for (let id in users) {
     let user = users[id];
-    if (bids_ids.indexOf(id) > -1 || user.lng && user.status !== lng[user.lng].crypto_bids || user.status.indexOf('cb_direction|') === -1) continue;
+    if (bids_ids.indexOf(id) > -1 || user.lng && user.status !== lng[user.lng].crypto_bids || user.status && user.status.indexOf('cb_direction|') === -1) continue;
     await udb.updateUserStatus(user.id, user.names, user.prev_status, lng[user.lng].games, user.send_time);
     let btns = await keybord(msg.lng, 'home');
 await botjs.sendMSG(user.id, lng[user.lng].new_bids_round, btns, false);

@@ -63,7 +63,7 @@ const localNow = new Date(now.getTime() - timezoneOffset);
 
 newTamagotchi.satiety -= await helpers.getRandomInRange(1, 10);
         newTamagotchi.happiness += await helpers.getRandomInRange(-20, 1);
-        newTamagotchi.health -= await helpers.getRandomInRange(0, 2);
+        if (newTamagotchi.health >= 20) newTamagotchi.health -= await helpers.getRandomInRange(0, 2);
         newTamagotchi.cleanliness -= await helpers.getRandomInRange(0, 5);
       
         if (newTamagotchi.satiety > 100) {
@@ -72,19 +72,20 @@ newTamagotchi.satiety -= await helpers.getRandomInRange(1, 10);
         if (newTamagotchi.happiness < 0) {
           newTamagotchi.happiness = 0;
         }
-        if (newTamagotchi.health < 0) {
-          newTamagotchi.health = 0;
-        }
         if (newTamagotchi.cleanliness > 100) {
           newTamagotchi.cleanliness = 100;
         }
       
-        if (newTamagotchi.age >= 15) {
+        if (newTamagotchi.age >= 15 && newTamagotchi.health >= 20) {
           newTamagotchi.health -= await helpers.getRandomInRange(1, 3);
         }
       
         if (newTamagotchi.cleanliness >= 90 && newTamagotchi.happiness >= 90) {
           newTamagotchi.health += await helpers.getRandomInRange(1, 2);
+        }
+
+        if (newTamagotchi.health < 0) {
+          newTamagotchi.health = 0;
         }
 
         if (newTamagotchi.health > 100) {
@@ -189,8 +190,8 @@ newTamagotchi.satiety -= await helpers.getRandomInRange(1, 10);
         if (!t1.power || typeof t1.power ==='undefined') t1.power = 0;
       
         // Рассчитываем силу атаки и силу защиты
-        const attackStrength = t1.energy / 100 + t1.satiety / 100 + t1.power / 100;
-        const defenseStrength = t2.energy / 100 + t2.satiety / 100 + t2.power / 100;
+        const attackStrength = t1.energy / 100 + t1.satiety / 100 + t1.power / 100 + t1.xp / 500;
+        const defenseStrength = t2.energy / 100 + t2.satiety / 100 + t2.power / 100 + t2.xp / 500;
       
         // Рассчитываем вероятность успешного нанесения удара после защиты
         let successProbability;
@@ -210,21 +211,21 @@ newTamagotchi.satiety -= await helpers.getRandomInRange(1, 10);
 if(t1.power === 0) t1.power = 1;
 
           const maxDamage = 20; // Максимальное значение урона
-          const powerMultiplier = maxDamage / 20; // Множитель, определяющий урон от силы
+          const powerMultiplier = maxDamage / 100; // Множитель, определяющий урон от силы
       
           // Рассчитываем урон в зависимости от силы t1, но не более maxDamage
-          let damage = Math.min(maxDamage, Math.floor(t1.power * powerMultiplier));
+          let damage = Math.min(maxDamage, parseFloat((t1.power * powerMultiplier).toFixed(2)));
 
           // Проверяем, произошел ли критический удар
           if (Math.random() <= criticalChance) {
             // Увеличиваем урон в 1.5 раза при критическом ударе
-            damage = Math.floor(damage * 1.5);
+            damage = parseFloat((damage * 1.5).toFixed(2));
             status = 2;
           }
       
           // Уменьшаем здоровье t2 на значение урона
-          const changedHealth = Math.max(t2.health - damage, 10);
-          const minusHealth = t2.health - changedHealth;
+          const changedHealth = Math.max(parseFloat((t2.health - damage).toFixed(2)), 10);
+          const minusHealth = parseFloat((t2.health - changedHealth).toFixed(2));
           t2.health = changedHealth;
       
           return { target: t2, status, damage: minusHealth };

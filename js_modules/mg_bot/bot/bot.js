@@ -59,7 +59,7 @@ async function sendMSG(userId, text, buttons, inline, preview) {
     try {
     if (text && text !== '') {
         let options = await keybord(buttons, inline, preview);
-        await bot.api.sendMessage(userId, text, options);
+        return await bot.api.sendMessage(userId, text, options);
     }
     } catch(error) {
         console.log('Ошибка с отправкой сообщения: ' + JSON.stringify(error));
@@ -70,6 +70,22 @@ await udb.removeUser(userId);
     }
     }
 
+    async function editMessage(chatId, messageId, text, buttons, inline, preview) {
+        let options = await keybord(buttons, inline, preview);
+        try {
+            await bot.api.editMessageText(chatId, messageId, text, {parse_mode: 'HTML', disable_web_page_preview: true});
+            await bot.api.editMessageReplyMarkup(chatId, messageId, options);
+        } catch(error) {
+            if (error.description.includes('MESSAGE_ID_INVALID')) {
+return false;
+            }
+            if (error.error_code === 403 && error.description === "Forbidden: bot was blocked by the user" || error.error_code === 403 && error.description === "Forbidden: user is deactivated") {
+                await udb.removeUser(chatId);
+                        await cbdb.removeCryptoBids(chatId)
+                }
+    }
+    }
+    
 async function allCommands() {
     try {
     bot.on('message', async (msg) => {
@@ -122,6 +138,7 @@ return res;
 }
 
 module.exports.sendMSG = sendMSG;
+module.exports.editMessage = editMessage;
 module.exports.allCommands = allCommands;
 module.exports.sendChatsMSG = sendChatsMSG;
 module.exports.checkSubscribes = checkSubscribes;

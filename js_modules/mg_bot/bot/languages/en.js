@@ -59,7 +59,6 @@ module.exports = {
         "of_energy": "of energy",
         "added_viz_scores": "Added Viz points",
 "all_scores": "total points",
-"add_viz_scores": "+ Viz points",
 "viz_scores_adding": function(to, memo) {
     return `Send a reward via the Viz blockchain to get Viz points (x10 is the amount of the reward received). You will not be able to receive a reward at midnight until you use it in games such as betting on the cryptocurrency exchange rate. If you win, you will get real points.
     First of all, to reward you, you need a Viz account in @viz_social_bot with a Viz login. Reward <code>${to}</code> with <code>2</code>% and add the memo <code>${memo}</code>, or choose another method:
@@ -209,11 +208,12 @@ energy: "Energy",
 cleanliness: "Cleanliness",
 age: "Age",
 power: "power",
+xp: "Experience",
 inventory: "Inventory"
 },
 "tamagotchi_stats": function(tamagotchi, action_changes) {
 if (tamagotchi && Object.keys(tamagotchi).length === 0) return `Unfortunately, you don't have a tamagotchi yet... Create one by entering a name!`;
-let exclude_params = ["name", "lastAgeUpdate", "sleap_time", "sleepEnergy"];
+let exclude_params = ["name", "lastAgeUpdate", "sleap_time", "sleepEnergy", "message_id"];
 let data = `<a href="https://telegra.ph/The-game-Tamogochi-in-viz-mg-bot-04-28">About the game</a>.
 Your tamagotchi named ${tamagotchi.name}`; for (let key in tamagotchi) { if (exclude_params.indexOf(key) > -1) continue; let action_change = ''; if (typeof action_changes !== 'undefined' && typeof action_changes[key] !== 'undefined') action_change = `(${action_changes[key]})`; data += `${this.tamagotchi_params[key]}: ${tamagotchi[key]}${action_change}`; } data +=`
 Choose an action...`;
@@ -236,8 +236,11 @@ After reaching 100% energy, it will wake up, and you can play with it again.`;
 "t_sleep": "Sleep",
 
 "t_shop": "Shop",
-"t_shop_text": "Item - cost: description\nEnergetic_100, Energetic_50, Energetic_20 - 100, 50, or 20 points: restores Tamagotchi's energy to 100%, 50%, or 20%, but not exceeding 100%. Can be activated once, after which the item is removed from the inventory, but you can buy multiple.",
+"t_shop_text": `Product - cost: description
+Energetic_100, Energetic_50, Energetic_20 - 100, 50 or 20 points: restores Tamagotchi energy by 100%, 50% or 20%, but not more than 100%. Activation 1 time, after which the product is removed from the inventory, but you can buy several.
+elixir_100, elixir_50, elixir_20 - 100, 50 or 20 points: restores Tamagotchi health by 100%, 50% or 20%, but not more than 100%. Activation 1 time, after which the product is removed from the inventory, but you can buy several.`,
 "energetic": "Energetic",
+"elixir": "Elixir",
 "t_shop_buy": "Your Tamagotchi's inventory now includes",
 "not_tamagotchi": "You don't have a Tamagotchi.",
 "not_in_inv": "The item is not in your inventory.",
@@ -247,8 +250,12 @@ After reaching 100% energy, it will wake up, and you can play with it again.`;
 "not_inventory": "There are no items in the inventory.",
 "inventory_select": "Select what you want to spend from the inventory.",
 "product_not_found": "Product not found.",
-"t_shop_elements": ["Energetic_100", "Energetic_50", "Energetic_20"],
-"t_shop_prices": [100, 50, 20],
+"t_shop_elements": ["Energetic_100", "Energetic_50", "Energetic_20", "elixir_100", "elixir_50", "elixir_20"],
+"t_shop_prices": [100, 50, 20, 100, 50, 20],
+
+"t_workout": "Training",
+"t_workout_text": "An opponent with equal characteristics was generated for your Tamagotchi. Total: 5 mutual blows...",
+"t_workout_experience": "Experience",
 
 "t_ring": "Ring",
 "t_ring_with_params": "Ring with parameters:",
@@ -260,16 +267,17 @@ After reaching 100% energy, it will wake up, and you can play with it again.`;
 "t_ring_auto_false": "Automatic ring participation mode is disabled.",
 "t_ring_text": `Select an active ring or create a new one.
 <b>Warning: pay attention to the power of the opponent (the health spent for 1 successful hit depends on it)</b>.
-The probability of a successful strike or successful defense depends on the satiety of your tamagotchi and on its percentage of energy.
+The probability of a successful strike or successful defense depends on the energy, satiety, strength and experience of your tamagotchi.
 
 Data structure in buttons:
-Power Number_balls Health Amount_points`,
+Power Number_balls Health Experience Amount_points`,
 "blow": "blow",
 "blows": "blows",
 "create_ring": "🆕",
 "t_ring_created": "The ring is created!",
 "t_ring_active": "The ring is active: gathered 2 participants. Choose another one.",
 "t_ring_no_power": "The power of your tamagotchi differs by more than 2 units from the power of the ring creator or exceeds the power of the ring creator.",
+"t_ring_small_health": "Your Tamagotchi has health <= 10. Come back later when there's more of it.",
 "t_ring_sleep": "Tamagotchi is sleeping. You can't join the rings.",
 "t_ring_joined": "You have joined the ring.",
 "t_ring_you": "You",
@@ -293,7 +301,7 @@ Power Number_balls Health Amount_points`,
 "t_ring_forgotten": "Forgotten",
 "t_ring_forgotten_text": `Select the ring you forgot. Forgotten rings - rings where opponents are waiting for your strike. Tapping automatically activates the kick.
 Data structure in buttons:
-Power number_strikes Amount_points`,
+Power number_strikes Experience Amount_points`,
 
 "tamagotchi_action": "action",
 "tamagotchi_not_wants": "Tamagotchi doesn't want to",
@@ -326,6 +334,15 @@ Power number_strikes Amount_points`,
 2. @viz_social_bot.`,
 "check_subscribes": "Check Subscription",
 "checking_subscribes": "To use the bot, you need to subscribe to the @blind_dev channel. Once you have done that, click the subscription check button.",
+
+"buy_viz": "buy VIZ",
+"no_buy_viz": "First add the Viz login to the bot.",
+"small_buy_viz": "The price is less than the minimum in $ ",
+"buy_viz_text": "Specify the amount in $ that you are ready to buy VIZ",
+"buy_viz_select": "Выберите способ оплаты. Ссылки на оплату также даны:",
+"bought_viz": "You bought",
+"buy_viz_to": "on account",
+
 "news": "News",
 "help": "Help",
 "help_text": `To get started, simply select one of the menu items.
