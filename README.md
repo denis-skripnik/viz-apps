@@ -51,3 +51,6 @@ mg_bot: THIS_ADD_mg_bot_API_TOKEN на его api токен, 123456789 на в�
 Для настройки репостинга новостей о Viz указывайте данные, как написано в README [readdle-helper](https://github.com/denis-skripnik/readdle-helper).
 5. Запуск:
 node viz.js или pm2 start viz.js
+## Документация
+
+Подробная структурированная документация находится в [`docs/README.md`](docs/README.md). Там описаны архитектура, конфигурация, запуск, API, модули, workflows, хранение данных и безопасность секретов.
