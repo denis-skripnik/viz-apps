@@ -21,7 +21,7 @@ try {
             let username = (chat.watchall == true && chat.witnesses.indexOf(witness.owner) > -1?" (@"+chat.username+")":"");
             let text_blocks = m.get_text_blocks(missed);
             if (typeof chat === 'undefined' || typeof chat.chat_id === 'undefined') return;
-            await telegram.send(chat.chat_id, `Делегат ${witness.owner}${username} пропустил ${missed} ${text_blocks}!
+            await telegram.send(chat.chat_id, `Валидатор ${witness.owner}${username} пропустил ${missed} ${text_blocks}!
             /help - Список команд.`);
         } catch(error) {
             if (typeof error.error_code === 'undefined') console.error(JSON.stringify(error));
@@ -80,7 +80,7 @@ async function checkVersion(witness, saved) {
 try {
         if(!chat.isWatching(witness.owner)) {return};
             let username = (chat.watchall == true && chat.witnesses.indexOf(witness.owner) > -1?" (@"+chat.username+")":"");
-        await telegram.send(chat.chat_id, `Делегат ${witness.owner}${username} установил новую версию ${witness.running_version}`);
+        await telegram.send(chat.chat_id, `Валидатор ${witness.owner}${username} установил новую версию ${witness.running_version}`);
 
         await sendVersions(chat);
     } catch(error) {
@@ -113,12 +113,12 @@ try {
         let username = (chat.watchall == true && chat.witnesses.indexOf(witness.owner) > -1?" (@"+chat.username+")":"");
 
         if(sactive && wactive) {
-            await telegram.send(chat.chat_id, `Делегат ${witness.owner}${username} сменил ключ ${witness.signing_key}`);
+            await telegram.send(chat.chat_id, `Валидатор ${witness.owner}${username} сменил ключ ${witness.signing_key}`);
         } else {
             if(wactive) {
-                await telegram.send(chat.chat_id, `Делегат ${witness.owner}${username} был активирован! ${witness.signing_key}`);
+                await telegram.send(chat.chat_id, `Валидатор ${witness.owner}${username} был активирован! ${witness.signing_key}`);
             } else {
-                await telegram.send(chat.chat_id, `Делегат ${witness.owner}${username} был деактивирован! ${witness.signing_key}`);
+                await telegram.send(chat.chat_id, `Валидатор ${witness.owner}${username} был деактивирован! ${witness.signing_key}`);
             }
         }
     } catch(error) {

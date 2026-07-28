@@ -178,6 +178,10 @@ if (opbody.memo !== '') memo = `${lng[user.lang].memo}: ${opbody.memo}`;
 let initiator = opbody.initiator;   
 let benef_shares = parseFloat(opbody.shares);
 benef_shares = benef_shares.toFixed(3) + ' Ƶ VIZ';
+memo = memo.replace(/(viz:\/\/\S+)/g, function(match) {
+    const url = match.replace('viz://', ''); // Убираем 'viz://' для URL
+    return `<a href="https://readdle.me/#viz://${url}">${match}</a>`; // Создаем HTML ссылку с анкором
+});
 let text = `🤘 <a href="https://dpos.space/viz/profiles/${benefactor}/benefactor-awards">${benefactor}</a> ${lng[user.lang].received_benefactor} <a href="https://dpos.space/viz/profiles/${initiator}/">${initiator}</a> ${lng[user.lang].to_amount} ${benef_shares}
 ${cs} ${memo}`;
 let btns = await keybord(user.lang, 'no');
@@ -200,7 +204,11 @@ if (opbody.memo !== '' && opbody.memo.indexOf('channel:@') > -1) opbody.memo = `
 if (opbody.memo !== '') memo = `${lng[user.lang].memo}: ${opbody.memo}`;
             let receiver_shares = parseFloat(opbody.shares);
             receiver_shares = receiver_shares.toFixed(3) + ' Ƶ VIZ';
-                let text = `😍 <a href="https://dpos.space/viz/profiles/${initiator}">${initiator}</a> ${lng[user.lang].awarded} <a href="https://dpos.space/viz/profiles/${receiver}">${receiver}</a> ${lng[user.lang].to_amount} ${receiver_shares}
+            memo = memo.replace(/(viz:\/\/\S+)/g, function(match) {
+                const url = match.replace('viz://', ''); // Убираем 'viz://' для URL
+                return `<a href="https://readdle.me/#viz://${url}">${match}</a>`; // Создаем HTML ссылку с анкором
+            });
+            let text = `😍 <a href="https://dpos.space/viz/profiles/${initiator}">${initiator}</a> ${lng[user.lang].awarded} <a href="https://dpos.space/viz/profiles/${receiver}">${receiver}</a> ${lng[user.lang].to_amount} ${receiver_shares}
 ${cs} ${memo}`;
 let btns = await keybord(user.lang, 'no');
 await botjs.sendMSG(user.uid, text, btns, false);

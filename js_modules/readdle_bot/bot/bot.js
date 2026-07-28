@@ -25,7 +25,11 @@ async function keybord(btn_list, inline) {
             for (let btn of btn_list[row]) {
                 let bytes = Buffer.from(btn[0]).length;
                 if (bytes > 64) continue;
+            if (btn[0].indexOf('web:') > -1) {
+                inline_keyboard[row].push({text: btn[1], web_app: {url: btn[0].split('web:')[1]}});
+            } else {
                 inline_keyboard[row].push({text: btn[1], callback_data: btn[0]});
+            }
     }
         }
 
@@ -36,7 +40,11 @@ async function keybord(btn_list, inline) {
     let btn_row = btn_list[n];
     if (!keyboard[n]) keyboard[n] = [];
     for (let btn of btn_row) {
-    keyboard[n].push({text: btn});
+        if (btn[0].indexOf('web:') > -1) {
+keyboard[n].push({text: btn[1], web_app: {url: btn[0].split('web:')[1]}});
+        } else {
+            keyboard[n].push({text: btn});
+        }
     }
             }
             reply_markup = {keyboard, resize_keyboard: true};

@@ -66,7 +66,8 @@ let permlink = req.query.permlink;
     try {
         
 if (service === 'top' && type && page) {
-        let data = await vudb.getTop(type, page);
+    let counter = await vudb.countTop(type);
+    let data = await vudb.getTop(type, page);
     let users = [];
     if (data && data.length > 0) {
         let collums = {};
@@ -86,7 +87,8 @@ for (let collum of collums[type]) {
         users_count++;
         } // end for.
     } // end if data.
-    res.send(users);
+    let result = {counter, users};
+    res.send(result);
 } else if (service === 'prices') {
     let data = await pdb.getPrices();
     delete data._id;

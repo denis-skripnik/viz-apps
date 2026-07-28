@@ -4,10 +4,7 @@ module.exports = {
     getActions: function (tamagotchi) {
         const actions = [];
         if (tamagotchi.sleap_time > 0) return actions;
-        if (tamagotchi.energy <= 20) {
-          actions.push("t_sleap"); // Тамагочи устал, нужно спать
-        }
-        if (tamagotchi.energy === 0) return actions;
+        if (tamagotchi.energy === 0) return ["t_sleap"];
         if (tamagotchi.satiety <= 99) {
           actions.push("t_feed"); // Тамагочи голоден, нужно кормить
         }
@@ -61,16 +58,16 @@ const localNow = new Date(now.getTime() - timezoneOffset);
   newTamagotchi.lastAgeUpdate = now.getTime();
 }
 
-newTamagotchi.satiety -= await helpers.getRandomInRange(1, 10);
-        newTamagotchi.happiness += await helpers.getRandomInRange(-20, 1);
-        if (newTamagotchi.health >= 20) newTamagotchi.health -= await helpers.getRandomInRange(0, 2);
-        newTamagotchi.cleanliness -= await helpers.getRandomInRange(0, 5);
+newTamagotchi.satiety = Math.max(newTamagotchi.satiety - await helpers.getRandomInRange(1, 10), 0);
+        newTamagotchi.happiness = Math.max(newTamagotchi.happiness + await helpers.getRandomInRange(-20, 1), 0);
+        if (newTamagotchi.health >= 20) newTamagotchi.health = Math.max(newTamagotchi.health - await helpers.getRandomInRange(0, 2), 1);
+        newTamagotchi.cleanliness = Math.max(newTamagotchi.cleanliness - await helpers.getRandomInRange(0, 5), 0);
       
         if (newTamagotchi.satiety > 100) {
           newTamagotchi.satiety = 100;
         }
-        if (newTamagotchi.happiness < 0) {
-          newTamagotchi.happiness = 0;
+        if (newTamagotchi.happiness > 100) {
+          newTamagotchi.happiness = 100;
         }
         if (newTamagotchi.cleanliness > 100) {
           newTamagotchi.cleanliness = 100;
@@ -96,6 +93,9 @@ newTamagotchi.satiety -= await helpers.getRandomInRange(1, 10);
       },
       
       performAction: function (action, tamagotchi, level) {
+        if (!tamagotchi || Object.keys(tamagotchi).length === 0) {
+          return false; // Тамагочи мертв, ничего нельзя сделать
+        }
         if (tamagotchi.health <= 0) {
           return false; // Тамагочи мертв, ничего нельзя сделать
         }
@@ -184,14 +184,15 @@ newTamagotchi.satiety -= await helpers.getRandomInRange(1, 10);
 
       performAttack: function (t1, t2) {
         if (t1.health <= 0) {
+t2.xp += 1;
           return { target: t2, status: 0, damage: 0 };
         }
       
         if (!t1.power || typeof t1.power ==='undefined') t1.power = 0;
       
         // Рассчитываем силу атаки и силу защиты
-        const attackStrength = t1.energy / 100 + t1.satiety / 100 + t1.power / 100 + t1.xp / 500;
-        const defenseStrength = t2.energy / 100 + t2.satiety / 100 + t2.power / 100 + t2.xp / 500;
+        const attackStrength = t1.energy / 100 + t1.satiety / 100 + t1.power / 100 + t1.xp / 1000;
+        const defenseStrength = t2.energy / 100 + t2.satiety / 100 + t2.power / 100 + t2.xp / 1000;
       
         // Рассчитываем вероятность успешного нанесения удара после защиты
         let successProbability;
@@ -227,7 +228,7 @@ if(t1.power === 0) t1.power = 1;
           const changedHealth = Math.max(parseFloat((t2.health - damage).toFixed(2)), 10);
           const minusHealth = parseFloat((t2.health - changedHealth).toFixed(2));
           t2.health = changedHealth;
-      
+          t2.xp += status / 4;
           return { target: t2, status, damage: minusHealth };
         }
       

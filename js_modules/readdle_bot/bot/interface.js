@@ -15,7 +15,7 @@ async function keybord(lang, variant) {
 if (variant === 'lng') {
         buttons = [["English", "Русский"]];
     } else if (variant === 'home') {
-        buttons = [[lng[lang].settings, lng[lang].lang], [lng[lang].publish_now, lng[lang].help]];
+        buttons = [[[`web:https://readdle.me`, lng[lang].readdle_app], lng[lang].settings, lng[lang].lang], [lng[lang].publish_now, lng[lang].help]];
     } else if (variant.indexOf('settings') > -1) {
         let params = JSON.parse(variant.split('settings')[1]);
         let show_all = '◾ ';
@@ -38,13 +38,13 @@ if (variant === 'lng') {
         buttons = [[lng[lang].note, lng[lang].post], [lng[lang].back, lng[lang].home]];
     }     else if (variant.indexOf('notify_buttons#') > -1) {
         let post = variant.split('#')[1];
-        buttons = [[[lng[lang].award + ' ' + post, lng[lang].award], [lng[lang].reblog + ' ' + post, lng[lang].reblog]]];
+        buttons = [[[`web:https://readdle.me/#${post}`, lng[lang].open_readdle], [lng[lang].award + ' ' + post, lng[lang].award], [lng[lang].reblog + ' ' + post, lng[lang].reblog]]];
     }     else if (variant === 'back') {
     buttons = [[lng[lang].back, lng[lang].home]];
 }     else if (variant === 'send_award') {
     buttons = [[['0.5', '0.5'], ['1', '1'], ['2', '2']], [['5', '5'], ['10', '10'], ['20', '20']], [['50', '50'], ['100', '100'], [lng[lang].cancel, lng[lang].cancel]]];
 }     else if (variant === 'cancel') {
-        buttons = [[lng[lang].cancel]];
+        buttons = [[lng[lang].cancel, lng[lang].home]];
     }
     return buttons;
 }
@@ -60,7 +60,7 @@ async function main(id, message, status) {
         if (user.show_all == undefined) user.show_all = true;
         if (user.energy_percent == undefined) user.energy_percent = 0;
         if (user.status === message) {
-            await udb.updateUser(id, user.lng, user.prev_status, message, user.subscribes, user.show_nsfw, user.show_all, user.energy_percent, user.coment_account);
+            await udb.updateUser(id, user.lng, user.prev_status, user.status, user.subscribes, user.show_nsfw, user.show_all, user.energy_percent, user.coment_account);
             } else {
                 await udb.updateUser(id, user.lng, user.status, message, user.subscribes, user.show_nsfw, user.show_all, user.energy_percent, user.coment_account);
             }
@@ -84,10 +84,23 @@ await botjs.sendMSG(id, text, btns, false);
             let text = lng[user.lng].enter_login;
             let btns = await keybord(user.lng, 'cancel');
             await botjs.sendMSG(id, text, btns, false);
-    } else if (user && user.lng && message.indexOf(lng[user.lng].home) > -1) {
+} else if ( user && user.lng && ( message === lng[user.lng].back || message === lng[user.lng].cancel)) {
+    return await main(id, user.prev_status, status);
+        } else if (user && user.lng && message.indexOf(lng[user.lng].home) > -1) {
         let text = lng[user.lng].home_message;
         let btns = await keybord(user.lng, 'home');
         await botjs.sendMSG(id, text, btns, false);        
+    } else if (user && user.lng && /^viz:\/\/@([a-z0-9.\-_]{1,63})\/\d+(\/publication)?\/?$/i.test(message.trim())) {
+        const match = message.trim().match(/^viz:\/\/@([a-z0-9.\-_]{1,63})\/(\d+)(\/publication)?\/?$/i);
+        const login = match[1];
+        const bn = parseInt(match[2]);
+        const vizUrl = `viz://@${login}/${bn}`;
+              const result = await getVizPostText(vizUrl, user.lng || 'ru');
+              if (result) {
+            await botjs.sendMSG(user.id, result.text, result.buttons, true);
+        } else {
+            await botjs.sendMSG(user.id, lng[user.lng].post_not_found, [], true);
+        }
     } else if (user && user.lng && message.indexOf(lng[user.lng].settings) > -1 && message.indexOf(lng[user.lng].news) === -1 && message.indexOf(lng[user.lng].award) === -1 && message.indexOf(lng[user.lng].reblog) === -1 && user.status.indexOf('publish_') === -1 && user.status.indexOf('postcontent') === -1 && user.status.indexOf('note_') === -1) {
         let text = lng[user.lng].settings_text;
                 let btns = await keybord(user.lng, 'settings' + JSON.stringify([user.show_all, user.show_nsfw]));
@@ -239,7 +252,7 @@ if (acc && acc.id === id) {
                                                                                         }
                                                                                             text = lng[user.lng].type_posting;
                                                                                             btns = await keybord(user.lng, 'cancel');
-                                                                                            await udb.updateUser(id, user.lng, user.status, 'changed_posting_' + login + '_' + JSON.stringify(posting_public_keys), user.subscribes, user.show_nsfw, user.show_all, user.energy_percent, user.coment_account);
+                                                                                            await udb.updateUser(id, user.lng, user.status, 'changedPosting@' + login + '_' + JSON.stringify(posting_public_keys), user.subscribes, user.show_nsfw, user.show_all, user.energy_percent, user.coment_account);
                                                                                         } else {
                                                                                             await udb.updateUser(id, user.lng, user.status, 'change_account', user.subscribes, user.show_nsfw, user.show_all, user.energy_percent, user.coment_account);
                                                                                             text = lng[user.lng].not_account;
@@ -250,10 +263,11 @@ if (acc && acc.id === id) {
                                                                                         btns = await keybord(user.lng, 'home');
                                                                                     }
                                                                                         await botjs.sendMSG(id, text, btns, false);
-                                                                                    } else if (user && user.lng && message === lng[user.lng].publish && user.status.indexOf('@') > -1 || user && user.lng && message === lng[user.lng].publish_now) {
+                                                                                    } else if (user && user.lng && message === lng[user.lng].publish && user.status.indexOf('@') > -1 || user && user.lng && message === lng[user.lng].publish_now || user && user.lng && message.indexOf('publish_') > -1) {
                                                                                         let login = user.coment_account;
                                                                                         if (message === lng[user.lng].publish) login = user.status.split('@')[1];
-                                                                                            let text = lng[user.lng].select_publish_type;
+                                                                                                                                                                                    if (message.indexOf('publish_') > -1) login = message.split('@')[1];
+                                                                                        let text = lng[user.lng].select_publish_type;
                                                                                             let btns = await keybord(user.lng, 'publish');
                                                                                             await udb.updateUser(id, user.lng, user.status, 'publish_@' + login, user.subscribes, user.show_nsfw, user.show_all, user.energy_percent, user.coment_account);
                                                                                         await botjs.sendMSG(id, text, btns, false);
@@ -263,12 +277,72 @@ if (acc && acc.id === id) {
                                                                                             let btns = await keybord(user.lng, 'cancel');
                                                                                             await udb.updateUser(id, user.lng, user.status, 'note_' + login, user.subscribes, user.show_nsfw, user.show_all, user.energy_percent, user.coment_account);
                                                                                         await botjs.sendMSG(id, text, btns, false);
-                                                                                    } else if (user && user.lng && message === lng[user.lng].post && user.status.indexOf('@') > -1) {
+                                                                                    } else if (user && user.lng && message === lng[user.lng].post && user.status.indexOf('@') > -1 || user && user.lng && message.indexOf('post_') > -1 && user.status.indexOf('post_') === -1) {
                                                                                         let login = user.status.split('@')[1];
+                                                                                        if (message.indexOf('post_') > -1) login = message.split('post_')[1];
                                                                                             let text = lng[user.lng].title;
                                                                                             let btns = await keybord(user.lng, 'cancel');
                                                                                             await udb.updateUser(id, user.lng, user.status, 'post_' + login, user.subscribes, user.show_nsfw, user.show_all, user.energy_percent, user.coment_account);
                                                                                         await botjs.sendMSG(id, text, btns, false);
+                                                                                    } else if (user && user.lng && lng[user.lng] && user.status.indexOf('note_') > -1) {
+                                                                                        let login = user.status.split('_')[1];
+                                                                                    let text = '';
+                                                                                    try {
+                                                                                        await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, user.show_nsfw, user.show_all, user.energy_percent, user.coment_account);    
+                                                                                        let acc = await adb.getAccount(login);
+                                                                                            if (acc) {
+                                                                                                let wif = sjcl.decrypt(login + '_postingKey_readdle_bot', acc.posting_key);
+                                                                                                let data = {};
+                                                                                        let custom_data = await methods.getCustomProtocolAccount(login, 'V');
+                                                                                        data.p =         custom_data.custom_sequence_block_num;
+                                                                                        data.d = {};
+                                                                                                data.d.t = message;
+                                                                                                await methods.sendJson(wif, login, 'V', JSON.stringify(data));
+                                                                                                text = lng[user.lng].sended_post;
+                                                                                            } else {
+                                                                                                text = lng[user.lng].post_not_sended;
+                                                                                            }
+                                                                                            } catch(e) {
+                                                                                                await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, user.show_nsfw, user.show_all, user.energy_percent, user.coment_account);    
+                                                                                                console.log(e, JSON.stringify(e));
+                                                                                                text = lng[user.lng].post_not_sended;
+                                                                                            }
+                                                                                        let btns = await keybord(user.lng, 'home');
+                                                                                        await botjs.sendMSG(id, text, btns, false);
+                                                                                    } else if (user && user.lng && lng[user.lng] && user.status.indexOf('post_') > -1) {
+                                                                                        let login = user.status.split('_')[1];
+                                                                                                    text = lng[user.lng].content;
+                                                                                            let btns = await keybord(user.lng, 'cancel');
+                                                                                            await botjs.sendMSG(id, text, btns, false);
+                                                                                            await udb.updateUser(id, user.lng, user.status, 'postcontent_' + login + '_' + message, user.subscribes, user.show_nsfw, user.show_all, user.energy_percent, user.coment_account);
+                                                                                        } else if (user && user.lng && lng[user.lng] && user.status.indexOf('postcontent_') > -1) {
+                                                                                            let data = user.status.split('_');
+                                                                                            let login = data[1];
+                                                                                            let title = data[2];
+                                                                                            let text = '';
+                                                                                            try {
+                                                                                                    let acc = await adb.getAccount(login);
+                                                                                                    if (acc) {
+                                                                                                        let wif = sjcl.decrypt(login + '_postingKey_readdle_bot', acc.posting_key);
+                                                                                                        let post = {};
+                                                                                                let custom_data = await methods.getCustomProtocolAccount(login, 'V');
+                                                                                                post.p =         custom_data.custom_sequence_block_num;
+                                                                                                post.t = 'p';
+                                                                                                post.d = {};
+                                                                                                post.d.t = title;
+                                                                                                post.d.m = message;
+                                                                                                post.d.d = message.slice(0, 140);
+                                                                                                        await methods.sendJson(wif, login, 'V', JSON.stringify(post));
+                                                                                                        text = lng[user.lng].sended_post;
+                                                                                                    } else {
+                                                                                                        text = lng[user.lng].post_not_sended;
+                                                                                                    }
+                                                                                                    } catch(e) {
+                                                                                                        console.log(e, JSON.stringify(e));
+                                                                                                        text = lng[user.lng].post_not_sended;
+                                                                                                    }
+                                                                                                let btns = await keybord(user.lng, 'home');
+                                                                                                await botjs.sendMSG(id, text, btns, false);
                                                                                     } else if (user && user.lng && message.indexOf(lng[user.lng].award) > -1) {
 let link = message.split(' ')[1];
 let account;
@@ -370,8 +444,6 @@ await udb.updateUser(id, message, status, lng[message].home, subscribes, user.sh
                     await botjs.sendMSG(id, text, btns, false);
                     await helpers.sleep(3000);
                   await main(id, lng[message].home, 1);
-                } else if (user && user.lng && user.lng !== '' && message.indexOf(lng[user.lng].back) > -1 || user && user.lng && user.lng !== '' && message.indexOf(lng[user.lng].cancel) > -1) {
-                    await main(id, user.prev_status, status);
                 } else {
                     if (user && user.lng && lng[user.lng] && user.status === lng[user.lng].add_account) {
 let get_account = await methods.getAccount(message);
@@ -422,15 +494,14 @@ await botjs.sendMSG(id, text, btns, false);
     await helpers.sleep(1000);
     await main(id, lng[user.lng].change_posting + '@' + login, status);
 }    
-} else if (user && user.lng && lng[user.lng] && user.status.indexOf('changed_posting_') > -1) {
+} else if (user && user.lng && lng[user.lng] && user.status.indexOf('changedPosting@') > -1) {
     let arr = user.status.split('@')[1];
     let login = arr.split('_')[0];
     let text = '';
 let btns;
 try {
     const public_wif = await methods.wifToPublic(message);
-    let posting_public_keys = user.status.split('_')[3];
-    console.log(JSON.stringify(posting_public_keys), public_wif);
+    let posting_public_keys = arr.split('_')[1];
     if (posting_public_keys.indexOf(public_wif) > -1) {
     await adb.updateAccount(id, login, sjcl.encrypt(login + '_postingKey_readdle_bot', message));
                             await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, user.show_nsfw, user.show_all, user.energy_percent, user.coment_account);
@@ -452,65 +523,6 @@ try {
         btns = await keybord(user.lng, 'home');
         await botjs.sendMSG(id, text, btns, false);
     }    
-} else if (user && user.lng && lng[user.lng] && user.status.indexOf('note_') > -1) {
-    let login = user.status.split('_')[1];
-let text = '';
-try {
-    await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, user.show_nsfw, user.show_all, user.energy_percent, user.coment_account);    
-    let acc = await adb.getAccount(login);
-        if (acc) {
-            let wif = sjcl.decrypt(login + '_postingKey_readdle_bot', acc.posting_key);
-            let data = {};
-    let custom_data = await methods.getCustomProtocolAccount(login, 'V');
-    data.p =         custom_data.custom_sequence_block_num;
-    data.d = {};
-            data.d.t = message;
-            await methods.sendJson(wif, login, 'V', JSON.stringify(data));
-            text = lng[user.lng].sended_post;
-        } else {
-            text = lng[user.lng].post_not_sended;
-        }
-        } catch(e) {
-            await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, user.show_nsfw, user.show_all, user.energy_percent, user.coment_account);    
-            console.log(e, JSON.stringify(e));
-            text = lng[user.lng].post_not_sended;
-        }
-    let btns = await keybord(user.lng, 'home');
-    await botjs.sendMSG(id, text, btns, false);
-} else if (user && user.lng && lng[user.lng] && user.status.indexOf('post_') > -1) {
-    let login = user.status.split('_')[1];
-                text = lng[user.lng].content;
-        let btns = await keybord(user.lng, 'cancel');
-        await botjs.sendMSG(id, text, btns, false);
-        await udb.updateUser(id, user.lng, user.status, 'postcontent_' + login + '_' + message, user.subscribes, user.show_nsfw, user.show_all, user.energy_percent, user.coment_account);
-    } else if (user && user.lng && lng[user.lng] && user.status.indexOf('postcontent_') > -1) {
-        let data = user.status.split('_');
-        let login = data[1];
-        let title = data[2];
-        let text = '';
-        try {
-                let acc = await adb.getAccount(login);
-                if (acc) {
-                    let wif = sjcl.decrypt(login + '_postingKey_readdle_bot', acc.posting_key);
-                    let data = {};
-            let custom_data = await methods.getCustomProtocolAccount(login, 'V');
-            data.p =         custom_data.custom_sequence_block_num;
-            data.t = 'p';
-            data.d = {};
-                    data.d.t = title;
-                    data.d.m = message;
-data.d.d = message.slice(0, 140);
-                    await methods.sendJson(wif, login, 'V', JSON.stringify(data));
-                    text = lng[user.lng].sended_post;
-                } else {
-                    text = lng[user.lng].post_not_sended;
-                }
-                } catch(e) {
-                    console.log(e, JSON.stringify(e));
-                    text = lng[user.lng].post_not_sended;
-                }
-            let btns = await keybord(user.lng, 'home');
-            await botjs.sendMSG(id, text, btns, false);
     } else if (user && user.lng && lng[user.lng] && user.status.indexOf('delete_') > -1) {
     let login = user.status.split('_')[1];
     if (user.status.split('_')[2]) {
@@ -620,7 +632,7 @@ if (typeof lang === 'undefined' || lang && lang === '') return;
 ${lng[lang].publication_title}: ${data.d.t}
 
 ${lng[lang].announcement}:
-${data.d.d}`;
+${data.d.m.slice(0, 3000)}`;
     } else if (!data.t && !data.d.s && !data.d.r) {
         data.d.t = data.d.t.replace("\n","<br>");
         text = `<a href="https://readdle.me/#viz://@${login}/${bn}">${lng[lang].type_note}</a> ${lng[lang].from} ${login}. ${lng[lang].note_text}:
@@ -639,8 +651,9 @@ ${data.d.t}`;
 let user = await udb.getUser(parseInt(id));
 if (user) {
     await udb.updateUser(id, user.lng, user.status, lng[user.lng].home, user.subscribes, user.show_nsfw, user.show_all, user.energy_percent, user.coment_account);
+    let replacedText = text.replace(/<br\s*\/?>/gi, "\n");
     let btns = await keybord(lang, `notify_buttons#viz://@${login}/${bn}`);
-    await botjs.sendMSG(id, text.substring(0, 4096), btns, true);
+    await botjs.sendMSG(id, replacedText.substring(0, 4096), btns, true);
         }
 } catch(e) {
     console.error(e);
@@ -662,7 +675,7 @@ if (user) {
                 data.p =         custom_data.custom_sequence_block_num;
                 data.d = {};
                         data.d.t = text;
-        data.d.r = link + '/';
+        data.d.r = link;
                         await methods.sendJson(wif, acc.login, 'V', JSON.stringify(data));
                         message = lng[user.lng].sended_reply + acc.login;
                     } // end account if.
@@ -675,7 +688,7 @@ if (user) {
                 data.p =         custom_data.custom_sequence_block_num;
                 data.d = {};
                         data.d.t = text;
-        data.d.r = link + '/';
+        data.d.r = link;
                         await methods.sendJson(wif, acc.login, 'V', JSON.stringify(data));
                         message = lng[user.lng].sended_reply + acc.login;
                     } // end if account.
@@ -686,6 +699,83 @@ if (user) {
             let btns = await keybord(user.lng, 'home');
             await botjs.sendMSG(id, message, btns, false);
         }
+}
+
+function stripHTML(html) {
+  return html.replace(/<\/?[^>]+(>|$)/g, "");
+}
+
+function replaceSIAWithHTMLLinks(str) {
+  // если нужна замена ссылок на viz:// — используй свою реализацию
+  return str;
+}
+
+async function getVizPostText(vizUrl, lang = 'ru') {
+  try {
+    const match = vizUrl.match(/^viz:\/\/@([^\/]+)\/(\d+)$/);
+    if (!match) throw new Error('Некорректный формат viz:// ссылки');
+
+    const login = match[1];
+    const bn = parseInt(match[2]);
+    const block = await methods.getBlock(bn);
+    for (const tr of block.transactions) {
+      for (let operation of tr.operations) {
+        const [op, opbody] = operation;
+      if (op === 'custom' && opbody.id === 'V' && opbody.required_regular_auths[0] === login) {
+        let data;
+        try {
+            data = JSON.parse(opbody.json);
+        } catch {
+          continue;
+        }
+
+        // Обработка текста
+        if (data.d.m) data.d.m = replaceSIAWithHTMLLinks(data.d.m);
+        if (data.d.d) data.d.d = replaceSIAWithHTMLLinks(data.d.d);
+        if (data.d.t) data.d.t = replaceSIAWithHTMLLinks(data.d.t);
+        
+        let text = '';
+        const url = `https://readdle.me/#viz://@${login}/${bn}`;
+        const langData = lng[lang] || lng['en'];
+
+        if (data.t && data.t === 'p' && !data.d.r && !data.d.s && data.d.d) {
+            data.d.d = data.d.d.replace(/<\/?[^>]+(>|$)/g, "");
+            text = `<a href="https://readdle.me/#viz://@${login}/${bn}/publication/">${lng[lang].type_publication}</a> ${lng[lang].from} ${login}.
+        ${lng[lang].publication_title}: ${data.d.t}
+        
+        ${lng[lang].announcement}:
+        ${data.d.m.slice(0, 3000)}`;
+        } else if (!data.t && !data.d.s && !data.d.r) {
+            data.d.t = data.d.t.replace("\n","<br>");
+            text = `<a href="https://readdle.me/#viz://@${login}/${bn}">${lng[lang].type_note}</a> ${lng[lang].from} ${login}. ${lng[lang].note_text}:
+        
+        ${data.d.t}`;
+        } else if (!data.t && !data.d.r && data.d.s) {
+            text = `<a href="https://readdle.me/#viz://@${login}/${bn}">${lng[lang].type_repost}</a> ${lng[lang].repost_post} <a href="https://readdle.me/#${data.d.s}">${data.d.s}</a> ${lng[lang].from} ${login}:
+        
+        ${data.d.t}`;
+        } else if (!data.t && !data.d.s && data.d.r) {
+            data.d.t = data.d.t.replace("\n","<br>");
+            text = `<a href="https://readdle.me/#viz://@${login}/${bn}">${lng[lang].type_reply}</a> ${lng[lang].from} ${login} ${lng[lang].type_reply2} <a href="https://readdle.me/#${data.d.r}">${data.d.r}</a>:
+            
+        ${data.d.t}`;
+        }
+        
+        const cleanText = text.replace(/<br\s*\/?>/gi, "\n").substring(0, 4096);
+        const buttons = await keybord(lang, `notify_buttons#viz://@${login}/${bn}`);
+
+        return {
+          text: cleanText,
+          buttons
+        };
+      }
+      }
+    }
+    return null;
+  } catch (err) {
+    console.error('Ошибка в getVizPostText:', err);
+    return null;
+  }
 }
 
 module.exports.main = main;

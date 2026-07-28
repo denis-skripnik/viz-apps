@@ -5,14 +5,28 @@ let keccak = require("keccak");
 let BigI = require("big-integer");
 
 async function getOpsInBlock(bn) {
-    return await viz.api.getOpsInBlockAsync(bn, false);
+    try {
+            return await viz.api.getOpsInBlockAsync(bn, false);
+    } catch(e) {
+        console.error(e);
+    }
   }
+
+  async function getBlock(bn) {
+try {
+    return await viz.api.getBlockAsync(bn);
+    } catch(e) {
+        console.error(e);
+    }
+  }
+
 
   let time_start = new Date().getTime();
   let time_start2 = new Date().getTime();
   let properties = {};
         async function getProps() {
-      let old_time = time_start;
+try {
+          let old_time = time_start;
     time_start = new Date().getTime();
 let time_call = time_start - old_time;
 if (time_call < 0) time_call = 0;
@@ -23,11 +37,17 @@ if (time_call < 0) time_call = 0;
     properties = await viz.api.getDynamicGlobalPropertiesAsync();
 }
 return properties;
+} catch(e) {
+        console.error(e);
+}
       }
 
-
       async function getConfig() {
-        return await viz.api.getConfigAsync();
+try {
+            return await viz.api.getConfigAsync();
+} catch(e) {
+        console.error(e);
+}
         }
   
       async function updateAccount(service) {
@@ -67,7 +87,7 @@ try {
     return await viz.broadcast.sendAsync({extensions: [], operations}, [regular_wif]);
 } catch(e) {
     console.error(e);
-    console.log('Операции: ', JSON.stringify(operations));
+return 'error';
 }
 }
 
@@ -112,8 +132,8 @@ return await viz.broadcast.awardAsync(wif,initiator,receiver,energy,0,memo,benef
 
 async function getBlockSignature(block) {
     var b = await viz.api.getBlockAsync(block);
-    if(b && b.witness_signature) {
-        return b.witness_signature;
+    if(b && b.validator_signature) {
+        return b.validator_signature;
     } 
     throw "unable to retrieve signature for block " + block;
 }
@@ -139,15 +159,15 @@ async function randomWithHash(hash, block, maximum_number) {
 }
 
 async function getWitnessByAccount(login) {
-    return await viz.api.getWitnessByAccountAsync(login)
+    return await viz.api.getValidatorByAccountAsync(login)
 }
 
 async function getWitnessesByVote(login, limit) {
-    return await viz.api.getWitnessesByVoteAsync(login,limit);
+    return await viz.api.getValidatorsByVoteAsync(login,limit);
 }
 
 async function getWitnessSchedule() {
-    return await viz.api.getWitnessScheduleAsync();
+    return await viz.api.getValidatorScheduleAsync();
 }
 
 async function sendReblog(account, wif, author, block, text) {
@@ -165,25 +185,33 @@ async function transfer(wif, from, to, amount, memo) {
 return await viz.broadcast.transferAsync(wif, from, to, amount, memo);
 }
 
-module.exports.getOpsInBlock = getOpsInBlock;
-module.exports.getProps = getProps;      
-module.exports.getConfig = getConfig;
-module.exports.updateAccount = updateAccount;
-module.exports.getAccount = getAccount;
-module.exports.getCustomProtocolAccount = getCustomProtocolAccount;
-module.exports.lookupAccounts = lookupAccounts;
-module.exports.getAccounts = getAccounts;
-module.exports.send = send;
-module.exports.wifToPublic = wifToPublic;
-module.exports.workerVote = workerVote;
-module.exports.verifyData = verifyData;
-module.exports.getSubscriptionStatus = getSubscriptionStatus;
-module.exports.sendJson = sendJson;
-module.exports.award = award;
-module.exports.randomGenerator = randomGenerator;
-module.exports.randomWithHash = randomWithHash;
-module.exports.getWitnessByAccount = getWitnessByAccount;
-module.exports.getWitnessesByVote = getWitnessesByVote;
-module.exports.getWitnessSchedule = getWitnessSchedule;
-module.exports.sendReblog = sendReblog;
-module.exports.transfer = transfer;
+async function withdrawVesting(wif, tx) {
+    return await viz.broadcast.withdrawVestingAsync(wif, tx.from, tx.vesting_shares)
+}
+
+module.exports = {
+    getOpsInBlock,
+    getBlock,
+    getProps,
+    getConfig,
+    updateAccount,
+    getAccount,
+    getCustomProtocolAccount,
+    lookupAccounts,
+    getAccounts,
+    send,
+    wifToPublic,
+    workerVote,
+    verifyData,
+    getSubscriptionStatus,
+    sendJson,
+    award,
+    randomGenerator,
+    randomWithHash,
+    getWitnessByAccount,
+    getWitnessesByVote,
+    getWitnessSchedule,
+    sendReblog,
+    transfer,
+    withdrawVesting
+  };

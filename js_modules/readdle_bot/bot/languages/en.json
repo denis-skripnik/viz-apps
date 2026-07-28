@@ -73,6 +73,7 @@
         "reply_not_sended": "the reply was not sent. Probably a mistake.",
         "install_coment_account": "Default",
         "installed_coment_account": "The account is set by default for commenting and awarding.",
+        "post_not_found": "The post was not found.",
         "award": "award",
         "type_award": "Reward by account",
         "typeing_energy": "Enter the percentage of energy to be awarded. Max.",
@@ -81,7 +82,16 @@
         "award_error": "Error sending the award. details: ",
 "award_sended_with_option": "Successful. Bounty sent to",
 "energy_before_award": "Percentage of energy at the time of the bounty",
-        "news": "News",
+
+"reblog": "Repost",
+"type_reblog": "Repost from account",
+"typeing_reblog_comment": "Enter a comment for the repost. 0 - skip.",
+"reblog_sended": "successfully sent.",
+"reblog_error": "Error sending the repost. Details: ",
+
+"open_readdle": "Открыть в Readdle.me",
+"readdle_app": "Readdle.me",        
+"news": "News",
     "help": "Help",
     "help_text": "Almost all commands are executed via buttons. Only unsubscribe via unsub login\r\nAre the buttons gone? Click on the bot's keyboard button or type /start.\r\nIf you have any questions or problems, write to the chat @dpos_space or personal @denis_skripnik"
 }

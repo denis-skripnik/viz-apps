@@ -73,8 +73,9 @@ await udb.removeUser(userId);
     async function editMessage(chatId, messageId, text, buttons, inline, preview) {
         let options = await keybord(buttons, inline, preview);
         try {
-            await bot.api.editMessageText(chatId, messageId, text, {parse_mode: 'HTML', disable_web_page_preview: true});
-            await bot.api.editMessageReplyMarkup(chatId, messageId, options);
+            let edited_text = await bot.api.editMessageText(chatId, messageId, text, {parse_mode: 'HTML', disable_web_page_preview: true});
+            let edited_reply_markup = await bot.api.editMessageReplyMarkup(chatId, messageId, options);
+            return {edited_text, edited_reply_markup}
         } catch(error) {
             if (error.description.includes('MESSAGE_ID_INVALID')) {
 return false;
@@ -86,6 +87,15 @@ return false;
     }
     }
     
+async function editKeyboard(chatId, messageId, buttons, inline, preview) {
+    try {
+    let options = await keybord(buttons, inline, preview);
+    return             await bot.api.editMessageReplyMarkup(chatId, messageId, options);
+} catch(e) {
+    console.error(JSON.stringify(e));
+}
+}
+
 async function allCommands() {
     try {
     bot.on('message', async (msg) => {
@@ -128,7 +138,7 @@ async function checkSubscribes(uid) {
     var res = false;
     let id = '@blind_dev';
     try {
-    let responce = await axios.get('http://178.20.43.121:3906/blind-dev?id=' + uid);
+    let responce = await axios.get('http://localhost:3906/blind-dev?id=' + uid);
     if (responce.data === true || responce.data === 'true') res = true;
 } catch (e) {
 console.log(e);
@@ -139,6 +149,7 @@ return res;
 
 module.exports.sendMSG = sendMSG;
 module.exports.editMessage = editMessage;
+module.exports.editKeyboard = editKeyboard;
 module.exports.allCommands = allCommands;
 module.exports.sendChatsMSG = sendChatsMSG;
 module.exports.checkSubscribes = checkSubscribes;

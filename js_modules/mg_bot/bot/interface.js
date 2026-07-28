@@ -11,6 +11,7 @@ const ftqdb = require(process.cwd() + "/databases/mg_bot/ftqdb");
 const cbdb = require(process.cwd() + "/databases/mg_bot/cbdb");
 const bkdb = require(process.cwd() + "/databases/mg_bot/bkdb");
 const rtdb = require(process.cwd() + "/databases/mg_bot/ringdb");
+const sdb = require(process.cwd() + "/databases/mg_bot/sharesdb");
 const axios = require("axios");
 var crypto = require('crypto');
 const helpers = require(process.cwd() + "/js_modules/helpers");
@@ -44,7 +45,119 @@ let text = `${lng[user.lng].bought_viz} ${viz_amount} ${lng[user.lng].buy_viz_to
   });
 
 const tmc = require('../tamagotchi');
+const { send } = require('process');
 var energy = new Big(20);
+const RATE_LIMIT_MS = 600;
+const actionStats = new Map();
+// userId -> { lastTs, clicks: [], shadow: false }
+
+function checkRateLimit(userId) {
+    const now = Date.now();
+    let s = actionStats.get(userId) || {
+    lastActionTs: 0,
+    clicks: [],
+    violations: 0,
+    lastViolation: 0,
+    shadowUntil: 0
+};
+
+    if (s.lastActionTs && now - s.lastActionTs < RATE_LIMIT_MS) {
+        applyShadow(userId);
+        return false;
+    }
+
+    s.lastActionTs = now;
+    actionStats.set(userId, s);
+    return true;
+}
+
+function decayViolations(s) {
+    if (!s.lastViolation || !s.violations) return;
+
+    const now = Date.now();
+    const decayStep = 30 * 60 * 1000;
+    const passed = Math.floor((now - s.lastViolation) / decayStep);
+
+    if (passed > 0) {
+        s.violations = Math.max(0, s.violations - passed);
+        s.lastViolation += passed * decayStep;
+    }
+}
+
+function applyShadow(userId) {
+    const now = Date.now();
+    let s = actionStats.get(userId) || {};
+
+    decayViolations(s);
+
+    s.violations = (s.violations || 0) + 1;
+    s.lastViolation = now;
+
+    const base = 5 * 60 * 1000;
+    const duration = Math.min(
+        base * Math.pow(2, s.violations - 1),
+        2 * 60 * 60 * 1000
+    );
+
+    s.shadowUntil = now + duration;
+
+    actionStats.set(userId, s);
+}
+
+function detectAutoClicker(userId) {
+    const now = Date.now();
+    let s = actionStats.get(userId);
+    if (!s) return false;
+    
+    if (!Array.isArray(s.clicks)) {
+        s.clicks = [];
+    }
+
+    s.clicks.push(now);
+    if (s.clicks.length > 8) s.clicks.shift();
+
+    if (s.clicks.length < 6) return false;
+
+    let diffs = [];
+    for (let i = 1; i < s.clicks.length; i++) {
+        diffs.push(s.clicks[i] - s.clicks[i - 1]);
+    }
+
+    const avg = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+    const variance = diffs.reduce((a, b) => a + Math.abs(b - avg), 0) / diffs.length;
+
+    if (variance < 60) {
+applyShadow(userId);
+        actionStats.set(userId, s);
+        return true;
+    }
+
+    return false;
+}
+
+function isShadowBanned(userId) {
+    const s = actionStats.get(userId);
+    if (!s || !s.shadowUntil) return false;
+
+    if (Date.now() > s.shadowUntil) {
+        s.shadowUntil = 0;
+        s.clicks = [];
+        actionStats.set(userId, s);
+        return false;
+    }
+
+    return true;
+}
+
+function safeAddScore(score, userId) {
+    if (!isShadowBanned(userId)) return score;
+
+    if (score instanceof Big) {
+        return new Big(0);
+    }
+
+    return 0;
+}
 
 async function sumNumbers(n1, n2) {
     let n = new Big(n1).plus(new Big(n2));
@@ -81,13 +194,15 @@ async function keybord(lang, variant) {
 if (variant === 'lng') {
         buttons = [["English", "Русский"]];
     } else if (variant === 'home') {
-        buttons = [[lng[lang].reytings, lng[lang].games, lng[lang].my_viz_login, lng[lang].buy_viz], [lng[lang].lang, lng[lang].help, lng[lang].partners]];
+        buttons = [[lng[lang].reytings, lng[lang].my_viz_login, lng[lang].buy_viz, lng[lang].home], [lng[lang].boosts, lng[lang].lang, lng[lang].help, lng[lang].partners]];
     } else if (variant === 'games') {
         buttons = [[lng[lang].fortune_telling, lng[lang].random_numbers, lng[lang].bk_game], [lng[lang].crypto_bids, lng[lang].tamagotchi, lng[lang].home]];
+    } else if (variant === 'games_inline') {
+        buttons = [[[lng[lang].fortune_telling, lng[lang].fortune_telling], [lng[lang].random_numbers, lng[lang].random_numbers], [lng[lang].bk_game, lng[lang].bk_game]], [[lng[lang].crypto_bids, lng[lang].crypto_bids], [lng[lang].tamagotchi, lng[lang].tamagotchi], [lng[lang].boosts, lng[lang].boosts]]];
     } else if (variant === 'bk_game') {
         buttons = [[lng[lang].bk_level + '1', lng[lang].bk_level + '2', lng[lang].bk_level + '3'], [lng[lang].games, lng[lang].home]];
     } else if (variant === 'reytings') {
-        buttons = [[lng[lang].scores_top, lng[lang].t_age_top, lng[lang].t_power_top], [lng[lang].artifacts_owners, lng[lang].home]]
+        buttons = [[lng[lang].scores_top, lng[lang].t_age_top, lng[lang].t_power_top], [lng[lang].t_xp_top, lng[lang].artifacts_owners, lng[lang].home]]
     } else if (variant === 'fortune_telling') {
         buttons = [[lng[lang].ft_award, lng[lang].ft_standart, lng[lang].back]];
     } else if (variant === 'ft_award_buttons') {
@@ -195,26 +310,17 @@ if (n === "1") ref_share = 0.02;
 let referer = await udb.getUserByRefererCode(ref_id);
 if (referer) {
     let new_scores = scores * ref_share;
-    await udb.updateUserStatus(referer.id, referer.names, referer.prev_status, referer.status, referer.send_time, new_scores, 0, 0);
+    new_scores = safeAddScore(new_scores, referer.id);
+    await udb.updateUserStatus(referer.id, referer.names, referer.prev_status, referer.status, referer.send_time, referer.diversity, new_scores, 0, 0);
 }
 }
 }
 }
 
 // Команды
-async function main(id, names, message, status, isReturn = false) {
-    if (id === 374679395 || id === 1695538437) {
-        try {
-            fs.appendFileSync(process.cwd() + '/anticivil.txt', '\n' + `${id}: ${message}`);
-          } catch (err) {
-            console.error('Ошибка при добавлении новой строки в файл:', err);
-          }
-    }
-    
+async function main(id, names, message, status, isReturn = false, silent = false) {
     const block_n = await bdb.getBlock();
     let bn = block_n.last_block;
-    let block_interval = 28800;
-    let end_round_block = block_interval - (bn % block_interval);
 
     let send_time = new Date().getTime();
         let user = await udb.getUser(id);
@@ -258,8 +364,24 @@ await udb.addUser(id, names, '', '', 'start', send_time, 0, refs, id_hash, [], '
 } else { // end if no referer code in command.
         await udb.addUser(id, names, '', '', 'start', send_time, 0, [not_refs], id_hash, [], '', '', tamagotchi);
     } // end if no referer in command.
+    user = await udb.getUser(id);
     } // end if not user.
     else { // yes user.
+                // ⛔ антибот-фильтр (до любых игр)
+                    detectAutoClicker(id);
+if (!silent && !checkRateLimit(id)) {
+    // мягкий ответ, не всегда
+    if (Math.random() < 0.3) {
+        await botjs.sendMSG(
+            id,
+            lng[user.lng]?.too_fast || '⏳ Слишком быстро, подожди немного',
+            [],
+            true
+        );
+    }
+    return;
+}
+
         let last_time = send_time - user.send_time;
         if (user.send_time && typeof user.send_time !== 'undefined' && last_time < 1000 && message !== lng[user.lng].home && message !== lng[user.lng].check_subscribes && message !== '/start') return;
         if (typeof message !== 'undefined' && user && user.lng && user.lng !== '' && message.indexOf(lng[user.lng].back) > -1 || typeof message !== 'undefined' && user && user.lng && user.lng !== '' && message.indexOf(lng[user.lng].cancel) > -1) message = user.prev_status;
@@ -273,18 +395,30 @@ await udb.addUser(id, names, '', '', 'start', send_time, 0, refs, id_hash, [], '
             }
     } // end yes user.
 
-    if (end_round_block < 30 && (message === lng[user.lng].fortune_telling || message === lng[user.lng].random_numbers || message === lng[user.lng].crypto_bids)) {
+    let now = new Date();
+    let noon = new Date();
+    noon.setHours(12, 0, 0, 0);
+    let remained = noon - now;
+    if (remained >= 0 && remained < 60000 && (message === lng[user.lng].fortune_telling || message === lng[user.lng].random_numbers || message === lng[user.lng].crypto_bids)) {
         let text = lng[user.lng].wait_award;
         let btns = await keybord(user.lng, 'no');
         await botjs.sendMSG(id, text, btns, false);
     return;
     }
 
-    if (message.indexOf('start') > -1 || user && user.lng && message.indexOf(lng[user.lng].home) > -1) {
+// бусты:
+let boost = 1;
+if (names.indexOf('$VIZ') > -1) boost += 0.1;
+if (names.indexOf('@viz_mg_bot') > -1) boost += 0.2;
+if (typeof user !== 'undefined' && user.viz_login  && typeof user.viz_login !== 'undefined' && user.viz_login !== '') boost += 0.1;
+boost += user.diversity.length * 0.02;
+boost = parseFloat(boost.toFixed(2));
+    
+if (message && message.indexOf('start') > -1 || user && user.lng && message.indexOf(lng[user.lng].home) > -1) {
         let text = '';
 let btns;
 if (user && user.lng && user.lng !== '') {
-    await main(id, names, lng[user.lng].check_subscribes, status, false);
+    await main(id, names, lng[user.lng].check_subscribes, status, false, true);
 } else {
     text = `Select language: Выберите язык.`;
     btns = await keybord('', 'lng');
@@ -303,13 +437,16 @@ if (user && user.lng && user.lng !== '') {
                         referer = 'not found';
                     }
         }
-        let text = lng[user.lng].home_message(user.names, referer, user.referer_code, user.scores, level, user.locked_scores, user.viz_scores);
+        let text = lng[user.lng].home_message(user.names, referer, user.referer_code, user.scores, level, user.locked_scores, user.viz_scores, boost);
         text += `
 
 ${lng[user.lng].viz_scores_adding(conf.mg_bot.award_account, `scores:${id}`)}`;        
         let btns = await keybord(user.lng, 'home');
-                await botjs.sendMSG(id, text, btns, false);        
-    } else if (checking && checking === true && isReturn === true) {
+                await botjs.sendMSG(id, 'Loading...', btns, false);        
+                await new Promise(r => setTimeout(r, 1000));
+                let btns2 = await keybord(user.lng, 'games_inline')
+                await botjs.sendMSG(id, text, btns2, true);        
+            } else if (checking && checking === true && isReturn === true) {
         return;
     } else {
         let text = lng[user.lng].checking_subscribes;
@@ -321,7 +458,11 @@ return 'not_subscribe';
 let text = `Select language: Выберите язык.`;
 btns = await keybord('', 'lng');
 await botjs.sendMSG(id, text, btns, false);
-    } else if (user && user.lng && message.indexOf(lng[user.lng].games) > -1) {
+} else if (user && user.lng && message.indexOf(lng[user.lng].boosts    ) > -1) {
+    let text = lng[user.lng].boosts_text;
+    let btns = await keybord(user.lng, 'no');
+await botjs.sendMSG(id, text, btns, false);
+} else if (user && user.lng && message.indexOf(lng[user.lng].games) > -1) {
         let text = lng[user.lng].games_text;
                 let btns = await keybord(user.lng, 'games');
         await botjs.sendMSG(id, text, btns, false);
@@ -340,16 +481,6 @@ await botjs.sendMSG(id, text, btns, false);
             return p;
         }
     }, 0);
-let j_timestamp = parseInt(end_round_block * 3);
-var j_hours = Math.floor(j_timestamp / 60 / 60);
-var j_minutes = Math.floor(j_timestamp / 60) - (j_hours * 60);
-var j_seconds = j_timestamp % 60;
-var end_round_time = [
-    j_hours.toString().padStart(2, '0'),
-    j_minutes.toString().padStart(2, '0'),
-    j_seconds.toString().padStart(2, '0')
-  ].join(':');
-let before_award = `${end_round_block} ${lng[user.lng].is_blocks} (${lng[user.lng].approximately} ${end_round_time})`;
 
                 let top_list = '';
         for (let el of top) {
@@ -365,7 +496,7 @@ let identity = `<a href="tg://user?id=${el.id}">${el.id}</a>`;
     ${identity}: ${el.scores.toFixed(3)} (${percent.toFixed(2)}% ${lng[user.lng].of_energy})`;
 }
         }
-        let text = lng[user.lng].scores_top_text(before_award, top_list);
+        let text = lng[user.lng].scores_top_text(top_list);
         let btns = await keybord(user.lng, 'no');
         await botjs.sendMSG(id, text, btns, false);
         await udb.updateUserStatus(id, names, user.status, lng[user.lng].reytings, send_time);
@@ -377,7 +508,7 @@ if (typeof el.tamagotchi !== 'undefined' && el.tamagotchi.age > 0) {
 let identity = `<a href="tg://user?id=${el.id}">${el.id}</a>`;
     if (el.names !== '') identity = `<a href="tg://user?id=${el.id}">${helpers.addslashes(el.names)}</a>`;
     top_list += `
-${lng[user.lng].tamagotchi} ${el.tamagotchi.name} ${lng[user.lng].from} ${identity}: ${lng[user.lng].tamagotchi_params.age} ${el.tamagotchi.age}, ${lng[user.lng].tamagotchi_params.power} ${el.tamagotchi.power}`;
+${lng[user.lng].tamagotchi} ${el.tamagotchi.name} ${lng[user.lng].from} ${identity}: ${lng[user.lng].tamagotchi_params.age} ${el.tamagotchi.age}, ${lng[user.lng].tamagotchi_params.xp} ${el.tamagotchi.xp}, ${lng[user.lng].tamagotchi_params.power} ${el.tamagotchi.power}`;
 }
         }
         let text = lng[user.lng].t_age_top_text(top_list);
@@ -392,10 +523,25 @@ ${lng[user.lng].tamagotchi} ${el.tamagotchi.name} ${lng[user.lng].from} ${identi
     let identity = `<a href="tg://user?id=${el.id}">${el.id}</a>`;
     if (el.names !== '') identity = `<a href="tg://user?id=${el.id}">${helpers.addslashes(el.names)}</a>`;
     top_list += `
-    ${lng[user.lng].tamagotchi} ${el.tamagotchi.name} ${lng[user.lng].from} ${identity}: ${lng[user.lng].tamagotchi_params.power} ${el.tamagotchi.power}, ${lng[user.lng].tamagotchi_params.age} ${el.tamagotchi.age}`;
+${lng[user.lng].tamagotchi} ${el.tamagotchi.name} ${lng[user.lng].from} ${identity}: ${lng[user.lng].tamagotchi_params.power} ${el.tamagotchi.power}, ${lng[user.lng].tamagotchi_params.xp} ${el.tamagotchi.xp}, ${lng[user.lng].tamagotchi_params.age} ${el.tamagotchi.age}`;
     }
         }
         let text = lng[user.lng].t_power_top_text(top_list);
+        let btns = await keybord(user.lng, 'no');
+        await botjs.sendMSG(id, text, btns, false);
+        await udb.updateUserStatus(id, names, user.status, lng[user.lng].reytings, send_time);
+    } else if (user && user.lng && message.indexOf(lng[user.lng].t_xp_top) > -1) {
+        let top = await udb.getTop("tamagotchi.xp");
+                let top_list = '';
+        for (let el of top) {
+    if (typeof el.tamagotchi !== 'undefined' && el.tamagotchi.xp > 0) {
+    let identity = `<a href="tg://user?id=${el.id}">${el.id}</a>`;
+    if (el.names !== '') identity = `<a href="tg://user?id=${el.id}">${helpers.addslashes(el.names)}</a>`;
+    top_list += `
+${lng[user.lng].tamagotchi} ${el.tamagotchi.name} ${lng[user.lng].from} ${identity}: ${lng[user.lng].tamagotchi_params.xp} ${el.tamagotchi.xp}, ${lng[user.lng].tamagotchi_params.power} ${el.tamagotchi.power}, ${lng[user.lng].tamagotchi_params.age} ${el.tamagotchi.age}`;
+    }
+        }
+        let text = lng[user.lng].t_xp_top_text(top_list);
         let btns = await keybord(user.lng, 'no');
         await botjs.sendMSG(id, text, btns, false);
         await udb.updateUserStatus(id, names, user.status, lng[user.lng].reytings, send_time);
@@ -460,6 +606,8 @@ await ftqdb.updateHashData(hash, q, id);
     let score = number * 5;
     score = Math.min(Math.max(0, Math.floor(score * Math.pow(0.95, level) * 100) / 100), max_score);
 if (score < 0) score = 0;
+score *= boost;
+    score = safeAddScore(score, id);
 let text = `${q}
 ${ft_result}
 ${lng[user.lng].more}:
@@ -472,7 +620,8 @@ ${lng[user.lng].scores}: ${score}.
 ${lng[user.lng].award_ft_author}`;
 let btns = await keybord(user.lng, 'home');
 await botjs.sendMSG(id, text, btns, false);
- await udb.updateUserStatus(id, names, user.status, lng[user.lng].home, send_time, score);
+if (user.diversity.indexOf('fortune_telling') === -1) user.diversity.push('fortune_telling')
+await udb.updateUserStatus(id, names, user.status, lng[user.lng].home, send_time, user.diversity, score);
 await createRefererScores(score, user.referers);
 } else if (user && user.lng && message.indexOf(lng[user.lng].random_numbers) > -1) {
     let text = lng[user.lng].rn_text;
@@ -481,26 +630,8 @@ await createRefererScores(score, user.referers);
 } else if (user && user.lng && message.indexOf(lng[user.lng].crypto_bids) > -1 || user && user.lng && message === '.bids' || user && user.lng && message === '.стк') {
     if (message === '.bids') message = lng[user.lng].crypto_bids;
     if (message === '.стк') message = lng[user.lng].crypto_bids;
-    let end_bids_round = Math.ceil(bn / 200) * 200;
-    if (bn >= end_bids_round - 100 && bn <= end_bids_round) {
-        let end_round_block = 200 - (bn % 200);
-        let timestamp = parseInt(end_round_block * 3);
-        var hours = Math.floor(timestamp / 60 / 60);
-        var minutes = Math.floor(timestamp / 60) - (hours * 60);
-        var seconds = timestamp % 60;
-        var end_round_time = [
-            hours.toString().padStart(2, '0'),
-            minutes.toString().padStart(2, '0'),
-            seconds.toString().padStart(2, '0')
-          ].join(':');
-        
-        let text = lng[user.lng].crypto_bids_active + ` ${end_round_time}`;
-        let btns = await keybord(user.lng, 'games');        
-        await botjs.sendMSG(id, text, btns, false);        
-        await udb.updateUserStatus(id, names, user.prev_status, lng[user.lng].home, send_time);
-        return;
-    }
     let bids = await cbdb.findCryptoBids();
+    console.error(bids);
     let btc_price = await cbdb.getBTCPrice();
   // Проверяем наличие пользователя в списке ставок
   let userBidExists = bids.some((bid) => bid.id === id);
@@ -528,16 +659,15 @@ await createRefererScores(score, user.referers);
     return total;
   }, totalBids);
 
-
         let now_datetime = new Date(btc_price.timestamp).toLocaleString("ru-RU", {timeZone: "Europe/Moscow"});
         let [date, time] = now_datetime.split(', ');
         let [month, day, year] = date.split('/');
         let datetime = `${day}.${month}.${year} ${time.split(' AM')[0]} GMT+3`;
         text = lng[user.lng].crypto_bids_text(active_scores, btc_price.price, datetime, totalProfitCoefficients);
                 btns = await keybord(user.lng, 'cancel');
-                await udb.updateUserStatus(id, names, user.prev_status, lng[user.lng].crypto_bids + '|' + btc_price.price, send_time, 0);
+                await udb.updateUserStatus(id, names, user.prev_status, lng[user.lng].crypto_bids + '|' + btc_price.price, send_time, user.diversity, 0);
             } else {
-        await udb.updateUserStatus(id, names, user.prev_status, lng[user.lng].home, send_time, 0);
+        await udb.updateUserStatus(id, names, user.prev_status, lng[user.lng].home, send_time, user.diversity, 0);
     }
     await botjs.sendMSG(id, text, btns, false);        
 } else if (user && user.lng && message.indexOf(lng[user.lng].bk_game) > -1) {
@@ -549,7 +679,7 @@ await createRefererScores(score, user.referers);
                     let text = lng[user.lng].bk_no_level;
                     let btns = await keybord(user.lng, 'bk_game');
                                 await botjs.sendMSG(id, text, btns, false);
-                                await udb.updateUserStatus(user.id, user.names, user.prev_status, user.status, user.send_time, 0, 0, 0, user.tamagotchi);
+                                await udb.updateUserStatus(user.id, user.names, user.prev_status, user.status, user.send_time, user.diversity, 0, 0, 0, user.tamagotchi);
                                 return;
                 }
                 let bk_level = parseInt(message.split(' ')[1]);
@@ -565,7 +695,7 @@ await bkdb.addGameSession(id, bk_level, number)
                 let btns = await keybord(user.lng, 'games_buttons');
                             await botjs.sendMSG(id, text, btns, false);
                         } else if (user && user.lng && message.indexOf(lng[user.lng].tamagotchi) > -1) {
-                                                        let action = message.split('|')[1];
+                            let action = message.split('|')[1];
                             if (user.tamagotchi && Object.keys(user.tamagotchi).length > 0 && typeof action === 'undefined') user.tamagotchi = await tmc.updateTamagotchi(user.tamagotchi);
                             let action_text = '';
                             let action_changes = {};
@@ -606,25 +736,28 @@ let btns = await keybord(user.lng, 'cancel');
 if (user.tamagotchi && Object.keys(user.tamagotchi).length > 0) {
     let actions = tmc.getActions(user.tamagotchi);
     btns = await keybord(user.lng, 'tamagotchi|' + JSON.stringify(actions));
-    if (!user.tamagotchi.message_id || user.status.indexOf(lng[user.lng].tamagotchi) === -1) {
+    if (!user.tamagotchi.message_id && user.message_id > user.tamagotchi.message_id || user.status.indexOf(lng[user.lng].tamagotchi) === -1) {
         let sended = await botjs.sendMSG(id, text, btns, true, false);
-        if (typeof sended.message_id !== 'undefined') user.tamagotchi.message_id = sended.message_id;
+        if (typeof sended.message_id !== 'undefined' && Object.keys(user.tamagotchi).length > 0) user.tamagotchi.message_id = sended.message_id;
     } else {
-        let edited = await botjs.editMessage(id, user.tamagotchi.message_id,  text, btns, true, false);
+        let edited = await botjs.editMessage(id, user.tamagotchi.message_id, text, btns, true, false);
         if (edited == false) {
             let sended = await botjs.sendMSG(id, text, btns, true, false);
-            if (typeof sended.message_id !== 'undefined') user.tamagotchi.message_id = sended.message_id;
+            if (typeof sended.message_id !== 'undefined' && Object.keys(user.tamagotchi).length > 0) user.tamagotchi.message_id = sended.message_id;
         }
     }
 } else if (Object.keys(user.tamagotchi).length === 0) {
     if (!user.tamagotchi.message_id) {
         let sended = await botjs.sendMSG(id, text, btns, false, false);
-        if (typeof sended.message_id !== 'undefined') user.tamagotchi.message_id = sended.message_id;
+        if (typeof sended.message_id !== 'undefined' && Object.keys(user.tamagotchi).length > 0) user.tamagotchi.message_id = sended.message_id;
     } else {
         await botjs.editMessage(id, user.tamagotchi.message_id,  text, btns, false, false);
     }
 }
-                                                                                await udb.updateUserStatus(user.id, user.names, user.status, message, user.send_time, action_scores, 0, 0, user.tamagotchi);
+                                                                                action_scores *= boost;
+                                                                                    action_scores = safeAddScore(action_scores, user.id);
+                                                                                if (user.diversity.indexOf('tamagotchi') === -1) user.diversity.push('tamagotchi')
+await udb.updateUserStatus(user.id, user.names, user.status, message, user.send_time, user.diversity, action_scores, 0, 0, user.tamagotchi);
                                                                             } else if (user && user.lng && message.indexOf(lng[user.lng].inventory) > -1) {                                                                                                    
                                                                                 let text = lng[user.lng].no_tamagotchi;
                                                                                 let actions = [];
@@ -665,7 +798,7 @@ if (message.indexOf('elixir') > -1) {
 }
 user.tamagotchi.inventory.splice(res, 1);
 text = `${message} ${lng[user.lng].product_applied}`;
-await udb.updateUserStatus(user.id, user.names, user.status, message, user.send_time, 0, 0, 0, user.tamagotchi);
+await udb.updateUserStatus(user.id, user.names, user.status, message, user.send_time, user.diversity, 0, 0, 0, user.tamagotchi);
 for (let el of user.tamagotchi.inventory) {
     actions.push(el)
 }
@@ -699,17 +832,7 @@ if (product_number === -1) text = lng[user.lng].product_not_found;
         blockchain_scores = scores;
       }
       user.tamagotchi.inventory.push(product);
-      await udb.updateUserStatus(
-              id,
-              names,
-              user.status,
-              lng[user.lng].games,
-              send_time,
-              -Math.abs(gamer_scores),
-              0,
-              -Math.abs(blockchain_scores),
-              user.tamagotchi
-              );
+      await udb.updateUserStatus(id, names, user.status, lng[user.lng].games, send_time, user.diversity, -Math.abs(gamer_scores), 0, -Math.abs(blockchain_scores), user.tamagotchi);
               text = `${lng[user.lng].t_shop_buy} ${product}`;
         }
     }
@@ -800,17 +923,7 @@ if (t1.health >= t2.health) {
     user.tamagotchi.power += power;
 text += `
 ${lng[user.lng].tamagotchi_params.power}: ${power}`;
-    await udb.updateUserStatus(
-        id,
-        names,
-        user.prev_status,
-user.status,
-        send_time,
-        -Math.abs(gamer_scores),
-        0,
-        -Math.abs(blockchain_scores),
-        user.tamagotchi
-        );
+    await udb.updateUserStatus(id, names, user.prev_status, user.status, send_time, user.diversity, -Math.abs(gamer_scores), 0, -Math.abs(blockchain_scores), user.tamagotchi);
     let btns = await keybord(user.lng, 'tamagotchi|' + JSON.stringify([]));
     await botjs.sendMSG(id, text, btns, true, false);    
 } else if (user && user.lng && message.indexOf(lng[user.lng].t_ring) > -1) {                        
@@ -880,7 +993,7 @@ let buttons = [];
 if (ring.u1.id === user.id) {
     text = lng[user.lng].t_ring_creator;
     buttons.push([`t_ring_delete ${timestamp}`, lng[user.lng].t_ring_delete])
-} else if (typeof ring.u2 === 'undefined' && ring.u1.id !== user.id && (Math.abs(user.tamagotchi.power - ring.power) > 2 && user.tamagotchi.power > ring.power)) {
+} else if (typeof ring.u2 === 'undefined' && ring.u1.id !== user.id && (Math.abs(user.tamagotchi.power - ring.power) > 10 && user.tamagotchi.power > ring.power)) {
 text = lng[user.lng].t_ring_no_power;
 } else if (typeof ring.u2 === 'undefined' && ring.u1.id !== user.id && (Math.abs(user.tamagotchi.power - ring.power) <= 2 || user.tamagotchi.power <= ring.power)) {
     if (user.tamagotchi.sleap_time > 0) {
@@ -914,16 +1027,7 @@ return;
     blockchain_scores = scores;
   }
   let locked_scores = await sumNumbers(Math.abs(gamer_scores), Math.abs(blockchain_scores));
-  await udb.updateUserStatus(
-          id,
-          names,
-          user.status,
-          lng[user.lng].tamagotchi,
-          send_time,
-          -Math.abs(gamer_scores),
-          locked_scores,
-          -Math.abs(blockchain_scores)
-          );
+  await udb.updateUserStatus(id, names, user.status, lng[user.lng].tamagotchi, send_time, user.diversity, -Math.abs(gamer_scores), locked_scores, -Math.abs(blockchain_scores));
     let data = {timestamp,u2: {id: user.id, tamagotchi: user.tamagotchi, scores: Math.abs(gamer_scores), viz_scores: Math.abs(blockchain_scores), auto: false}};
     await rtdb.updateRing(data);
     let exclude_params = ["name", "lastAgeUpdate", "sleap_time", "sleepEnergy", "message_id"];
@@ -1013,16 +1117,7 @@ await botjs.sendMSG(id, text, btns, true, false);
     blockchain_scores = scores;
   }
   let locked_scores = await sumNumbers(Math.abs(gamer_scores), Math.abs(blockchain_scores));
-  await udb.updateUserStatus(
-          id,
-          names,
-          user.status,
-          lng[user.lng].tamagotchi,
-          send_time,
-          -Math.abs(gamer_scores),
-          locked_scores,
-          -Math.abs(blockchain_scores)
-          );
+  await udb.updateUserStatus(id, names, user.status, lng[user.lng].tamagotchi, send_time, user.diversity, -Math.abs(gamer_scores), locked_scores, -Math.abs(blockchain_scores));
           let blows = parseInt(n);
           let timestamp = new Date().getTime();
           let data = {timestamp, blows, hit: 0, queue: 'u2', power: user.tamagotchi.power, scores, u1: {id: user.id, tamagotchi: user.tamagotchi, scores: Math.abs(gamer_scores), viz_scores: Math.abs(blockchain_scores), auto: false}};
@@ -1058,7 +1153,7 @@ if (typeof  ring.u2 !== 'undefined' && ring.u2.id === id) gamer = 'u2';
         buttons.push([lng[user.lng].t_ring, lng[user.lng].t_ring])
         let btns = await keybord(user.lng, 't_ring|' + JSON.stringify(buttons));
         await botjs.sendMSG(user.id, text, btns, true, false);
-if (ring[gamer].auto == false && ring.queue === gamer) await main(id, names, `t_ring_hit ${timestamp}`, 1, false)
+if (ring[gamer].auto == false && ring.queue === gamer) await main(id, names, `t_ring_hit ${timestamp}`, 1, false, true)
     }
     } else if (user && user.lng && message.indexOf('t_ring_delete ') > -1) {
 let n = message.split(' ')[1];
@@ -1078,7 +1173,7 @@ if (typeof ring.u2 !== 'undefined') users['u2'] = await udb.getUser(ring.u2.id);
             let locked_scores = -await sumNumbers(ring[gamer].scores, ring[gamer].viz_scores);
             if (!locked_scores || typeof locked_scores === 'undefined') locked_scores = -ring.scores;
             acc.tamagotchi.health = ring[gamer].tamagotchi.health;
-            await udb.updateUserStatus(acc.id, acc.names, acc.prev_status, acc.status, acc.send_time, scores, locked_scores, viz_scores, acc.tamagotchi);
+            await udb.updateUserStatus(acc.id, acc.names, acc.prev_status, acc.status, acc.send_time, acc.diversity, scores, locked_scores, viz_scores, 0, acc.tamagotchi);
             let text = `${lng[acc.lng].t_ring_deleted}:
             ${lng[acc.lng].tamagotchi_params.power}: ${ring.power},
             ${lng[acc.lng].blows}: ${ring.blows}
@@ -1139,7 +1234,7 @@ if (gamer === winner) {
 let locked_scores = -await sumNumbers(ring[gamer].scores, ring[gamer].viz_scores);
 if (!locked_scores || typeof locked_scores === 'undefined') locked_scores = ring.scores;
 acc.tamagotchi.health = ring[gamer].tamagotchi.health;
-await udb.updateUserStatus(acc.id, acc.names, acc.prev_status, acc.status, acc.send_time, scores, locked_scores, 0, acc.tamagotchi);
+await udb.updateUserStatus(acc.id, acc.names, acc.prev_status, acc.status, acc.send_time, acc.diversity, scores, locked_scores, 0, 0, acc.tamagotchi);
 let b = [];
 b.push([lng[user.lng].t_ring, lng[user.lng].t_ring])
 let bs = await keybord(acc.lng, 't_ring|' + JSON.stringify(b));
@@ -1192,7 +1287,7 @@ let btns = await keybord(user.lng, 't_ring|' + JSON.stringify(buttons));
 await botjs.sendMSG(id, text, btns, true, false);
 if (user2 && typeof user2 !== 'undefined' && ring[opponent].auto == true) {
     await helpers.sleep(3000);
-    await main(user2.id, user2.names, `t_ring_hit ${timestamp}`, 1, false)
+    await main(user2.id, user2.names, `t_ring_hit ${timestamp}`, 1, false, true)
 }
     }
 } else if (user && user.lng && message.indexOf(lng[user.lng].buy_viz) > -1) {
@@ -1239,10 +1334,10 @@ for (let one_user of all_users) {
         if (user && user.status) {
             status = user.status;
         }
-        await udb.updateUser(id, names, message, status, lng[message].home, send_time, user.referers, user.referer_code, user.artifacts, user.prize, user.viz_login, user.viz_scores, user.tamagotchi);
+        await udb.updateUser(id, names, message, status, lng[message].home, send_time, user.referers, user.referer_code, user.artifacts, user.prize, user.viz_login, user.viz_scores, user.tamagotchi, user.diversity);
                     await botjs.sendMSG(id, text, btns, false);
                     await helpers.sleep(3000);
-                  await main(id, names, lng[message].home, status);
+                  await main(id, names, lng[message].home, status, false, true);
                 } else {
                     if (user && user.lng && lng[user.lng] && user.status === lng[user.lng].fortune_telling) {
                 let text = lng[user.lng].ft_message;
@@ -1275,10 +1370,13 @@ let rn = String(number);
                                 let max_score = 3;
                                 score = Math.min(Math.max(0, Math.floor(score * Math.pow(0.95, level) * 100) / 100), max_score);
                                 if (score < 0) score = 0;
+score *= boost;
+                                                                                    score = safeAddScore(score, id);
                                 let scores = user.scores;
                                 scores = await sumNumbers(scores, score);
                                 text = lng[user.lng].rn_gameing_text(number, message, score, scores);
-                                await udb.updateUserStatus(id, names, lng[user.lng].home, user.status, send_time, score);                                
+                                if (user.diversity.indexOf('random_numbers') === -1) user.diversity.push('random_numbers')
+                                await udb.updateUserStatus(id, names, lng[user.lng].home, user.status, send_time, user.diversity, score);                                
                                                                 await createRefererScores(score, user.referers);
                                                             } else { // if is not number or if error.
                                                                 await udb.updateUserStatus(id, names, lng[user.lng].home, user.status, send_time);
@@ -1319,11 +1417,14 @@ text = lng[user.lng].bk_game_text(bk_level, staps);
                                                                             let score_without_level = score_by_stap.times(staps_for_scores).times(0.1);
 let score = parseFloat(score_without_level.toString());
 score = Math.min(Math.max(0, Math.floor(score * Math.pow(0.95, level) * 100) / 100), max_score);
+score *= boost;
+                                                                                    score = safeAddScore(score, id);
 let calc_score = new Big(score);
 let scores = user.scores;
                                                                             scores = await sumNumbers(calc_score, scores);
                                                                             text = lng[user.lng].bk_gameing_text(game.number, now_stap, calc_score, scores);
-                                                                            await udb.updateUserStatus(id, names, user.prev_status, user.status, send_time, parseFloat(calc_score));                                
+                                                                            if (user.diversity.indexOf('bk_game') === -1) user.diversity.push('bk_game')
+                                                                            await udb.updateUserStatus(id, names, user.prev_status, user.status, send_time, user.diversity, parseFloat(calc_score));                                
                                                                                                             await createRefererScores(calc_score, user.referers);
                                                                         await bkdb.removeGameSession(id, bk_level);
                                                                                                         } // end if maximum bulls.
@@ -1351,26 +1452,6 @@ text = lng[user.lng].reset_yes(bk_level);
 await botjs.sendMSG(id, text, btns, false);
 await udb.updateUserStatus(id, names, user.status, lng[user.lng].home, send_time);
 } else if (user && user.lng && lng[user.lng] && user.status.indexOf(lng[user.lng].crypto_bids + '|') > -1) {
-    let end_bids_round = Math.ceil(bn / 200) * 200;
-    if (bn >= end_bids_round - 100 && bn <= end_bids_round) {
-        let end_round_block = 200 - (bn % 200);
-        let timestamp = parseInt(end_round_block * 3);
-        var hours = Math.floor(timestamp / 60 / 60);
-        var minutes = Math.floor(timestamp / 60) - (hours * 60);
-        var seconds = timestamp % 60;
-        var end_round_time = [
-            hours.toString().padStart(2, '0'),
-            minutes.toString().padStart(2, '0'),
-            seconds.toString().padStart(2, '0')
-          ].join(':');
-        
-        let text = lng[user.lng].crypto_bids_active + ` ${end_round_time}`;
-        let btns = await keybord(user.lng, 'games');        
-        await botjs.sendMSG(id, text, btns, false);        
-        await udb.updateUserStatus(id, names, user.prev_status, lng[user.lng].home, send_time);
-        return;
-    }
-                    
     let price = user.status.split('|')[1];
                         let text = lng[user.lng].not_number;
                         let btns = await keybord(user.lng, 'games_buttons');
@@ -1382,26 +1463,6 @@ await udb.updateUserStatus(id, names, user.status, lng[user.lng].home, send_time
 }
 await botjs.sendMSG(id, text, btns, false);
 } else if (user && user.lng && lng[user.lng] && user.status.indexOf('cb_direction|') > -1) {
-    let end_bids_round = Math.ceil(bn / 200) * 200;
-    if (bn >= end_bids_round - 100 && bn <= end_bids_round) {
-        let end_round_block = 200 - (bn % 200);
-        let timestamp = parseInt(end_round_block * 3);
-        var hours = Math.floor(timestamp / 60 / 60);
-        var minutes = Math.floor(timestamp / 60) - (hours * 60);
-        var seconds = timestamp % 60;
-        var end_round_time = [
-            hours.toString().padStart(2, '0'),
-            minutes.toString().padStart(2, '0'),
-            seconds.toString().padStart(2, '0')
-          ].join(':');
-        
-        let text = lng[user.lng].crypto_bids_active + ` ${end_round_time}`;
-        let btns = await keybord(user.lng, 'games');        
-        await botjs.sendMSG(id, text, btns, false);        
-        await udb.updateUserStatus(id, names, user.prev_status, lng[user.lng].home, send_time);
-        return;
-    }
-
     let scores = parseFloat(user.status.split('|')[1]);
     let price = parseFloat(user.status.split('|')[2]);
     let text = lng[user.lng].crypto_bids_failed;
@@ -1423,22 +1484,13 @@ await botjs.sendMSG(id, text, btns, false);
       } else {
         blockchain_scores = scores;
       }
-      await udb.updateUserStatus(
-        id,
-        names,
-        user.status,
-        lng[user.lng].games,
-        send_time,
-        -Math.abs(gamer_scores),
-        scores,
-        -Math.abs(blockchain_scores)
-        );
+      await udb.updateUserStatus(id, names, user.status, lng[user.lng].games, send_time, user.diversity, -Math.abs(gamer_scores), scores, -Math.abs(blockchain_scores));
 }
 await botjs.sendMSG(id, text, btns, false);
 } else if (user && user.lng && lng[user.lng] && user.status === lng[user.lng].tamagotchi && Object.keys(user.tamagotchi).length === 0) {
     let tamagotchi = {name: message, health: 100, satiety: 100, happiness: 100, energy: 100, cleanliness: 100, age: 0, power: 0, xp: 0, lastAgeUpdate: new Date().getTime(), sleap_time: 0, inventory: []};
     user.tamagotchi = tamagotchi;
-await udb.updateUserStatus(user.id, user.names, user.prev_status, user.status, user.send_time, 0, 0, 0, user.tamagotchi);
+await udb.updateUserStatus(user.id, user.names, user.prev_status, user.status, user.send_time, user.diversity, 0, 0, 0, user.tamagotchi);
 let text = `${lng[user.lng].tamagotchi_set_name} ${message}!`;
 let btns = await keybord(user.lng, 'to_game|' + user.status);
                                         await botjs.sendMSG(id, text, btns, true);
@@ -1483,7 +1535,7 @@ ${asset}: ${url}`;
     let text = lng[user.lng].not_account;
     if (get_account && get_account.length > 0) {
         text = lng[user.lng].account_added;
-        await udb.updateUser(id, names, user.lng, user.prev_status, user.status, send_time, user.referers, user.referer_code, user.artifacts, user.prize, viz_login, user.viz_scores, user.tamagotchi);
+        await udb.updateUser(id, names, user.lng, user.prev_status, user.status, send_time, user.referers, user.referer_code, user.artifacts, user.prize, viz_login, user.viz_scores, user.tamagotchi, user.diversity);
     }
     let btns = await keybord(user.lng, 'home_button');
 await botjs.sendMSG(id, text, btns, false);
@@ -1499,9 +1551,15 @@ if (type && id) {
     let q = data.text;
     let user = await udb.getUser(parseInt(id));
     if (user) {
-        let res =     await main(user.id, user.names, lng[user.lng].check_subscribes, 1, true);
+        let res =     await main(user.id, user.names, lng[user.lng].check_subscribes, 1, true, true);
         if (user.lng && user.lng !== '' && res === 'not_subscribe') return;
-   
+        let boost = 1;
+        if (user.names.indexOf('$VIZ') > -1) boost += 0.1;
+        if (user.names.indexOf('@viz_mg_bot') > -1) boost += 0.2;
+        if (typeof user.viz_login !== 'undefined' && user.viz_login !== '') boost += 0.1;
+        boost += user.diversity.length * 0.02;
+        boost = parseFloat(boost.toFixed(2));
+        
         let number = await methods.randomWithHash(data.hash, bn, 2);
         let variant = lng[user.lng][number];
         let random_variant = await helpers.getRandomInRange(1, variant.length);
@@ -1513,6 +1571,8 @@ if (type && id) {
         let score = number * 10;
         if (score < 0) score = 0;
         score = Math.min(Math.max(0, Math.floor(score * Math.pow(0.95, level) * 100) / 100), max_score);
+        score *= boost;
+                                                                                                    score = safeAddScore(score, id);
         let text = `${q}
 ${ft_result}
 ${lng[user.lng].more}:
@@ -1528,7 +1588,8 @@ await botjs.sendMSG(parseInt(id), text, btns, false);
 await ftqdb.removeHashData(parseInt(id));
 let scores = user.scores;
 scores = await sumNumbers(scores, score);
-await udb.updateUserStatus(user.id, user.names, user.prev_status, user.status, user.send_time, score);
+if (user.diversity.indexOf('fortune_telling') === -1) user.diversity.push('fortune_telling')
+await udb.updateUserStatus(user.id, user.names, user.prev_status, user.status, user.send_time, user.diversity, score);
 await createRefererScores(score, user.referers);
 }
 }
@@ -1539,10 +1600,20 @@ async function addVizScores(bn, memo, shares) {
     if (typeof id !=='undefined' && !isNaN(id)) {
         let user = await udb.getUser(parseInt(id));
         if (!user || user && Object.keys(user).length === 0) return;
+        let boost = 1;
+        if (user.names.indexOf('$VIZ') > -1) boost += 0.1;
+        if (user.names.indexOf('@viz_mg_bot') > -1) boost += 0.2;
+        if (typeof user.viz_login !== 'undefined' && user.viz_login !== '') boost += 0.1;
+        boost += user.diversity.length * 0.02;
+        boost = parseFloat(boost.toFixed(2));
+
         let score = shares * 10;
+        score *= boost;
+                                                                                            score = safeAddScore(score, user.id);
         let scores = user.viz_scores;
         scores = await sumNumbers(scores, score);
-        await udb.updateUserStatus(user.id, user.names, user.prev_status, user.status, user.send_time, 0, 0, score);
+        if (user.diversity.indexOf('add_viz_scores') === -1 && shares >= 1) user.diversity.push('add_viz_scores')
+        await udb.updateUserStatus(user.id, user.names, user.prev_status, user.status, user.send_time, user.diversity, 0, 0, score);
         let text = `${lng[user.lng].added_viz_scores}: ${score}
 ${lng[user.lng].all_scores}: ${scores}.`;
         let btns = await keybord(user.lng, 'no');
@@ -1551,8 +1622,11 @@ ${lng[user.lng].all_scores}: ${scores}.`;
     }
 
 async function scoresAward() {
-    const operations = [];
-let benef = [{account: 'denis-skripnik', weight: 100}];
+try {
+    const account = await methods.getAccount(conf.mg_bot.award_account);
+    if (account && account.length == 0) return;
+        const balance = parseFloat(account[0].balance.split(' ')[0]) - 1;
+
     let top = await udb.getTop();
     let all_scores = top.reduce(function(p, c) {
         if (c.scores > 0) {
@@ -1563,178 +1637,142 @@ let benef = [{account: 'denis-skripnik', weight: 100}];
     }, 0);
     let msgs = [];
 let top_list = '';
-    for (let user of top) {
+const operations = [];
+for (let user of top) {
         if (user.scores > 0) {
-            let res =     await main(user.id, user.names, lng[user.lng].check_subscribes, 1, true);
+            let res =     await main(user.id, user.names, lng[user.lng].check_subscribes, 1, true, true);
         if (user.lng && user.lng !== '' && res === 'not_subscribe') continue;
             let text = '';
     let scores_share = new Big(user.scores).div(all_scores);
-    let percent = energy.times(scores_share);
+    let send_amount = new Big(balance).times(scores_share);
     let identity = `<a href="tg://user?id=${user.id}">${user.id}</a>`;
     if (user.names !== '') identity = `<a href="tg://user?id=${user.id}">${helpers.addslashes(user.names)}</a>`;
-    top_list += `
-    ${identity}: ${user.scores} (${percent.toFixed(2)}% ${lng[user.lng].of_energy})`;
-
-    if (percent.lt(0.01)) {
+    if (send_amount.lt(0.001)) {
     text = lng[user.lng].not_scores_award(user.scores, all_scores);
     continue;
 }
-let memo =  `telegram:${user.id}`;
-let receiver = 'viz-social-bot';
-if (user.viz_login !== '') {
-    memo = 'https://t.me/viz_mg_bot';
-    receiver = user.viz_login.toLowerCase();
+let memo =  `Award from https://t.me/viz_mg_bot`;
+let to = user.viz_login;
+if (user.viz_login === '') {
+    memo =  `telegram:${user.id}`;
+to = 'viz-social-bot';
 }
 let op = [];
-op[0] = 'award';
+op[0] = 'transfer';
 op[1] = {};
-op[1].initiator = conf.mg_bot.award_account;
-op[1].receiver = receiver;
-op[1].energy = parseInt(percent.times(100));
-op[1].custom_sequence = 0;
+op[1].from = conf.mg_bot.award_account;
+op[1].to = to;
+op[1].amount = send_amount.toFixed(3) + ' VIZ';
 op[1].memo = memo;
-op[1].beneficiaries = benef;
 operations.push(op);
+top_list += `
+${identity}: ${user.scores} (${send_amount.toFixed(3)} VIZ)`;
 
     text = `${lng[user.lng].yes_scores_award}
 `;
 msgs.push({text, lng: user.lng, id: user.id})
 }
 }
+
 if (operations.length > 0) {
-    await methods.send(operations, conf.mg_bot.regular_key);
+    let sended = await methods.send(operations, conf.mg_bot.active_key);
+    if (typeof sended === 'string' && send === 'error') return;
     await udb.resetUsersScores();
+    await sdb.updateShares(0);
     await cbdb.removeCryptoBids();
     await rtdb.removeRing(-1);
 for (let msg of msgs) {
-    msg.text += lng[msg.lng].scores_top_text('', top_list);
+    msg.text += lng[msg.lng].scores_top_text(top_list);
     let btns = await keybord(msg.lng, 'no');
 await botjs.sendMSG(msg.id, msg.text, btns, false);
 }
+}
+} catch(e) {
+    console.error('Ошибка в функции scoresAward:', e);
+    await helpers.sleep(60000);
+    await scoresAward();
 }
 }
 
 async function cryptoBidsResults() {
     await helpers.sleep(1000);
-    let responce = await axios.get('https://api.coincap.io/v2/assets?limit=1');
-    let now_price = parseFloat(responce.data.data[0].priceUsd);
+    let responce = await axios.get('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
+    let now_price = parseFloat(responce.data.price);
     let time_has_passed = new Date().getTime() - responce.data.timestamp;
     if (!now_price || typeof now_price === 'undefined' || responce && responce.length > 0 && time_has_passed >= 600000) return;
     let timestamp = new Date().getTime();
 await cbdb.updateBTCPrice(now_price, timestamp);
 
-    let bids = await cbdb.findCryptoBids();
+let min_time = timestamp - 60000;
+let bids = await cbdb.findCryptoBids(true, {timestamp: {$lte: min_time}});
     if (!bids || bids && bids.length === 0) {
         bids_status = false;
         return;
     }
     
-    const bids_ids = bids.reduce((previousValue, currentValue) => {
-        previousValue.push(currentValue.id);
-        return previousValue;
-        }, []);
-    
-        let users = await udb.findAllUsers('object');
+        let users = await udb.findAllUsers();
 if (!users || typeof users === 'undefined' || Object.keys(users).length === 0) return;
-for (let id in users) {
-    let user = users[id];
-    if (bids_ids.indexOf(id) > -1 || user.lng && user.status !== lng[user.lng].crypto_bids || user.status && user.status.indexOf('cb_direction|') === -1) continue;
-    await udb.updateUserStatus(user.id, user.names, user.prev_status, lng[user.lng].games, user.send_time);
-    let btns = await keybord(msg.lng, 'home');
-await botjs.sendMSG(user.id, lng[user.lng].new_bids_round, btns, false);
-}
-
-
-let all_bids = new Big(0);
-let winners_bids = new Big(0);
-let winners = [];
-        let admin_text = `В этом раунде сделали ставки следующие пользователи:
-`;
-        for (let bid of bids) {
-            let user = users[bid.id];
-if (user && Object.keys(user).length > 0) {
-    if (!user.lng || user.lng && user.lng === '') user.lng = 'English';
-    let res =     await main(user.id, user.names, lng[user.lng].check_subscribes, 1, true);
+for (let user of users) {
+if (!bids[user.id] || typeof bids[user.id] === 'undefined') continue;
+    let res =     await main(user.id, user.names, lng[user.lng].check_subscribes, 1, true, true);
     if (user.lng && user.lng !== '' && res === 'not_subscribe') continue;
+    let bid = bids[user.id];
     let direction = '<';
 if (now_price > bid.btc_price) direction = '>';
 if (user.lng === '' && user.locked_scores === 0) continue;
 let text = lng[user.lng].crypto_bids_lost;
 let btns = await keybord(user.lng, 'no');
 let bid_scores = new Big(bid.scores);
-    all_bids = all_bids.plus(bid_scores);
     if (bid.direction === direction) {
-        winners_bids = winners_bids.plus(bid_scores);
-        winners.push(bid);
-        admin_text += `${user.names} выиграл, поставив ${bid.scores} баллов.
-Курс BTC:
-был: ${bid.btc_price}, Сейчас: ${now_price}`;
-            continue;
-} // you winn.
-                 else {
-                    await cbdb.removeCryptoBids(bid.id);
-                    admin_text += `${user.names} проиграл, поставив ${bid.scores} баллов.
-Курс BTC:
-Был: ${bid.btc_price}, сейчас: ${now_price}`;                   
-                    let locked_scores = parseFloat(new Big(user.locked_scores).minus(bid.scores));
-                    if (locked_scores < 0) locked_scores = 0;
-                    await udb.updateUserStatus(bid.id, user.names, user.prev_status, user.status, user.send_time, 0, -Math.abs(bid.scores));
-                    await helpers.sleep(500);
-                }
-    text += lng[user.lng].crypto_bids_data(helpers.adaptiveFixed(bid.btc_price, 2), helpers.adaptiveFixed(now_price, 2), bid.direction, bid.scores);
-    await botjs.sendMSG(bid.id, text, btns, false);
-} // end if user.
-        } // end for bids.
+        let boost = 1;
+        if (user.names.indexOf('$VIZ') > -1) boost += 0.1;
+        if (user.names.indexOf('@viz_mg_bot') > -1) boost += 0.2;
+        if (typeof user.viz_login !== 'undefined' && user.viz_login !== '') boost += 0.1;
+        boost += user.diversity.length * 0.02;
+        boost = parseFloat(boost.toFixed(2));
 
-        for (let bid of winners) {
-            let user = users[bid.id];
-                        if (user && Object.keys(user).length > 0) {
-                            let level = parseInt(new Big(user.scores).plus(new Big(user.locked_scores)).div(100))
-                        if (level < 0) level = 0;
-                            if (!user.lng || user.lng && user.lng === '') user.lng = 'English';
-    let direction = '<';
-if (now_price > bid.btc_price) direction = '>';
-if (user.lng === '' && user.locked_scores === 0) continue;
-    let text = lng[user.lng].crypto_bids_lost;
-    let btns = await keybord(user.lng, 'no');
-    let bid_scores = new Big(bid.scores);
-    if (bid.direction === direction) {
-        let bid_share = bid_scores.div(winners_bids);
-        let scoreCalc = all_bids.times(bid_share);
-        if (winners.length === bids.length) {
-            const stakeLevel = Math.ceil(bid.scores / 100); // Уровень с округлением в большую сторону
+        let level = parseInt(new Big(user.scores).plus(new Big(user.locked_scores)).div(100))
+    if (level < 0) level = 0;
+    if (!user.lng || user.lng && user.lng === '') user.lng = 'English';
+const stakeLevel = Math.ceil(bid.scores / 100); // Уровень с округлением в большую сторону
 
-const baseCoefficient = 1.5; // Начальное значение коэффициента
+const baseCoefficient = 1.2; // Начальное значение коэффициента
 const maxLevel = 10; // Максимальный уровень, на котором коэффициент будет равен 1.05
 
 let coefficient;
 if (stakeLevel <= maxLevel) {
-  const decayFactor = Math.pow(1.05 / baseCoefficient, 1 / maxLevel); // Фактор затухания для плавного спуска
-  coefficient = baseCoefficient * Math.pow(decayFactor, stakeLevel);
+const decayFactor = Math.pow(1.05 / baseCoefficient, 1 / maxLevel); // Фактор затухания для плавного спуска
+coefficient = baseCoefficient * Math.pow(decayFactor, stakeLevel);
 } else {
-  coefficient = 1.05; // Коэффициент равен 1.05 после максимального уровня
+coefficient = 1.05; // Коэффициент равен 1.05 после максимального уровня
 }
-
-            scoreCalc = scoreCalc.times(coefficient);
-        }
-        let plus_amount = new Big(scoreCalc).minus(bid.scores);
-        plus_amount = new Big(plus_amount).times(new Big(0.95).pow(level)).toFixed(2);
-        let score = new Big(bid.scores).plus(plus_amount);
-        let scores = parseFloat(new Big(user.scores).plus(score));
+coefficient -= 1;
+let k = new Big(coefficient).times(boost);
+k = new Big(1).plus(k);
+let scoreCalc = bid_scores.times(k);
+let score = new Big(scoreCalc);
+                                                                                    score = safeAddScore(score, bid.id);
+let scores = parseFloat(new Big(user.scores).plus(score));
+let plus_amount = new Big(score).minus(bid.scores);
 text = lng[user.lng].crypto_bids_winn(parseFloat(plus_amount), bid.scores, parseFloat(score));
 let locked_scores = parseFloat(new Big(user.locked_scores).minus(bid.scores));
-                if (locked_scores < 0) locked_scores = 0;
-                await udb.updateUserStatus(bid.id, user.names, user.prev_status, user.status, user.send_time, score, -Math.abs(bid.scores));
-                await helpers.sleep(500);
-                await createRefererScores(score, user.referers);
-            } // you winn.
+if (locked_scores < 0) locked_scores = 0;
+if (user.diversity.indexOf('crypto_bids') === -1) user.diversity.push('crypto_bids')
+await udb.updateUserStatus(bid.id, user.names, user.prev_status, user.status, user.send_time, user.diversity, score, -Math.abs(bid.scores));
+await helpers.sleep(500);
+await createRefererScores(score, user.referers);
+await cbdb.removeCryptoBids(bid.id);    
+} // you winn.
+                 else {
+                    await cbdb.removeCryptoBids(bid.id);
+                    let locked_scores = parseFloat(new Big(user.locked_scores).minus(bid.scores));
+                    if (locked_scores < 0) locked_scores = 0;
+                    await udb.updateUserStatus(bid.id, user.names, user.prev_status, user.status, user.send_time, user.diversity, 0, -Math.abs(bid.scores));
+                    await helpers.sleep(500);
+                }
     text += lng[user.lng].crypto_bids_data(helpers.adaptiveFixed(bid.btc_price, 2), helpers.adaptiveFixed(now_price, 2), bid.direction, bid.scores);
     await botjs.sendMSG(bid.id, text, btns, false);
-    await cbdb.removeCryptoBids(bid.id);
-} // end if user.
-        } // end for bids.
-        await botjs.sendMSG(conf.mg_bot.admins[0], admin_text, [], false);
-await helpers.sleep(1000);
+            } // end for users.
 }
 
 module.exports.main = main;

@@ -1,6 +1,8 @@
 {
   "dependencies": {
+    "@foile/crypto-pay-api": "^1.0.4",
     "axios": "^0.21.1",
+    "basescript": "^0.0.4",
     "big-integer": "^1.6.51",
     "big.js": "^6.1.1",
     "cron": "^1.8.2",
@@ -10,6 +12,6 @@
     "mongodb": "latest",
     "sjcl": "^1.0.8",
     "telebot": "^1.4.1",
-    "viz-js-lib": "latest"
+    "viz-js-lib": "^0.12.6"
   }
 }

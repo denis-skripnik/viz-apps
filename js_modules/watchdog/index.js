@@ -10,7 +10,7 @@ const m = require("./messages");
 const check = require("./check");
 
 async function witnessesList(chat) {
-    let text = `Список добавленных делегатов. Введите логин с минусом (-login), чтобы удалить:
+    let text = `Список добавленных валидаторов. Введите логин с минусом (-login), чтобы удалить:
 ${chat.witnesses.join(', ')}`;
     await telegram.send(chat.chat_id, text);
 }
@@ -19,42 +19,42 @@ async function processMessage(chat, msg) {
     let action = msg.charAt(0);
 let account = msg.slice(1);
     if(!account || !account.match("^[a-z0-9.-]+$")) {
-        await telegram.send(chat.chat_id, "Введенное не является делегатом.");
+        await telegram.send(chat.chat_id, "Введенное не является валидатором.");
         return;
     }
     if (action === '-') {
         let index = chat.witnesses.indexOf(account);
 if (index !== -1) {
   chat.witnesses.splice(index, 1); // Удаляем 1 элемент с найденного индекса
-  await telegram.send(chat.chat_id, "Делегат удалён из списка.");
+  await telegram.send(chat.chat_id, "Валидатор удалён из списка.");
 } else {
-    await telegram.send(chat.chat_id, "Такого делегата нет в списке.");
+    await telegram.send(chat.chat_id, "Такого валидатора нет в списке.");
 } // end if index.
     } else if (action === '+') {
         const witness = await methods.getWitnessByAccount(account);
         if(!witness || !witness.owner || witness.owner != account) {
-            await telegram.send(chat.chat_id, "Такой делегат не найден");
+            await telegram.send(chat.chat_id, "Такой валидатор не найден");
             return;
         }
         if(chat.witnesses.indexOf(account) > -1) {
-            await telegram.send(chat.chat_id, "Делегат уже в списке.");
+            await telegram.send(chat.chat_id, "валидатор уже в списке.");
             return;
         }
         chat.witnesses.push(account);
-        await telegram.send(chat.chat_id, "Делегат @" + account + " добавлен!");
+        await telegram.send(chat.chat_id, "Валидатор @" + account + " добавлен!");
     } // end if action +.
 else {
     const witness = await methods.getWitnessByAccount(msg);
     if(!witness || !witness.owner || witness.owner != msg) {
-        await telegram.send(chat.chat_id, "Такой делегат не найден");
+        await telegram.send(chat.chat_id, "Такой валидатор не найден");
         return;
     }
     if(chat.witnesses.indexOf(msg) > -1) {
-        await telegram.send(chat.chat_id, "Делегат уже в списке.");
+        await telegram.send(chat.chat_id, "Валидатор уже в списке.");
         return;
     }
     chat.witnesses.push(msg);
-    await telegram.send(chat.chat_id, "Делегат @" + msg + " добавлен!");
+    await telegram.send(chat.chat_id, "Валидатор @" + msg + " добавлен!");
 }
 } // end function
 
@@ -78,7 +78,7 @@ async function onMsg(msg) {
         switch(msg.text) {
             case "/start": {
                 chat.username = username;
-                await telegram.send(chat_id, "Привет, я бот, который наблюдает за делегатами. Введи +логин-делегата, если хочешь получать персонализированные уведомления. -логин-делегата - удалить из списка. /help - список команд.")
+                await telegram.send(chat_id, "Привет, я бот, который наблюдает за валидаторами. Введи +логин-валидатора, если хочешь получать персонализированные уведомления. -логин-валидатора - удалить из списка. /help - список команд.")
             }; break;
             case "/help": {
                 await telegram.send(chat_id, m.help())

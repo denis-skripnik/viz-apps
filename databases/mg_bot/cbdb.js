@@ -67,8 +67,9 @@ async function addCryptoBid(id, scores, direction, btc_price) {
         const db = client.db("mg_bot");
 
         let collection = db.collection('crypto_bids');
-
-        let res = await collection.insertOne({id, scores, direction, btc_price});
+		
+		let timestamp = new Date().getTime();
+        let res = await collection.insertOne({id, scores, direction, btc_price, timestamp});
 
 return res;
 
@@ -113,7 +114,7 @@ if (!id) {
 	}
 }
 
-async function findCryptoBids(id) {
+async function findCryptoBids(isObject = false,  query = {}) {
     let client = await pool.getClient()
 
 if (!client) {
@@ -126,15 +127,23 @@ try {
 
     let collection = db.collection('crypto_bids');
 
-    const res = [];
-    let query = {};
-	if (id && typeof id !== 'undefined') query = {id}
-	let cursor = await collection.find(query).limit(500);
-    let doc = null;
-    while(null != (doc = await cursor.next())) {
-        res.push(doc);
-    }
-return res;
+	if (isObject == true) {
+		const res = {};
+		let cursor = await collection.find(query).limit(500);
+			let doc = null;
+			while(null != (doc = await cursor.next())) {
+		res[doc.id] = doc;
+			}
+			return res;
+		} else {
+			const res = [];
+			let cursor = await collection.find(query).limit(500);
+				let doc = null;
+				while(null != (doc = await cursor.next())) {
+res.push(doc);
+				}
+				return res;
+		}
   } catch (err) {
 
     console.log('test find bids', err);

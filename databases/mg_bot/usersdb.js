@@ -1,4 +1,3 @@
-const { userInfo } = require('os');
 const pool = require('./../@db.js')
 
 async function getUser(id) {
@@ -62,7 +61,7 @@ async function addUser(id, names, lng, prev_status, status, send_time, scores, r
         let collection = db.collection('users');
 
         let locked_scores = 0;
-        let res = await collection.insertOne({id, names, lng, prev_status, status, send_time, scores, locked_scores, referers, referer_code, artifacts, prize, viz_login, tamagotchi, viz_scores: 0});
+        let res = await collection.insertOne({id, names, lng, prev_status, status, send_time, scores, locked_scores, referers, referer_code, artifacts, prize, viz_login, tamagotchi, viz_scores: 0, diversity: []});
 
 return res;
 
@@ -75,7 +74,7 @@ return res;
     }
 }
 
-async function updateUser(id, names, lng, prev_status, status, send_time, referers, referer_code, artifacts, prize, viz_login, viz_scores, tamagotchi) {
+async function updateUser(id, names, lng, prev_status, status, send_time, referers, referer_code, artifacts, prize, viz_login, viz_scores, tamagotchi, diversity) {
 
     let client = await pool.getClient()
 
@@ -89,7 +88,7 @@ async function updateUser(id, names, lng, prev_status, status, send_time, refere
 
       let collection = db.collection('users');
 
-      let res = await collection.updateOne({id}, {$set: {id, names, lng, prev_status, status, send_time, referers, referer_code, artifacts, prize, viz_login, tamagotchi}}, {});
+      let res = await collection.updateOne({id}, {$set: {id, names, lng, prev_status, status, send_time, referers, referer_code, artifacts, prize, viz_login, tamagotchi, diversity}}, {});
 
 return res;
 
@@ -102,7 +101,7 @@ return res;
   }
 }
 
-async function updateUserStatus(id, names, prev_status, status, send_time, scores = 0, locked_scores = 0, viz_scores = 0, tamagotchi) {
+async function updateUserStatus(id, names, prev_status, status, send_time, diversity, scores = 0, locked_scores = 0, viz_scores = 0, tamagotchi) {
 
     let client = await pool.getClient()
 
@@ -117,12 +116,13 @@ async function updateUserStatus(id, names, prev_status, status, send_time, score
       let collection = db.collection('users');
 
 let set_params = {id, names, prev_status, status, send_time};
+if (typeof diversity !== 'undefined') set_params.diversity = diversity;
 if (typeof tamagotchi !== 'undefined') set_params.tamagotchi = tamagotchi;
 
 let incParams = {
     scores: parseFloat(scores.toString()),
     locked_scores: parseFloat(locked_scores.toString()),
-    viz_scores: parseFloat(viz_scores.toString())
+    viz_scores: parseFloat(viz_scores.toString()),
   };
   const hasNegativeValue = Object.values(incParams).some(value => value < 0);
   if (hasNegativeValue == true) {
@@ -189,7 +189,7 @@ async function resetUsersScores() {
 
       let collection = db.collection('users');
 
-      let res = await collection.updateMany({}, {$set: {scores: 0, locked_scores: 0, ft_counter: 0}}, {});
+      let res = await collection.updateMany({}, {$set: {scores: 0, locked_scores: 0, ft_counter: 0, diversity: []}}, {});
 
 return res;
 

@@ -20,19 +20,18 @@ const links = require("./js_modules/links");
 const votes = require("./js_modules/votes");
 const helpers = require("./js_modules/helpers");
 const bdb = require("./databases/blocksdb");
+const sdb = require("./databases/mg_bot/sharesdb");
 const LONG_DELAY = 12000;
 const SHORT_DELAY = 3000;
 const SUPER_LONG_DELAY = 1000 * 60 * 15;
 
 async function processBlock(bn) {
     if (bn%1200 == 0)         prices.getPrices();
-if (bn % 200 == 0) await mgb.cryptoBidsResults();
         if (bn%28800 == 0) {
-            mgb.scoresAward();
             links.updateShares();
           vccb.run();
     }
-        
+    
     let update_account_ops = ["account_create", "transfer_to_vesting", "delegate_vesting_shares", "transfer", "create_invite", "invite_registration", "claim_invite_balance", "use_invite_balance", "receive_award", "benefactor_award", "committee_pay_request", "paid_subscription_action", "witness_reward"];
 let update_account_creators = ["creator", "from", "delegator", "from", "creator", "initiator", "initiator", "initiator", "", "", "worker", "subscriber", "witness"]
 let update_account_targets = ["new_account_name", "to", "delegatee", "to", "", "new_account_name", "receiver", "receiver", "receiver", "benefactor", "", "account"]
@@ -77,6 +76,9 @@ if (opbody.receiver === 'committee' && data.length === 3) {
 } else if (opbody.receiver === conf.mg_bot.award_account && opbody.memo.indexOf('scores:') > -1 && opbody.memo.split(':').length === 2 && parseFloat(opbody.shares) >= 0.001) {
     await mgb.addVizScores(bn, opbody.memo, parseFloat(opbody.shares));
     ok_ops_count +=  1;
+} else if (opbody.initiator === conf.mg_bot.award_account && opbody.receiver === conf.mg_bot.award_account && opbody.memo === '') {
+    await sdb.updateShares(parseFloat(opbody.shares));
+    ok_ops_count +=  1;
 }
 break;
 case "committee_worker_create_request":
@@ -100,7 +102,7 @@ let delay = SHORT_DELAY;
 
 async function getNullTransfers() {
     PROPS = await methods.getProps();
-            const block_n = await bdb.getBlock(PROPS.last_irreversible_block_num);
+    const block_n = await bdb.getBlock(PROPS.last_irreversible_block_num);
 if (typeof block_n === 'undefined') {
     await helpers.sleep(3000);
     getNullTransfers();
@@ -153,9 +155,47 @@ setInterval(() => {
 
 getNullTransfers()
 
+async function mgbAward() {
+    await methods.award(conf.mg_bot.regular_key, conf.mg_bot.award_account, conf.mg_bot.award_account, 0.1, '')
+    }
+setInterval(mgbAward, 432000);
+
 new CronJob('0 0 3 * * *', wr.producersDay, null, true);    
 new CronJob('0 0 3 1 * *', wr.producersMonth, null, true);
+new CronJob('0 0 12 * * *', mgb.scoresAward, null, true);    
+
 committee.noReturn();
+setInterval(mgb.cryptoBidsResults, 30000);
+
+// Функция для получения данных аккаунта и активации вывода
+async function checkAndWithdraw() {
+    const SHARE_THRESHOLD = 6714.588;  // Пороговое значение для shares
+try {
+        // Получаем данные аккаунта
+        const account = await methods.getAccount(conf.mg_bot.award_account);
+        if (account && account.length > 0) {
+            const shares = parseFloat(account[0].vesting_shares.split(' ')[0]);
+            // Проверяем, есть ли активный вывод
+            const withdrawAmount = parseFloat(account[0].vesting_withdraw_rate.split(' ')[0]);
+            if (shares > SHARE_THRESHOLD && withdrawAmount === 0) {
+                // Активируем вывод
+                let withdrawAmount = shares - SHARE_THRESHOLD;
+                // Формируем транзакцию на вывод средств
+                const tx = {
+                    from: conf.mg_bot.award_account,
+                    vesting_shares: `${withdrawAmount.toFixed(6)} SHARES`
+                };
+                // Подписываем и отправляем транзакцию
+await methods.withdrawVesting(conf.mg_bot.active_key, tx);
+            }
+        }
+    } catch (error) {
+        console.error('Ошибка при получении данных аккаунта:', error);
+    }
+}
+
+// Запускаем функцию раз в час
+setInterval(checkAndWithdraw, 600000); // 3600000 мс = 1 час
 
 const cleanup = require("./databases/@db.js").cleanup;
 process.on('SIGINT', cleanup);

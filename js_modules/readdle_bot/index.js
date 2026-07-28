@@ -6,7 +6,7 @@ const conf = require(process.cwd() + '/config.json');
 var sjcl = require('sjcl');
 
 function replaceSIAWithHTMLLinks(text) {
-    var exp = /(\b(sia):\/\/([-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|]))/gi;
+	var exp = /(\b(sia):\/\/([-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|]))/gi;
     return text.replace(exp,"<a href='https://siasky.net/$3'>$1</a>"); 
 }
 
@@ -24,7 +24,7 @@ let str_data = '';
 	}
 str_data = str_data.toLowerCase();
 
-if (str_data.indexOf('рашк') > -1 || str_data.indexOf('фашис') > -1 || str_data.indexOf('полити') > -1 || str_data.indexOf('украин') > -1 || login === 'stefan99' || login === 'virt') {
+if (str_data.indexOf('рашк') > -1 || str_data.indexOf('иноагент') > -1 || str_data.indexOf('фашис') > -1 || str_data.indexOf('полити') > -1 || str_data.indexOf('украин') > -1 || login === 'stefan99' || login === 'ayatmn' || login === 'virt') {
 	return;
 }
 	let users = await udb.findAllUsers();

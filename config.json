@@ -21,7 +21,8 @@
     "bot_api_key": "THIS_ADD_mg_bot_API_TOKEN",
     "admins": [123456789],
     "award_account": "THIS_ADD_ACCOUNT",
-    "regular_key": "THIS_ADD_REGULAR_KEY"
+    "regular_key": "THIS_ADD_REGULAR_KEY",
+    "active_key": "THIS_ADD_ACTIVE_KEY"
   },
   "committee_bot": {
     "api_key": "THIS_ADD_committee_bot_API_TOKEN",
@@ -52,5 +53,12 @@
               "account": "popular.viz-login",
       "regular_key": "THIS_POPULAR_PRIVATE_KEY"
           }
-  }
+  },
+  "buy_viz": {
+  "pay_api": "API_KEY",
+  "price": 0.004,
+  "account": "PAY_ACCOUNT",
+  "wif": "PAY_WIF",
+  "min_amount": 4
+}
 }

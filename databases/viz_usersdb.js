@@ -43,6 +43,36 @@ async function getTop(type, page) {
     }
 }
 
+async function countTop(type) {
+
+    const client = await db.getClient();
+
+    if (!client) {
+        return;
+    }
+
+    try {
+
+        const db = client.db("blockchains");
+
+        let collection = db.collection('viztop');
+        const query = {}
+        query[type] = { $exists: true }
+        const sorting = {};
+        sorting[type] = -1;
+
+        let counter = await collection.find(query).sort(sorting).count();
+    return counter;
+      } catch (err) {
+  
+        console.log(err);
+    return err;
+      } finally {
+  
+        
+    }
+}
+
 async function updateTop(name, shares, shares_percent, delegated_shares, received_shares, effective_shares, vesting_withdraw_rate, viz, viz_percent) {
 
     const client = await db.getClient();
@@ -76,4 +106,5 @@ return res;
 }
 
 module.exports.getTop = getTop;
+module.exports.countTop = countTop;
 module.exports.updateTop = updateTop;
