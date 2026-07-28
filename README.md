@@ -13,6 +13,7 @@
 8. votes - опросы в блокчейне Viz.
 9. Watchdog - бот, уведомляющий об активации / деактивации делегатов и пропусках ими блоков.
 10. rh-viz-projects - приложение на основе readdle-helper для получения из readdle.me новостей по Viz и репостингу в аккаунты согласно условиям.
+11. В mg_bot есть покупка VIZ через Crypto Bot: пользователь указывает сумму в долларах, получает ссылки на оплату в USDT, USDC и BUSD, а после оплаченного invoice бот переводит рассчитанное количество VIZ на сохранённый Viz-логин пользователя.
 
 Всё в js_modules.
 
@@ -41,7 +42,8 @@ authTrueLimiter - это сколько одновременных запрос�
 В votes меняем to - кому, а также vote_price - сумму создания опроса;
 В awards_bot заменяем THIS_ADD_awards_bot_API_TOKEN на его Api токен и вместо 123456789 ваши админские Telegram id;
 У readdle_bot заменяем THIS_ADD_readdle_bot_API_TOKEN на его api токен, а также 123456789 на ваши Telegram id админов;
-mg_bot: THIS_ADD_mg_bot_API_TOKEN на его api токен, 123456789 на ваши админские Telegram id, THIS_ADD_ACCOUNT на логин аккаунта награждающего за активность, THIS_ADD_REGULAR_KEY на его регулярный ключ (начинается с 5);
+mg_bot: THIS_ADD_mg_bot_API_TOKEN на его api токен, 123456789 на ваши админские Telegram id, THIS_ADD_ACCOUNT на логин аккаунта награждающего за активность, THIS_ADD_REGULAR_KEY на его регулярный ключ (начинается с 5).
+Для покупки VIZ в mg_bot настраивается раздел `buy_viz` в `config.json`: `pay_api` — API-ключ Crypto Bot / Crypto Pay, `price` — цена 1 VIZ в долларах, `account` — аккаунт VIZ, с которого бот переводит купленные токены, `wif` — ключ этого аккаунта для перевода, `min_amount` — минимальная сумма оплаты в долларах. Пользователь сначала должен добавить свой Viz-логин в mg_bot, затем нажать «Купить VIZ», указать сумму не меньше `min_amount`; бот создаёт Crypto Pay invoices в USDT, USDC и BUSD. После события `invoice_paid` сумма платежа пересчитывается по формуле `amount * usd_rate / price`, и бот отправляет VIZ на сохранённый Viz-аккаунт пользователя с memo `You bought VIZ - Вы купили VIZ!`.
 В committee_bot THIS_ADD_committee_bot_API_TOKEN на api токен его, 123456789 на ваш Telegram id (указывается в единственном числе);
 У chats_channels_bot заменяем THIS_ADD_chats_channels_bot_API_TOKEN на его api токен;
 У watchdog THIS_ADD_WATCHDOG_API_TOKEN на его api токен и 123456789 на Telegram id админа;
