@@ -626,13 +626,14 @@ async function sendNotify(login, lang, id, bn, data) {
 if (typeof lang === 'undefined' || lang && lang === '') return;
     try {
     let text = '';
-    if (data.t && data.t === 'p' && !data.d.r && !data.d.s && data.d.d) {
-        data.d.d = data.d.d.replace(/<\/?[^>]+(>|$)/g, "");
+    if (data.t && data.t === 'p' && !data.d.r && !data.d.s && (data.d.m || data.d.d)) {
+        let publicationBody = data.d.m || data.d.d;
+        publicationBody = publicationBody.replace(/<\/?[^>]+(>|$)/g, "");
         text = `<a href="https://readdle.me/#viz://@${login}/${bn}/publication/">${lng[lang].type_publication}</a> ${lng[lang].from} ${login}.
 ${lng[lang].publication_title}: ${data.d.t}
 
 ${lng[lang].announcement}:
-${data.d.m.slice(0, 3000)}`;
+${publicationBody.slice(0, 3000)}`;
     } else if (!data.t && !data.d.s && !data.d.r) {
         data.d.t = data.d.t.replace("\n","<br>");
         text = `<a href="https://readdle.me/#viz://@${login}/${bn}">${lng[lang].type_note}</a> ${lng[lang].from} ${login}. ${lng[lang].note_text}:
